@@ -7,6 +7,7 @@
 **Problem:** Vercel can't find your `package.json` and `vercel.json` files.
 
 **Solution:**
+
 1. Go to Vercel Dashboard → Your Project → Settings → General
 2. Under "Root Directory", set it to: `backend`
 3. Click "Save"
@@ -25,6 +26,7 @@
 ### 3. Verify File Structure
 
 Make sure these files exist in your repository:
+
 ```
 backend/
   ├── vercel.json          ✅
@@ -56,6 +58,7 @@ backend/
 ### 6. Test with Vercel's Default URL
 
 Before using your custom domain, test with Vercel's provided URL:
+
 - Go to Vercel Dashboard → Your Project → Deployments
 - Click on the latest deployment
 - Copy the "Preview" or "Production" URL
@@ -85,6 +88,7 @@ Sometimes Vercel caches old configurations:
 ### 9. Verify vercel.json Syntax
 
 Make sure `backend/vercel.json` is valid JSON:
+
 ```json
 {
   "version": 2,
@@ -137,4 +141,3 @@ vercel --prod --debug
 ```
 
 This will show more detailed error messages.
-
