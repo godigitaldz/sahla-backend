@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Sahla Delivery - Fast, reliable food delivery at your fingertips. Order from your favorite restaurants and get fresh meals delivered to your door.">
+    <meta name="keywords" content="food delivery, restaurant delivery, sahla, online food ordering">
+    <title>Sahla Delivery - Your Favorite Food, Delivered Fast</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="translations.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <img src="logo.png" alt="Sahla Delivery" class="logo-icon">
+                </div>
+                <div class="language-switcher">
+                    <button class="lang-btn" id="langBtn" aria-label="Change language" aria-haspopup="true" aria-expanded="false">
+                        <span class="lang-code" id="langCode">EN</span>
+                        <svg class="lang-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="lang-dropdown" id="langDropdown" role="menu">
+                        <button class="lang-option" data-lang="en" role="menuitem">
+                            <span class="lang-name">English</span>
+                            <span class="lang-code-small">EN</span>
+                        </button>
+                        <button class="lang-option" data-lang="ar" role="menuitem">
+                            <span class="lang-name">العربية</span>
+                            <span class="lang-code-small">AR</span>
+                        </button>
+                        <button class="lang-option" data-lang="fr" role="menuitem">
+                            <span class="lang-name">Français</span>
+                            <span class="lang-code-small">FR</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-visual">
+            <img src="hero-image.png" alt="Sahla Delivery App" class="hero-image">
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-cta">
+                        <a href="#download" class="btn btn-primary btn-large">
+                            <span data-i18n="downloadApp">Download App</span>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M10 2V12M10 12L6 8M10 12L14 8M2 14V16C2 17.1 2.9 18 4 18H16C17.1 18 18 17.1 18 16V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </a>
+                    </div>
+                    <p class="hero-subtitle" data-i18n="heroSubtitle">
+                        Fast delivery, fresh meals, and the flavors you love—all in one app.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-subtitle" data-i18n="featuresSubtitle">Everything you need for the perfect food delivery experience</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title" data-i18n="featureFastDelivery">Fast Delivery</h3>
+                    <p class="feature-description" data-i18n="featureFastDeliveryDesc">
+                        Get your favorite meals delivered in 30 minutes or less.
+                        Real-time tracking keeps you informed every step of the way.
+                    </p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title" data-i18n="featureTopRestaurants">Top Restaurants</h3>
+                    <p class="feature-description" data-i18n="featureTopRestaurantsDesc">
+                        Browse hundreds of top-rated restaurants. From local favorites
+                        to international cuisine, we have something for everyone.
+                    </p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 8V12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title" data-i18n="featureEasyOrdering">Easy Ordering</h3>
+                    <p class="feature-description" data-i18n="featureEasyOrderingDesc">
+                        Simple, intuitive interface makes ordering effortless.
+                        Reorder favorites, save addresses, and pay securely—all in one place.
+                    </p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                            <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title" data-i18n="featureTrackOrder">Track Your Order</h3>
+                    <p class="feature-description" data-i18n="featureTrackOrderDesc">
+                        Know exactly where your food is with live GPS tracking.
+                        Get real-time updates from kitchen to your door.
+                    </p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                            <path d="M20 7H4C2.89543 7 2 7.89543 2 9V19C2 20.1046 2.89543 21 4 21H20C21.1046 21 22 20.1046 22 19V9C22 7.89543 21.1046 7 20 7Z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 21V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V21" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title" data-i18n="featureExclusiveDeals">Exclusive Deals</h3>
+                    <p class="feature-description" data-i18n="featureExclusiveDealsDesc">
+                        Enjoy special discounts, promo codes, and exclusive offers.
+                        Save more on every order with Sahla rewards.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" data-i18n="howItWorksTitle">How It Works</h2>
+                <p class="section-subtitle" data-i18n="howItWorksSubtitle">Get delicious food delivered in just 3 simple steps</p>
+            </div>
+            <div class="steps">
+                <div class="step" data-aos="fade-right">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3 class="step-title" data-i18n="step1Title">Choose Your Restaurant</h3>
+                        <p class="step-description" data-i18n="step1Desc">
+                            Browse through hundreds of restaurants, filter by cuisine,
+                            ratings, or delivery time. Find your perfect meal.
+                        </p>
+                    </div>
+                    <div class="step-visual">
+                        <div class="step-icon">🍽️</div>
+                    </div>
+                </div>
+                <div class="step" data-aos="fade-left">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3 class="step-title" data-i18n="step2Title">Place Your Order</h3>
+                        <p class="step-description" data-i18n="step2Desc">
+                            Select your favorite dishes, customize your order,
+                            and add it to your cart. Secure checkout in seconds.
+                        </p>
+                    </div>
+                    <div class="step-visual">
+                        <div class="step-icon">🛒</div>
+                    </div>
+                </div>
+                <div class="step" data-aos="fade-right">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3 class="step-title" data-i18n="step3Title">Track & Enjoy</h3>
+                        <p class="step-description" data-i18n="step3Desc">
+                            Watch your order being prepared and delivered in real-time.
+                            Receive notifications and enjoy your meal!
+                        </p>
+                    </div>
+                    <div class="step-visual">
+                        <div class="step-icon">🚀</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Restaurants Preview -->
+    <section class="restaurants" id="restaurants">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" data-i18n="restaurantsTitle">Popular Restaurants</h2>
+                <p class="section-subtitle" data-i18n="restaurantsSubtitle">Discover amazing flavors from top-rated restaurants</p>
+            </div>
+            <div class="restaurants-grid" id="restaurantsGrid">
+                <div class="restaurant-card skeleton">
+                    <div class="restaurant-image"></div>
+                    <div class="restaurant-info">
+                        <h3 class="restaurant-name"></h3>
+                        <p class="restaurant-cuisine"></p>
+                        <div class="restaurant-rating"></div>
+                    </div>
+                </div>
+                <div class="restaurant-card skeleton">
+                    <div class="restaurant-image"></div>
+                    <div class="restaurant-info">
+                        <h3 class="restaurant-name"></h3>
+                        <p class="restaurant-cuisine"></p>
+                        <div class="restaurant-rating"></div>
+                    </div>
+                </div>
+                <div class="restaurant-card skeleton">
+                    <div class="restaurant-image"></div>
+                    <div class="restaurant-info">
+                        <h3 class="restaurant-name"></h3>
+                        <p class="restaurant-cuisine"></p>
+                        <div class="restaurant-rating"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section class="download" id="download">
+        <div class="container">
+            <div class="download-content">
+                <div class="download-text">
+                    <h2 class="download-title" data-i18n="downloadTitle">Ready to Order?</h2>
+                    <p class="download-subtitle" data-i18n="downloadSubtitle">
+                        Download the Sahla app now and enjoy fast, reliable food delivery.
+                        Available on iOS and Android.
+                    </p>
+                    <div class="download-buttons">
+                        <a href="#" class="download-btn app-store" aria-label="Download on App Store">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                            </svg>
+                            <div class="download-btn-text">
+                                <div class="download-btn-label" data-i18n="downloadOnAppStore">Download on the</div>
+                                <div class="download-btn-name" data-i18n="appStore">App Store</div>
+                            </div>
+                        </a>
+                        <a href="#" class="download-btn google-play" aria-label="Get it on Google Play">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+                            </svg>
+                            <div class="download-btn-text">
+                                <div class="download-btn-label" data-i18n="getItOn">Get it on</div>
+                                <div class="download-btn-name" data-i18n="googlePlay">Google Play</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="download-features">
+                        <div class="download-feature">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span data-i18n="freeToDownload">Free to download</span>
+                        </div>
+                        <div class="download-feature">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span data-i18n="noHiddenFees">No hidden fees</span>
+                        </div>
+                        <div class="download-feature">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span data-i18n="securePayments">Secure payments</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="download-visual">
+                    <div class="phones-showcase">
+                        <div class="phone-showcase phone-1"></div>
+                        <div class="phone-showcase phone-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="assets/icon/app_icon.png" alt="Sahla Delivery" class="logo-icon">
+                    </div>
+                    <p class="footer-description" data-i18n="footerDescription">
+                        Your favorite food, delivered fast. Order from the best restaurants
+                        and enjoy delicious meals at your doorstep.
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <ul class="footer-links">
+                        <li><a href="/privacy-policy" data-i18n="privacyPolicy">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="copyright">&copy; 2025 Sahla Delivery. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cookie Consent Popup -->
+    <div class="cookie-consent" id="cookieConsent">
+        <div class="cookie-consent-content">
+            <div class="cookie-consent-header">
+                <h3 class="cookie-consent-title" data-i18n="cookieTitle">We use cookies</h3>
+                <button class="cookie-consent-close" id="cookieClose" aria-label="Close">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="cookie-consent-body">
+                <p class="cookie-consent-text" data-i18n="cookieText">
+                    We use cookies to improve your experience on our site, personalize content, analyze traffic,
+                    and for other purposes outlined in our cookie policy. By agreeing to "Accept All", you consent
+                    to the use of non-essential cookies. If you choose "Reject Cookies", only essential cookies will be activated.
+                </p>
+                <div class="cookie-consent-preferences" id="cookiePreferences" style="display: none;">
+                    <div class="cookie-preference-item">
+                        <label class="cookie-preference-label">
+                            <input type="checkbox" id="cookieEssential" checked disabled>
+                            <span class="cookie-preference-text" data-i18n="cookieEssential">Essential Cookies</span>
+                            <span class="cookie-preference-desc" data-i18n="cookieEssentialDesc">Required for the site to function properly</span>
+                        </label>
+                    </div>
+                    <div class="cookie-preference-item">
+                        <label class="cookie-preference-label">
+                            <input type="checkbox" id="cookieAnalytics">
+                            <span class="cookie-preference-text" data-i18n="cookieAnalytics">Analytics Cookies</span>
+                            <span class="cookie-preference-desc" data-i18n="cookieAnalyticsDesc">Help us understand how visitors interact with our website</span>
+                        </label>
+                    </div>
+                    <div class="cookie-preference-item">
+                        <label class="cookie-preference-label">
+                            <input type="checkbox" id="cookieMarketing">
+                            <span class="cookie-preference-text" data-i18n="cookieMarketing">Marketing Cookies</span>
+                            <span class="cookie-preference-desc" data-i18n="cookieMarketingDesc">Used to deliver relevant ads and track campaign performance</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="cookie-consent-footer">
+                <button class="cookie-btn cookie-btn-secondary" id="cookieReject" data-i18n="cookieReject">Reject Cookies</button>
+                <button class="cookie-btn cookie-btn-secondary" id="cookieManage" data-i18n="cookieManage">Manage Preferences</button>
+                <a href="/privacy-policy" class="cookie-link" data-i18n="cookiePolicy">Cookie Policy</a>
+                <button class="cookie-btn cookie-btn-primary" id="cookieAccept" data-i18n="cookieAccept">Accept All</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="localization.js"></script>
+    <script src="script.js"></script>
+    <script src="cookie-consent.js"></script>
+</body>
+</html>
