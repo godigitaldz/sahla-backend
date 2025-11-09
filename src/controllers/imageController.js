@@ -38,19 +38,17 @@ export const getMenuItemImage = async (req, res) => {
     }
 
     let imageBuffer;
-
-    // Check if it's a full URL
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      imageBuffer = await imageService.getImageFromUrl(imagePath);
-    } else {
-      imageBuffer = await imageService.getMenuItemImage(imagePath);
-    }
+    
+    // The service handles both URLs and paths
+    imageBuffer = await imageService.getMenuItemImage(imagePath);
 
     // Determine content type from path or default to jpeg
     const contentType = imagePath.toLowerCase().endsWith('.png')
       ? 'image/png'
       : imagePath.toLowerCase().endsWith('.webp')
       ? 'image/webp'
+      : imagePath.toLowerCase().endsWith('.gif')
+      ? 'image/gif'
       : 'image/jpeg';
 
     res.setHeader('Content-Type', contentType);
@@ -60,6 +58,7 @@ export const getMenuItemImage = async (req, res) => {
     res.send(imageBuffer);
   } catch (error) {
     console.error('Error fetching menu item image:', error);
+    console.error('Image path:', req.params.imagePath);
     res.status(404).json({ success: false, error: error.message || 'Menu item image not found' });
   }
 };
@@ -103,18 +102,15 @@ export const getLTOImage = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Image path is required' });
     }
 
-    let imageBuffer;
-
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      imageBuffer = await imageService.getImageFromUrl(imagePath);
-    } else {
-      imageBuffer = await imageService.getMenuItemImage(imagePath);
-    }
+    // The service handles both URLs and paths
+    const imageBuffer = await imageService.getMenuItemImage(imagePath);
 
     const contentType = imagePath.toLowerCase().endsWith('.png')
       ? 'image/png'
       : imagePath.toLowerCase().endsWith('.webp')
       ? 'image/webp'
+      : imagePath.toLowerCase().endsWith('.gif')
+      ? 'image/gif'
       : 'image/jpeg';
 
     res.setHeader('Content-Type', contentType);
@@ -124,6 +120,7 @@ export const getLTOImage = async (req, res) => {
     res.send(imageBuffer);
   } catch (error) {
     console.error('Error fetching LTO image:', error);
+    console.error('Image path:', req.params.imagePath);
     res.status(404).json({ success: false, error: error.message || 'LTO image not found' });
   }
 };

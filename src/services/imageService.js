@@ -53,33 +53,56 @@ export class ImageService {
    * @returns {Promise<Buffer>} Image buffer
    */
   async getMenuItemImage(imagePath) {
-    // If it's already a full URL, extract the path
-    if (imagePath.startsWith('http')) {
-      // Extract path from Supabase URL
-      const url = new URL(imagePath);
-      const pathParts = url.pathname.split('/');
-      const bucketIndex = pathParts.findIndex(part =>
-        ['menu-items', 'menu_item_images', 'menu-item-images'].includes(part)
-      );
-
-      if (bucketIndex !== -1) {
-        const bucket = pathParts[bucketIndex];
-        const filePath = pathParts.slice(bucketIndex + 1).join('/');
-
-        const { data, error } = await supabase.storage
-          .from(bucket)
-          .download(filePath);
-
-        if (error || !data) {
-          throw new Error(`Menu item image not found: ${imagePath}`);
+    // If it's already a full URL, try to extract the path first
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      try {
+        // Extract path from Supabase URL
+        const url = new URL(imagePath);
+        const pathParts = url.pathname.split('/').filter(part => part.length > 0);
+        
+        // Look for bucket name in path
+        const bucketNames = ['menu-item-images', 'menu-items', 'menu_item_images'];
+        let bucketIndex = -1;
+        let bucket = null;
+        
+        for (const bucketName of bucketNames) {
+          bucketIndex = pathParts.findIndex(part => part === bucketName);
+          if (bucketIndex !== -1) {
+            bucket = bucketName;
+            break;
+          }
         }
 
-        return Buffer.from(await data.arrayBuffer());
+        if (bucketIndex !== -1 && bucket) {
+          // Extract file path after bucket name
+          const filePath = pathParts.slice(bucketIndex + 1).join('/');
+          
+          if (filePath) {
+            const { data, error } = await supabase.storage
+              .from(bucket)
+              .download(filePath);
+
+            if (!error && data) {
+              return Buffer.from(await data.arrayBuffer());
+            }
+          }
+        }
+        
+        // If extraction failed, try to proxy the URL directly
+        // This handles cases where the URL is from Supabase CDN or external sources
+        return await this.getImageFromUrl(imagePath);
+      } catch (e) {
+        // If URL parsing fails, try to proxy the URL directly
+        try {
+          return await this.getImageFromUrl(imagePath);
+        } catch (proxyError) {
+          throw new Error(`Failed to fetch image from URL: ${proxyError.message}`);
+        }
       }
     }
 
-    // Try common bucket names
-    const buckets = ['menu-items', 'menu_item_images', 'menu-item-images'];
+    // If it's a storage path (not a full URL), try common bucket names
+    const buckets = ['menu-item-images', 'menu-items', 'menu_item_images'];
     for (const bucket of buckets) {
       try {
         const { data, error } = await supabase.storage
