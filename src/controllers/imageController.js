@@ -31,23 +31,26 @@ export const getCategoryImage = async (req, res) => {
  */
 export const getMenuItemImage = async (req, res) => {
   try {
-    const imagePath = decodeURIComponent(req.params.imagePath);
-
+    // Get image path from query parameter (more reliable for long URLs)
+    const imagePath = req.query.url || req.params.imagePath;
+    
     if (!imagePath) {
-      return res.status(400).json({ success: false, error: 'Image path is required' });
+      return res.status(400).json({ success: false, error: 'Image path is required. Use ?url=... query parameter' });
     }
+    
+    const decodedPath = decodeURIComponent(imagePath);
 
     let imageBuffer;
     
     // The service handles both URLs and paths
-    imageBuffer = await imageService.getMenuItemImage(imagePath);
+    imageBuffer = await imageService.getMenuItemImage(decodedPath);
 
     // Determine content type from path or default to jpeg
-    const contentType = imagePath.toLowerCase().endsWith('.png')
+    const contentType = decodedPath.toLowerCase().endsWith('.png')
       ? 'image/png'
-      : imagePath.toLowerCase().endsWith('.webp')
+      : decodedPath.toLowerCase().endsWith('.webp')
       ? 'image/webp'
-      : imagePath.toLowerCase().endsWith('.gif')
+      : decodedPath.toLowerCase().endsWith('.gif')
       ? 'image/gif'
       : 'image/jpeg';
 
@@ -58,7 +61,7 @@ export const getMenuItemImage = async (req, res) => {
     res.send(imageBuffer);
   } catch (error) {
     console.error('Error fetching menu item image:', error);
-    console.error('Image path:', req.params.imagePath);
+    console.error('Image path:', req.query.url || req.params.imagePath);
     res.status(404).json({ success: false, error: error.message || 'Menu item image not found' });
   }
 };
@@ -96,20 +99,23 @@ export const getRestaurantImage = async (req, res) => {
  */
 export const getLTOImage = async (req, res) => {
   try {
-    const imagePath = decodeURIComponent(req.params.imagePath);
-
+    // Get image path from query parameter (more reliable for long URLs)
+    const imagePath = req.query.url || req.params.imagePath;
+    
     if (!imagePath) {
-      return res.status(400).json({ success: false, error: 'Image path is required' });
+      return res.status(400).json({ success: false, error: 'Image path is required. Use ?url=... query parameter' });
     }
+    
+    const decodedPath = decodeURIComponent(imagePath);
 
     // The service handles both URLs and paths
-    const imageBuffer = await imageService.getMenuItemImage(imagePath);
+    const imageBuffer = await imageService.getMenuItemImage(decodedPath);
 
-    const contentType = imagePath.toLowerCase().endsWith('.png')
+    const contentType = decodedPath.toLowerCase().endsWith('.png')
       ? 'image/png'
-      : imagePath.toLowerCase().endsWith('.webp')
+      : decodedPath.toLowerCase().endsWith('.webp')
       ? 'image/webp'
-      : imagePath.toLowerCase().endsWith('.gif')
+      : decodedPath.toLowerCase().endsWith('.gif')
       ? 'image/gif'
       : 'image/jpeg';
 
@@ -120,7 +126,7 @@ export const getLTOImage = async (req, res) => {
     res.send(imageBuffer);
   } catch (error) {
     console.error('Error fetching LTO image:', error);
-    console.error('Image path:', req.params.imagePath);
+    console.error('Image path:', req.query.url || req.params.imagePath);
     res.status(404).json({ success: false, error: error.message || 'LTO image not found' });
   }
 };
