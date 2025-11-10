@@ -1,26 +1,29 @@
 import express from 'express';
 import {
-  getCategoryImage,
-  getMenuItemImage,
-  getRestaurantImage,
-  getLTOImage,
+  loadImagesBatch,
+  loadImageById,
+  loadDrinkImagesByRestaurant,
+  loadRestaurantMenuImages,
+  getImageStats,
+  clearImageCache,
 } from '../controllers/imageController.js';
 
 const router = express.Router();
 
-// Category images
-router.get('/category/:categoryName', getCategoryImage);
+// Batch load images
+router.post('/batch', loadImagesBatch);
 
-// Menu item images - use query parameter for long URLs
-router.get('/menu-item', getMenuItemImage);
+// Load single image by ID
+router.get('/:id', loadImageById);
 
-// Restaurant images (logo or cover)
-router.get('/restaurant/:type/:restaurantId', getRestaurantImage);
+// Load drink images for restaurant
+router.get('/drinks/:restaurantId', loadDrinkImagesByRestaurant);
 
-// LTO card images (same as menu item images)
-router.get('/lto', getLTOImage);
+// Load all menu images for restaurant
+router.get('/restaurant/:restaurantId', loadRestaurantMenuImages);
 
-// Menu item list screen images (same as menu item images)
-router.get('/menu-list', getMenuItemImage);
+// Cache management
+router.get('/stats', getImageStats);
+router.delete('/cache', clearImageCache);
 
 export default router;

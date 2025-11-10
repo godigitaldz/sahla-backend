@@ -1,132 +1,152 @@
 import imageService from '../services/imageService.js';
+import { successResponse } from '../utils/response.js';
 
 /**
- * Get category image
+ * Batch load images by menu item IDs
+ * POST /api/images/batch
+ * Body: { itemIds: string[] }
  */
-export const getCategoryImage = async (req, res) => {
+export const loadImagesBatch = async (req, res, next) => {
   try {
-    const { categoryName } = req.params;
-    const { locale = 'en' } = req.query;
+    const { itemIds } = req.body;
 
-    if (!categoryName) {
-      return res.status(400).json({ success: false, error: 'Category name is required' });
+    if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'itemIds array is required and must not be empty',
+      });
     }
 
-    const imageBuffer = await imageService.getCategoryImage(categoryName, locale);
+    // Limit batch size for performance
+    if (itemIds.length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'Maximum 100 item IDs allowed per batch request',
+      });
+    }
 
-    // Set appropriate headers
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.setHeader('Content-Length', imageBuffer.length);
+    const imageMap = await imageService.loadImagesBatch(itemIds);
 
-    res.send(imageBuffer);
+    res.json(successResponse(imageMap, 'Images loaded successfully', {
+      count: Object.keys(imageMap).length,
+      requested: itemIds.length,
+    }));
   } catch (error) {
-    console.error('Error fetching category image:', error);
-    res.status(404).json({ success: false, error: error.message || 'Category image not found' });
+    next(error);
   }
 };
 
 /**
- * Get menu item image
+ * Load single image by menu item ID
+ * GET /api/images/:id
  */
-export const getMenuItemImage = async (req, res) => {
+export const loadImageById = async (req, res, next) => {
   try {
-    // Get image path from query parameter (more reliable for long URLs)
-    const imagePath = req.query.url || req.params.imagePath;
-    
-    if (!imagePath) {
-      return res.status(400).json({ success: false, error: 'Image path is required. Use ?url=... query parameter' });
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Menu item ID is required',
+      });
     }
-    
-    const decodedPath = decodeURIComponent(imagePath);
 
-    let imageBuffer;
-    
-    // The service handles both URLs and paths
-    imageBuffer = await imageService.getMenuItemImage(decodedPath);
+    const imageUrl = await imageService.loadImageById(id);
 
-    // Determine content type from path or default to jpeg
-    const contentType = decodedPath.toLowerCase().endsWith('.png')
-      ? 'image/png'
-      : decodedPath.toLowerCase().endsWith('.webp')
-      ? 'image/webp'
-      : decodedPath.toLowerCase().endsWith('.gif')
-      ? 'image/gif'
-      : 'image/jpeg';
+    if (!imageUrl) {
+      return res.status(404).json({
+        success: false,
+        error: 'Image not found for this menu item',
+      });
+    }
 
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.setHeader('Content-Length', imageBuffer.length);
-
-    res.send(imageBuffer);
+    res.json(successResponse({ id, image: imageUrl }, 'Image loaded successfully'));
   } catch (error) {
-    console.error('Error fetching menu item image:', error);
-    console.error('Image path:', req.query.url || req.params.imagePath);
-    res.status(404).json({ success: false, error: error.message || 'Menu item image not found' });
+    next(error);
   }
 };
 
 /**
- * Get restaurant logo or cover image
+ * Load drink images for a restaurant
+ * GET /api/images/drinks/:restaurantId
  */
-export const getRestaurantImage = async (req, res) => {
+export const loadDrinkImagesByRestaurant = async (req, res, next) => {
   try {
-    const { restaurantId, type } = req.params;
+    const { restaurantId } = req.params;
 
     if (!restaurantId) {
-      return res.status(400).json({ success: false, error: 'Restaurant ID is required' });
+      return res.status(400).json({
+        success: false,
+        error: 'Restaurant ID is required',
+      });
     }
 
-    if (!['logo', 'cover'].includes(type)) {
-      return res.status(400).json({ success: false, error: 'Type must be "logo" or "cover"' });
-    }
+    const imageMap = await imageService.loadDrinkImagesByRestaurant(restaurantId);
 
-    const imageBuffer = await imageService.getRestaurantImage(restaurantId, type);
-
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.setHeader('Content-Length', imageBuffer.length);
-
-    res.send(imageBuffer);
+    res.json(successResponse(imageMap, 'Drink images loaded successfully', {
+      count: Object.keys(imageMap).length,
+    }));
   } catch (error) {
-    console.error('Error fetching restaurant image:', error);
-    res.status(404).json({ success: false, error: error.message || 'Restaurant image not found' });
+    next(error);
   }
 };
 
 /**
- * Get LTO card image (same as menu item image)
+ * Load all menu item images for a restaurant
+ * GET /api/images/restaurant/:restaurantId
+ * Query params: availableOnly (boolean), limit (number), offset (number)
  */
-export const getLTOImage = async (req, res) => {
+export const loadRestaurantMenuImages = async (req, res, next) => {
   try {
-    // Get image path from query parameter (more reliable for long URLs)
-    const imagePath = req.query.url || req.params.imagePath;
-    
-    if (!imagePath) {
-      return res.status(400).json({ success: false, error: 'Image path is required. Use ?url=... query parameter' });
+    const { restaurantId } = req.params;
+    const { availableOnly = 'true', limit = '50', offset = '0' } = req.query;
+
+    if (!restaurantId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Restaurant ID is required',
+      });
     }
-    
-    const decodedPath = decodeURIComponent(imagePath);
 
-    // The service handles both URLs and paths
-    const imageBuffer = await imageService.getMenuItemImage(decodedPath);
+    const options = {
+      availableOnly: availableOnly === 'true',
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+    };
 
-    const contentType = decodedPath.toLowerCase().endsWith('.png')
-      ? 'image/png'
-      : decodedPath.toLowerCase().endsWith('.webp')
-      ? 'image/webp'
-      : decodedPath.toLowerCase().endsWith('.gif')
-      ? 'image/gif'
-      : 'image/jpeg';
+    const imageMap = await imageService.loadRestaurantMenuImages(restaurantId, options);
 
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.setHeader('Content-Length', imageBuffer.length);
-
-    res.send(imageBuffer);
+    res.json(successResponse(imageMap, 'Restaurant menu images loaded successfully', {
+      count: Object.keys(imageMap).length,
+      ...options,
+    }));
   } catch (error) {
-    console.error('Error fetching LTO image:', error);
-    console.error('Image path:', req.query.url || req.params.imagePath);
-    res.status(404).json({ success: false, error: error.message || 'LTO image not found' });
+    next(error);
+  }
+};
+
+/**
+ * Get cache statistics
+ * GET /api/images/stats
+ */
+export const getImageStats = async (req, res, next) => {
+  try {
+    const stats = imageService.getStats();
+    res.json(successResponse(stats, 'Image service statistics retrieved successfully'));
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Clear image cache
+ * DELETE /api/images/cache
+ */
+export const clearImageCache = async (req, res, next) => {
+  try {
+    imageService.clearCache();
+    res.json(successResponse(null, 'Image cache cleared successfully'));
+  } catch (error) {
+    next(error);
   }
 };

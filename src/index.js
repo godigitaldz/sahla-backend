@@ -10,11 +10,11 @@ import { limiter } from './middleware/rateLimiter.js';
 
 // Import routes
 import cuisinesRouter from './routes/cuisines.js';
+import imagesRouter from './routes/images.js';
 import menuRouter from './routes/menu.js';
 import ordersRouter from './routes/orders.js';
 import promoCodesRouter from './routes/promoCodes.js';
 import restaurantsRouter from './routes/restaurants.js';
-import imagesRouter from './routes/images.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
