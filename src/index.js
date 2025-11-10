@@ -14,6 +14,7 @@ import menuRouter from './routes/menu.js';
 import ordersRouter from './routes/orders.js';
 import promoCodesRouter from './routes/promoCodes.js';
 import restaurantsRouter from './routes/restaurants.js';
+import imagesRouter from './routes/images.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -66,6 +67,7 @@ app.use('/api/orders', ordersRouter);
 app.use('/api/promo-codes', promoCodesRouter);
 app.use('/api/menu', menuRouter);
 app.use('/api/cuisines', cuisinesRouter);
+app.use('/api/images', imagesRouter);
 
 // 404 Handler
 app.use((req, res) => {
