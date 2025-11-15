@@ -48,32 +48,38 @@ app.get('/', (req, res) => {
 
 // Privacy Policy route
 app.get('/privacy-policy', (req, res) => {
-  try {
-    res.sendFile(join(__dirname, '../public/privacy-policy.html'));
-  } catch (error) {
-    console.error('Error serving privacy policy:', error);
-    res.status(500).json({ error: 'Failed to serve privacy policy' });
-  }
+  res.sendFile(join(__dirname, '../public/privacy-policy.html'), (err) => {
+    if (err) {
+      console.error('Error serving privacy policy:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve privacy policy' });
+      }
+    }
+  });
 });
 
 // User Agreement route
 app.get('/user-agreement', (req, res) => {
-  try {
-    res.sendFile(join(__dirname, '../public/user-agreement.html'));
-  } catch (error) {
-    console.error('Error serving user agreement:', error);
-    res.status(500).json({ error: 'Failed to serve user agreement' });
-  }
+  res.sendFile(join(__dirname, '../public/user-agreement.html'), (err) => {
+    if (err) {
+      console.error('Error serving user agreement:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve user agreement' });
+      }
+    }
+  });
 });
 
 // Terms of Service route
 app.get('/terms-of-service', (req, res) => {
-  try {
-    res.sendFile(join(__dirname, '../public/terms-of-service.html'));
-  } catch (error) {
-    console.error('Error serving terms of service:', error);
-    res.status(500).json({ error: 'Failed to serve terms of service' });
-  }
+  res.sendFile(join(__dirname, '../public/terms-of-service.html'), (err) => {
+    if (err) {
+      console.error('Error serving terms of service:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve terms of service' });
+      }
+    }
+  });
 });
 
 // Health check
