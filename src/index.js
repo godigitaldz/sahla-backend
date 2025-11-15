@@ -10,6 +10,7 @@ import { limiter } from './middleware/rateLimiter.js';
 
 // Import routes
 import cuisinesRouter from './routes/cuisines.js';
+import imagesRouter from './routes/images.js';
 import menuRouter from './routes/menu.js';
 import ordersRouter from './routes/orders.js';
 import promoCodesRouter from './routes/promoCodes.js';
@@ -50,6 +51,16 @@ app.get('/privacy-policy', (req, res) => {
   res.sendFile(join(__dirname, '../public/privacy-policy.html'));
 });
 
+// User Agreement route
+app.get('/user-agreement', (req, res) => {
+  res.sendFile(join(__dirname, '../public/user-agreement.html'));
+});
+
+// Terms of Service route
+app.get('/terms-of-service', (req, res) => {
+  res.sendFile(join(__dirname, '../public/terms-of-service.html'));
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({
@@ -66,6 +77,7 @@ app.use('/api/orders', ordersRouter);
 app.use('/api/promo-codes', promoCodesRouter);
 app.use('/api/menu', menuRouter);
 app.use('/api/cuisines', cuisinesRouter);
+app.use('/api/images', imagesRouter);
 
 // 404 Handler
 app.use((req, res) => {

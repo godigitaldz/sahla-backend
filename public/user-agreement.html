@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Sahla Delivery App User Agreement - Terms and conditions for using our food delivery service">
+    <title data-i18n-title="userAgreementTitle">User Agreement - Sahla Delivery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="translations.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        body.rtl {
+            direction: rtl;
+            text-align: right;
+        }
+
+        body.rtl ul,
+        body.rtl ol {
+            margin-right: 30px;
+            margin-left: 0;
+        }
+
+        body.rtl .highlight {
+            border-right: 4px solid #ffc107;
+            border-left: none;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .last-updated {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            color: #34495e;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+
+        .back-link::before {
+            content: '←';
+        }
+
+        body.rtl .back-link::before {
+            content: '→';
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .contact-info {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+
+        .contact-info strong {
+            color: #2c3e50;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .highlight {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+        /* Language Switcher */
+        .language-switcher {
+            position: relative;
+        }
+
+        .lang-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 36px;
+            padding: 0 12px;
+            border-radius: 18px;
+            border: 1.5px solid #000000;
+            background: #FFFFFF;
+            color: #333;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin: 0;
+            position: relative;
+            min-width: 60px;
+        }
+
+        .lang-btn:hover {
+            background: #F8F9FA;
+        }
+
+        .lang-chevron {
+            opacity: 0.6;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .lang-btn:hover .lang-chevron {
+            opacity: 0.8;
+        }
+
+        .lang-btn[aria-expanded="true"] .lang-chevron {
+            transform: rotate(180deg);
+            opacity: 0.8;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            padding: 8px;
+            min-width: 140px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        .lang-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .lang-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            font-size: 14px;
+        }
+
+        .lang-option:hover {
+            background: #F8F9FA;
+        }
+
+        .lang-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .lang-code-small {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        body.rtl .lang-dropdown {
+            right: auto;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-nav">
+            <a href="/" class="back-link" data-i18n="userAgreementBackToHome">Back to Home</a>
+            <div class="language-switcher">
+                <button class="lang-btn" id="langBtn" aria-label="Change language" aria-haspopup="true" aria-expanded="false">
+                    <span class="lang-code" id="langCode">EN</span>
+                    <svg class="lang-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <div class="lang-dropdown" id="langDropdown" role="menu">
+                    <button class="lang-option" data-lang="en" role="menuitem">
+                        <span class="lang-name">English</span>
+                        <span class="lang-code-small">EN</span>
+                    </button>
+                    <button class="lang-option" data-lang="ar" role="menuitem">
+                        <span class="lang-name">العربية</span>
+                        <span class="lang-code-small">AR</span>
+                    </button>
+                    <button class="lang-option" data-lang="fr" role="menuitem">
+                        <span class="lang-name">Français</span>
+                        <span class="lang-code-small">FR</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <h1 data-i18n="userAgreementTitle">User Agreement</h1>
+        <p class="last-updated"><strong data-i18n="userAgreementLastUpdated">Last Updated:</strong> <span data-i18n="userAgreementDate">November 2025</span></p>
+
+        <p data-i18n="userAgreementIntro1">
+            Welcome to Sahla ("we," "our," "us," or "Sahla"). These Terms of Service ("Terms," "Agreement") constitute a legally binding agreement between you and Sahla Delivery regarding your use of our mobile application, website, and related services (collectively, the "Service").
+        </p>
+
+        <p data-i18n="userAgreementIntro2">
+            By accessing or using the Sahla Service, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the Service. Please read these Terms carefully before using our Service.
+        </p>
+
+        <div class="highlight">
+            <strong data-i18n="userAgreementImportant">Important:</strong> <span data-i18n="userAgreementImportantText">By creating an account, placing an order, or using any part of the Service, you acknowledge that you have read, understood, and agree to be bound by these Terms and our Privacy Policy. If you do not agree to these Terms, you must immediately stop using the Service.</span>
+        </div>
+
+        <h2 data-i18n="userAgreementSection1Title">1. Acceptance of Terms</h2>
+
+        <p data-i18n="userAgreementSection1Text1">By accessing or using the Sahla Service, you agree to comply with and be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any part of these Terms, you must not use the Service.</p>
+
+        <p data-i18n="userAgreementSection1Text2">We reserve the right to modify these Terms at any time. We will notify you of any material changes by posting the updated Terms on this page and updating the "Last Updated" date. Your continued use of the Service after such modifications constitutes your acceptance of the updated Terms.</p>
+
+        <h2 data-i18n="userAgreementSection2Title">2. Description of Service</h2>
+
+        <p data-i18n="userAgreementSection2Text1">Sahla is a food delivery platform that connects customers with restaurants and delivery partners. Our Service allows you to:</p>
+        <ul>
+            <li data-i18n="userAgreementServiceBrowse">Browse menus from participating restaurants</li>
+            <li data-i18n="userAgreementServiceOrder">Place orders for food and beverages</li>
+            <li data-i18n="userAgreementServiceTrack">Track your orders in real-time</li>
+            <li data-i18n="userAgreementServicePay">Make secure payments for orders</li>
+            <li data-i18n="userAgreementServiceReview">Review restaurants and menu items</li>
+            <li data-i18n="userAgreementServiceManage">Manage your account and preferences</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection2Text2">Sahla acts as an intermediary platform connecting customers, restaurants, and delivery partners. We do not prepare, cook, or deliver food ourselves. We are not responsible for the quality, safety, or accuracy of food prepared by restaurants.</p>
+
+        <h2 data-i18n="userAgreementSection3Title">3. Eligibility and Account Registration</h2>
+
+        <h3 data-i18n="userAgreementSection3_1Title">3.1 Age Requirements</h3>
+        <p data-i18n="userAgreementSection3_1Text">You must be at least 18 years old to use the Sahla Service. By using the Service, you represent and warrant that you are at least 18 years of age and have the legal capacity to enter into this Agreement.</p>
+
+        <h3 data-i18n="userAgreementSection3_2Title">3.2 Account Creation</h3>
+        <p data-i18n="userAgreementSection3_2Text1">To use certain features of the Service, you must create an account by providing:</p>
+        <ul>
+            <li data-i18n="userAgreementAccountName">Your full name</li>
+            <li data-i18n="userAgreementAccountPhone">A valid phone number</li>
+            <li data-i18n="userAgreementAccountEmail">A valid email address (optional)</li>
+            <li data-i18n="userAgreementAccountPassword">A secure password</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection3_2Text2">You agree to provide accurate, current, and complete information during registration and to update such information to keep it accurate, current, and complete.</p>
+
+        <h3 data-i18n="userAgreementSection3_3Title">3.3 Account Security</h3>
+        <p data-i18n="userAgreementSection3_3Text1">You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to:</p>
+        <ul>
+            <li data-i18n="userAgreementSecurityPassword">Use a strong, unique password</li>
+            <li data-i18n="userAgreementSecurityNotify">Immediately notify us of any unauthorized use of your account</li>
+            <li data-i18n="userAgreementSecurityLogout">Log out of your account when using shared devices</li>
+            <li data-i18n="userAgreementSecurityProtect">Take reasonable steps to protect your account information</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection3_3Text2">We are not liable for any loss or damage arising from your failure to comply with these security obligations.</p>
+
+        <h3 data-i18n="userAgreementSection3_4Title">3.4 Account Verification</h3>
+        <p data-i18n="userAgreementSection3_4Text">We may require you to verify your phone number or email address to activate your account. You agree to provide accurate verification information and to complete the verification process.</p>
+
+        <h2 data-i18n="userAgreementSection4Title">4. User Conduct and Prohibited Activities</h2>
+
+        <h3 data-i18n="userAgreementSection4_1Title">4.1 Acceptable Use</h3>
+        <p data-i18n="userAgreementSection4_1Text">You agree to use the Service only for lawful purposes and in accordance with these Terms. You agree not to use the Service:</p>
+        <ul>
+            <li data-i18n="userAgreementProhibitedIllegal">In any way that violates any applicable law or regulation</li>
+            <li data-i18n="userAgreementProhibitedHarm">To harm, threaten, or harass others</li>
+            <li data-i18n="userAgreementProhibitedFraud">To commit fraud or engage in deceptive practices</li>
+            <li data-i18n="userAgreementProhibitedSpam">To send spam, unsolicited messages, or promotional materials</li>
+            <li data-i18n="userAgreementProhibitedInterfere">To interfere with or disrupt the Service or servers</li>
+            <li data-i18n="userAgreementProhibitedAccess">To attempt to gain unauthorized access to any part of the Service</li>
+            <li data-i18n="userAgreementProhibitedReverse">To reverse engineer, decompile, or disassemble any part of the Service</li>
+            <li data-i18n="userAgreementProhibitedImpersonate">To impersonate any person or entity</li>
+            <li data-i18n="userAgreementProhibitedCollect">To collect or harvest information about other users</li>
+            <li data-i18n="userAgreementProhibitedViolate">To violate any intellectual property rights</li>
+        </ul>
+
+        <h3 data-i18n="userAgreementSection4_2Title">4.2 Content Standards</h3>
+        <p data-i18n="userAgreementSection4_2Text">When posting reviews, comments, or other content, you agree that your content will not:</p>
+        <ul>
+            <li data-i18n="userAgreementContentDefamatory">Be defamatory, libelous, or obscene</li>
+            <li data-i18n="userAgreementContentOffensive">Contain offensive, discriminatory, or hateful language</li>
+            <li data-i18n="userAgreementContentFalse">Contain false or misleading information</li>
+            <li data-i18n="userAgreementContentSpam">Constitute spam or unsolicited advertising</li>
+            <li data-i18n="userAgreementContentViolate">Violate any third-party rights</li>
+        </ul>
+
+        <h2 data-i18n="userAgreementSection5Title">5. Orders and Payment</h2>
+
+        <h3 data-i18n="userAgreementSection5_1Title">5.1 Placing Orders</h3>
+        <p data-i18n="userAgreementSection5_1Text1">When you place an order through the Service:</p>
+        <ul>
+            <li data-i18n="userAgreementOrderOffer">You make an offer to purchase items from a restaurant</li>
+            <li data-i18n="userAgreementOrderAcceptance">The restaurant may accept or reject your order</li>
+            <li data-i18n="userAgreementOrderConfirmation">You will receive a confirmation when your order is accepted</li>
+            <li data-i18n="userAgreementOrderBinding">Once accepted, the order becomes a binding contract between you and the restaurant</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection5_1Text2">We reserve the right to refuse, cancel, or limit any order at our sole discretion, including orders that appear fraudulent or involve prohibited items.</p>
+
+        <h3 data-i18n="userAgreementSection5_2Title">5.2 Pricing</h3>
+        <p data-i18n="userAgreementSection5_2Text1">All prices displayed on the Service are in Algerian Dinars (DZD) unless otherwise stated. Prices include applicable taxes where required by law.</p>
+        <ul>
+            <li data-i18n="userAgreementPricingMenu">Menu item prices are set by restaurants</li>
+            <li data-i18n="userAgreementPricingDelivery">Delivery fees are calculated based on distance and location</li>
+            <li data-i18n="userAgreementPricingService">Service fees may apply to certain orders</li>
+            <li data-i18n="userAgreementPricingTax">Taxes are included in displayed prices where applicable</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection5_2Text2">We reserve the right to change prices at any time. Prices at the time of order confirmation are final.</p>
+
+        <h3 data-i18n="userAgreementSection5_3Title">5.3 Payment Methods</h3>
+        <p data-i18n="userAgreementSection5_3Text">We accept the following payment methods:</p>
+        <ul>
+            <li data-i18n="userAgreementPaymentCash">Cash on delivery</li>
+            <li data-i18n="userAgreementPaymentCard">Credit or debit card (if available)</li>
+            <li data-i18n="userAgreementPaymentWallet">Digital wallet (if available)</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection5_3Text2">You agree to provide valid payment information and authorize us to charge your selected payment method for all orders placed through your account.</p>
+
+        <h3 data-i18n="userAgreementSection5_4Title">5.4 Payment Processing</h3>
+        <p data-i18n="userAgreementSection5_4Text">Payment processing is handled by third-party payment processors. By using the Service, you agree to the terms and conditions of our payment processors. We are not responsible for any errors or issues with payment processing.</p>
+
+        <h2 data-i18n="userAgreementSection6Title">6. Order Cancellation and Refunds</h2>
+
+        <h3 data-i18n="userAgreementSection6_1Title">6.1 Cancellation by Customer</h3>
+        <p data-i18n="userAgreementSection6_1Text1">You may cancel an order before it is accepted by the restaurant. Once the restaurant accepts your order, cancellation may not be possible, or cancellation fees may apply.</p>
+        <ul>
+            <li data-i18n="userAgreementCancelBefore">Cancellation before restaurant acceptance: Full refund</li>
+            <li data-i18n="userAgreementCancelAfter">Cancellation after restaurant acceptance: Subject to restaurant's cancellation policy</li>
+            <li data-i18n="userAgreementCancelPreparing">Cancellation while order is being prepared: May incur cancellation fees</li>
+            <li data-i18n="userAgreementCancelReady">Cancellation after order is ready: No refund available</li>
+        </ul>
+
+        <h3 data-i18n="userAgreementSection6_2Title">6.2 Cancellation by Restaurant or Sahla</h3>
+        <p data-i18n="userAgreementSection6_2Text">Restaurants or Sahla may cancel orders due to:</p>
+        <ul>
+            <li data-i18n="userAgreementCancelUnavailable">Item unavailability</li>
+            <li data-i18n="userAgreementCancelLocation">Delivery location issues</li>
+            <li data-i18n="userAgreementCancelWeather">Weather or safety concerns</li>
+            <li data-i18n="userAgreementCancelFraud">Suspected fraud or abuse</li>
+        </ul>
+        <p data-i18n="userAgreementSection6_2Text2">If we cancel your order, you will receive a full refund.</p>
+
+        <h3 data-i18n="userAgreementSection6_3Title">6.3 Refunds</h3>
+        <p data-i18n="userAgreementSection6_3Text1">Refunds will be processed to the original payment method within 5-10 business days. Refunds may be issued in the following circumstances:</p>
+        <ul>
+            <li data-i18n="userAgreementRefundCancelled">Order cancelled by restaurant or Sahla</li>
+            <li data-i18n="userAgreementRefundWrong">Wrong items received (subject to verification)</li>
+            <li data-i18n="userAgreementRefundQuality">Significant quality issues (subject to verification)</li>
+            <li data-i18n="userAgreementRefundUndelivered">Order not delivered within reasonable time</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection6_3Text2">Refund requests must be submitted within 24 hours of order completion. We reserve the right to investigate refund requests and may require evidence.</p>
+
+        <h2 data-i18n="userAgreementSection7Title">7. Delivery Terms</h2>
+
+        <h3 data-i18n="userAgreementSection7_1Title">7.1 Delivery Time Estimates</h3>
+        <p data-i18n="userAgreementSection7_1Text">Estimated delivery times are provided for your convenience but are not guaranteed. Actual delivery times may vary due to:</p>
+        <ul>
+            <li data-i18n="userAgreementDeliveryRestaurant">Restaurant preparation time</li>
+            <li data-i18n="userAgreementDeliveryTraffic">Traffic conditions</li>
+            <li data-i18n="userAgreementDeliveryWeather">Weather conditions</li>
+            <li data-i18n="userAgreementDeliveryVolume">Order volume and demand</li>
+            <li data-i18n="userAgreementDeliveryLocation">Delivery location accessibility</li>
+        </ul>
+
+        <h3 data-i18n="userAgreementSection7_2Title">7.2 Delivery Address</h3>
+        <p data-i18n="userAgreementSection7_2Text1">You are responsible for providing accurate delivery addresses. We are not responsible for:</p>
+        <ul>
+            <li data-i18n="userAgreementAddressIncorrect">Deliveries to incorrect addresses provided by you</li>
+            <li data-i18n="userAgreementAddressInaccessible">Inaccessible delivery locations</li>
+            <li data-i18n="userAgreementAddressUnsafe">Unsafe delivery locations</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection7_2Text2">If a delivery cannot be completed due to an incorrect or inaccessible address, you may be charged a redelivery fee or the order may be cancelled without refund.</p>
+
+        <h3 data-i18n="userAgreementSection7_3Title">7.3 Delivery Personnel</h3>
+        <p data-i18n="userAgreementSection7_3Text">Delivery personnel are independent contractors, not employees of Sahla. We are not responsible for the actions, conduct, or behavior of delivery personnel, though we take reports of misconduct seriously.</p>
+
+        <h2 data-i18n="userAgreementSection8Title">8. Restaurant Partners</h2>
+
+        <p data-i18n="userAgreementSection8Text1">Restaurants on the Sahla platform are independent businesses. We are not responsible for:</p>
+        <ul>
+            <li data-i18n="userAgreementRestaurantQuality">Food quality, freshness, or preparation</li>
+            <li data-i18n="userAgreementRestaurantAccuracy">Menu accuracy or item availability</li>
+            <li data-i18n="userAgreementRestaurantAllergies">Allergen information or dietary restrictions</li>
+            <li data-i18n="userAgreementRestaurantSafety">Food safety or hygiene standards</li>
+            <li data-i18n="userAgreementRestaurantPricing">Restaurant pricing decisions</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection8Text2">If you have issues with food quality, accuracy, or safety, please contact the restaurant directly or report the issue through our customer support.</p>
+
+        <h2 data-i18n="userAgreementSection9Title">9. Intellectual Property Rights</h2>
+
+        <h3 data-i18n="userAgreementSection9_1Title">9.1 Sahla's Intellectual Property</h3>
+        <p data-i18n="userAgreementSection9_1Text">The Service, including its design, features, functionality, and content, is owned by Sahla and protected by copyright, trademark, and other intellectual property laws. You may not:</p>
+        <ul>
+            <li data-i18n="userAgreementIPCopy">Copy, modify, or create derivative works</li>
+            <li data-i18n="userAgreementIPReverse">Reverse engineer or attempt to extract source code</li>
+            <li data-i18n="userAgreementIPRemove">Remove copyright or proprietary notices</li>
+            <li data-i18n="userAgreementIPUse">Use Sahla's trademarks or logos without permission</li>
+        </ul>
+
+        <h3 data-i18n="userAgreementSection9_2Title">9.2 User Content</h3>
+        <p data-i18n="userAgreementSection9_2Text1">By posting reviews, photos, comments, or other content ("User Content") on the Service, you grant Sahla a worldwide, non-exclusive, royalty-free license to:</p>
+        <ul>
+            <li data-i18n="userAgreementContentUse">Use, reproduce, and display your User Content</li>
+            <li data-i18n="userAgreementContentModify">Modify and adapt your User Content</li>
+            <li data-i18n="userAgreementContentDistribute">Distribute and promote your User Content</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection9_2Text2">You retain ownership of your User Content and represent that you have the right to grant this license.</p>
+
+        <h2 data-i18n="userAgreementSection10Title">10. Privacy and Data Protection</h2>
+
+        <p data-i18n="userAgreementSection10Text">Your use of the Service is also governed by our Privacy Policy, which explains how we collect, use, and protect your personal information. By using the Service, you consent to the collection and use of your information as described in our Privacy Policy.</p>
+
+        <h2 data-i18n="userAgreementSection11Title">11. Disclaimers and Limitations of Liability</h2>
+
+        <h3 data-i18n="userAgreementSection11_1Title">11.1 Service Availability</h3>
+        <p data-i18n="userAgreementSection11_1Text">We strive to provide reliable service, but we do not guarantee that the Service will be available at all times or free from errors, interruptions, or defects. The Service is provided "as is" and "as available."</p>
+
+        <h3 data-i18n="userAgreementSection11_2Title">11.2 Food Quality and Safety</h3>
+        <p data-i18n="userAgreementSection11_2Text">We are not responsible for the quality, safety, freshness, or preparation of food ordered through the Service. Food quality and safety are the sole responsibility of the restaurant.</p>
+
+        <h3 data-i18n="userAgreementSection11_3Title">11.3 Limitation of Liability</h3>
+        <p data-i18n="userAgreementSection11_3Text1">To the maximum extent permitted by law, Sahla and its affiliates, officers, employees, and agents shall not be liable for:</p>
+        <ul>
+            <li data-i18n="userAgreementLiabilityIndirect">Indirect, incidental, or consequential damages</li>
+            <li data-i18n="userAgreementLiabilityLoss">Loss of profits, data, or business opportunities</li>
+            <li data-i18n="userAgreementLiabilityFood">Food-related illnesses or allergic reactions</li>
+            <li data-i18n="userAgreementLiabilityDelivery">Delivery delays or failures</li>
+            <li data-i18n="userAgreementLiabilityThirdParty">Third-party actions or conduct</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection11_3Text2">Our total liability for any claims arising from your use of the Service shall not exceed the amount you paid to Sahla in the 12 months preceding the claim.</p>
+
+        <h3 data-i18n="userAgreementSection11_4Title">11.4 No Warranties</h3>
+        <p data-i18n="userAgreementSection11_4Text">We disclaim all warranties, express or implied, including warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
+
+        <h2 data-i18n="userAgreementSection12Title">12. Indemnification</h2>
+
+        <p data-i18n="userAgreementSection12Text">You agree to indemnify, defend, and hold harmless Sahla and its affiliates, officers, employees, and agents from any claims, damages, losses, liabilities, and expenses (including legal fees) arising from:</p>
+        <ul>
+            <li data-i18n="userAgreementIndemnifyUse">Your use of the Service</li>
+            <li data-i18n="userAgreementIndemnifyViolation">Your violation of these Terms</li>
+            <li data-i18n="userAgreementIndemnifyContent">Your User Content</li>
+            <li data-i18n="userAgreementIndemnifyRights">Your violation of any third-party rights</li>
+        </ul>
+
+        <h2 data-i18n="userAgreementSection13Title">13. Termination</h2>
+
+        <h3 data-i18n="userAgreementSection13_1Title">13.1 Termination by You</h3>
+        <p data-i18n="userAgreementSection13_1Text">You may terminate your account at any time by deleting your account through the App settings or by contacting customer support.</p>
+
+        <h3 data-i18n="userAgreementSection13_2Title">13.2 Termination by Sahla</h3>
+        <p data-i18n="userAgreementSection13_2Text1">We may suspend or terminate your account immediately, without notice, if you:</p>
+        <ul>
+            <li data-i18n="userAgreementTerminateViolate">Violate these Terms</li>
+            <li data-i18n="userAgreementTerminateFraud">Engage in fraudulent activity</li>
+            <li data-i18n="userAgreementTerminateAbuse">Abuse the Service or other users</li>
+            <li data-i18n="userAgreementTerminateIllegal">Use the Service for illegal purposes</li>
+            <li data-i18n="userAgreementTerminatePayment">Fail to pay for orders</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection13_2Text2">Upon termination, your right to use the Service will immediately cease, and we may delete your account and data in accordance with our Privacy Policy.</p>
+
+        <h2 data-i18n="userAgreementSection14Title">14. Dispute Resolution</h2>
+
+        <h3 data-i18n="userAgreementSection14_1Title">14.1 Informal Resolution</h3>
+        <p data-i18n="userAgreementSection14_1Text">Before filing a formal dispute, you agree to contact our customer support team to attempt to resolve the issue informally. We will make good faith efforts to resolve disputes within 30 days.</p>
+
+        <h3 data-i18n="userAgreementSection14_2Title">14.2 Governing Law</h3>
+        <p data-i18n="userAgreementSection14_2Text">These Terms shall be governed by and construed in accordance with the laws of Algeria, without regard to its conflict of law provisions.</p>
+
+        <h3 data-i18n="userAgreementSection14_3Title">14.3 Jurisdiction</h3>
+        <p data-i18n="userAgreementSection14_3Text">Any disputes arising from these Terms or your use of the Service shall be subject to the exclusive jurisdiction of the courts of Algeria.</p>
+
+        <h3 data-i18n="userAgreementSection14_4Title">14.4 Class Action Waiver</h3>
+        <p data-i18n="userAgreementSection14_4Text">You agree that any disputes will be resolved individually and not as part of a class action lawsuit.</p>
+
+        <h2 data-i18n="userAgreementSection15Title">15. Force Majeure</h2>
+
+        <p data-i18n="userAgreementSection15Text">We shall not be liable for any failure or delay in performance under these Terms due to circumstances beyond our reasonable control, including natural disasters, war, terrorism, pandemics, government actions, or failures of third-party services.</p>
+
+        <h2 data-i18n="userAgreementSection16Title">16. Changes to Terms</h2>
+
+        <p data-i18n="userAgreementSection16Text1">We reserve the right to modify these Terms at any time. We will notify you of material changes by:</p>
+        <ul>
+            <li data-i18n="userAgreementChangesPosting">Posting the updated Terms on this page</li>
+            <li data-i18n="userAgreementChangesDate">Updating the "Last Updated" date</li>
+            <li data-i18n="userAgreementChangesNotification">Sending you a notification through the App (for material changes)</li>
+        </ul>
+
+        <p data-i18n="userAgreementSection16Text2">Your continued use of the Service after changes become effective constitutes your acceptance of the modified Terms.</p>
+
+        <h2 data-i18n="userAgreementSection17Title">17. Severability</h2>
+
+        <p data-i18n="userAgreementSection17Text">If any provision of these Terms is found to be invalid, illegal, or unenforceable, the remaining provisions shall continue in full force and effect.</p>
+
+        <h2 data-i18n="userAgreementSection18Title">18. Entire Agreement</h2>
+
+        <p data-i18n="userAgreementSection18Text">These Terms, together with our Privacy Policy, constitute the entire agreement between you and Sahla regarding your use of the Service and supersede all prior agreements and understandings.</p>
+
+        <h2 data-i18n="userAgreementSection19Title">19. Contact Information</h2>
+
+        <div class="contact-info">
+            <p data-i18n="userAgreementSection19Text">If you have any questions, concerns, or requests regarding these Terms of Service, please contact us:</p>
+            <p><strong data-i18n="userAgreementEmail">Email:</strong> <a href="mailto:legal@sahla-delivery.com">legal@sahla-delivery.com</a></p>
+            <p><strong data-i18n="userAgreementWebsite">Website:</strong> <a href="https://sahla-delivery.com">https://sahla-delivery.com</a></p>
+            <p><strong data-i18n="userAgreementAddress">Address:</strong> Sahla Delivery Team</p>
+        </div>
+
+        <h2 data-i18n="userAgreementSection20Title">20. Acknowledgment</h2>
+
+        <p data-i18n="userAgreementSection20Text">By using the Sahla Service, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy.</p>
+
+        <p style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #7f8c8d; font-size: 0.9em;" data-i18n="userAgreementFooterText">
+            This User Agreement is effective as of November 2025 and applies to all users of the Sahla Delivery Service.
+        </p>
+    </div>
+    <script src="localization.js"></script>
+    <script>
+        // Language switcher functionality
+        function setupLanguageSwitcher() {
+            const langBtn = document.getElementById('langBtn');
+            const langCodeSpan = document.getElementById('langCode');
+            const langDropdown = document.getElementById('langDropdown');
+            const langOptions = document.querySelectorAll('.lang-option');
+
+            if (!langBtn || !langDropdown) return;
+
+            // Toggle dropdown
+            langBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isActive = langDropdown.classList.toggle('active');
+                langBtn.setAttribute('aria-expanded', isActive.toString());
+                const chevron = langBtn.querySelector('.lang-chevron');
+                if (chevron) {
+                    chevron.style.transform = isActive ? 'rotate(180deg)' : 'rotate(0deg)';
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!langBtn.contains(e.target) && !langDropdown.contains(e.target)) {
+                    langDropdown.classList.remove('active');
+                    langBtn.setAttribute('aria-expanded', 'false');
+                    const chevron = langBtn.querySelector('.lang-chevron');
+                    if (chevron) {
+                        chevron.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
+
+            // Handle language selection
+            langOptions.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const lang = option.getAttribute('data-lang');
+                    if (lang && window.localization) {
+                        window.localization.setLanguage(lang);
+                    }
+                });
+            });
+        }
+
+        // Update translations and UI
+        function updateUserAgreementUI() {
+            if (!window.localization) return;
+
+            const lang = window.localization.currentLang || 'en';
+            const t = window.localization.translations[lang];
+
+            // Update document language and direction
+            document.documentElement.lang = lang;
+            if (lang === 'ar') {
+                document.documentElement.dir = 'rtl';
+                document.body.classList.add('rtl');
+            } else {
+                document.documentElement.dir = 'ltr';
+                document.body.classList.remove('rtl');
+            }
+
+            // Update language code display
+            const langCode = document.getElementById('langCode');
+            if (langCode) {
+                langCode.textContent = lang.toUpperCase();
+            }
+
+            // Update translations
+            if (t) {
+                document.querySelectorAll('[data-i18n]').forEach(element => {
+                    const key = element.getAttribute('data-i18n');
+                    if (t[key]) {
+                        // Check if element has child elements (like <strong>)
+                        if (element.children.length > 0 || element.querySelector('strong')) {
+                            // For elements with HTML structure, replace text but keep structure
+                            const translation = t[key];
+                            // Try to extract and preserve the label part for <strong>
+                            const strongElement = element.querySelector('strong');
+                            if (strongElement && translation.includes(':')) {
+                                const parts = translation.split(':');
+                                if (parts.length >= 2) {
+                                    strongElement.textContent = parts[0] + ':';
+                                    // Update the rest of the text
+                                    const textNode = Array.from(element.childNodes).find(node =>
+                                        node.nodeType === Node.TEXT_NODE && node.textContent.trim()
+                                    );
+                                    if (textNode) {
+                                        textNode.textContent = ' ' + parts.slice(1).join(':').trim();
+                                    } else {
+                                        // Create text node after strong
+                                        const afterText = document.createTextNode(' ' + parts.slice(1).join(':').trim());
+                                        element.appendChild(afterText);
+                                    }
+                                } else {
+                                    element.textContent = translation;
+                                }
+                            } else {
+                                element.textContent = translation;
+                            }
+                        } else {
+                            element.textContent = t[key];
+                        }
+                    }
+                });
+
+                // Update page title
+                if (t.userAgreementTitle) {
+                    document.title = t.userAgreementTitle + ' - Sahla Delivery';
+                }
+            }
+        }
+
+        // Initialize localization for user agreement page
+        function initUserAgreementLocalization() {
+            if (window.localization && window.translations) {
+                updateUserAgreementUI();
+                setupLanguageSwitcher();
+            } else {
+                // Wait for localization to load
+                setTimeout(initUserAgreementLocalization, 100);
+            }
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initUserAgreementLocalization);
+        } else {
+            initUserAgreementLocalization();
+        }
+
+        // Listen for language changes
+        document.addEventListener('languageChanged', () => {
+            updateUserAgreementUI();
+        });
+
+        // Also update when localization is ready (in case page loads after localization)
+        if (window.localization) {
+            updateUserAgreementUI();
+        }
+    </script>
+</body>
+</html>
