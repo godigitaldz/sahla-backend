@@ -2,7 +2,7 @@ import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/app.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -48,9 +48,11 @@ app.get('/', (req, res) => {
 
 // Privacy Policy route
 app.get('/privacy-policy', (req, res) => {
-  res.sendFile(join(__dirname, '../public/privacy-policy.html'), (err) => {
+  const filePath = resolve(__dirname, '../public/privacy-policy.html');
+  res.sendFile(filePath, (err) => {
     if (err) {
       console.error('Error serving privacy policy:', err);
+      console.error('Attempted path:', filePath);
       if (!res.headersSent) {
         res.status(500).json({ error: 'Failed to serve privacy policy' });
       }
@@ -60,9 +62,11 @@ app.get('/privacy-policy', (req, res) => {
 
 // User Agreement route
 app.get('/user-agreement', (req, res) => {
-  res.sendFile(join(__dirname, '../public/user-agreement.html'), (err) => {
+  const filePath = resolve(__dirname, '../public/user-agreement.html');
+  res.sendFile(filePath, (err) => {
     if (err) {
       console.error('Error serving user agreement:', err);
+      console.error('Attempted path:', filePath);
       if (!res.headersSent) {
         res.status(500).json({ error: 'Failed to serve user agreement' });
       }
@@ -72,9 +76,11 @@ app.get('/user-agreement', (req, res) => {
 
 // Terms of Service route
 app.get('/terms-of-service', (req, res) => {
-  res.sendFile(join(__dirname, '../public/terms-of-service.html'), (err) => {
+  const filePath = resolve(__dirname, '../public/terms-of-service.html');
+  res.sendFile(filePath, (err) => {
     if (err) {
       console.error('Error serving terms of service:', err);
+      console.error('Attempted path:', filePath);
       if (!res.headersSent) {
         res.status(500).json({ error: 'Failed to serve terms of service' });
       }
