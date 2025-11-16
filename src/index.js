@@ -124,13 +124,19 @@ app.use(errorHandler);
 let io = null;
 let broadcastFunctions = null;
 
-if (process.env.VERCEL !== '1') {
-  // Initialize Socket.IO for local development
+// Initialize Socket.IO for both local and Vercel
+// Note: On Vercel, Socket.IO will work but with limitations due to serverless nature
+try {
   io = initializeSocketIO(server);
   broadcastFunctions = createBroadcastFunctions(io);
 
   // Make broadcast functions available globally for use in other modules
   global.socketBroadcast = broadcastFunctions;
+  
+  console.log('✅ Socket.IO initialized successfully');
+} catch (error) {
+  console.error('❌ Socket.IO initialization error:', error);
+  // Continue without Socket.IO if initialization fails
 }
 
 // Start server (only if not on Vercel)
