@@ -2,11 +2,13 @@ import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { dirname, join } from 'path';
+import { createServer } from 'http';
+import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/app.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { limiter } from './middleware/rateLimiter.js';
+import { createBroadcastFunctions, initializeSocketIO } from './socket/socketServer.js';
 
 // Import routes
 import cuisinesRouter from './routes/cuisines.js';
@@ -20,6 +22,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+const server = createServer(app);
 
 // Security & Performance Middleware
 app.use(helmet({
@@ -48,7 +51,44 @@ app.get('/', (req, res) => {
 
 // Privacy Policy route
 app.get('/privacy-policy', (req, res) => {
-  res.sendFile(join(__dirname, '../public/privacy-policy.html'));
+  const filePath = resolve(__dirname, '../public/privacy-policy.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving privacy policy:', err);
+      console.error('Attempted path:', filePath);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve privacy policy' });
+      }
+    }
+  });
+});
+
+// User Agreement route
+app.get('/user-agreement', (req, res) => {
+  const filePath = resolve(__dirname, '../public/user-agreement.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving user agreement:', err);
+      console.error('Attempted path:', filePath);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve user agreement' });
+      }
+    }
+  });
+});
+
+// Terms of Service route
+app.get('/terms-of-service', (req, res) => {
+  const filePath = resolve(__dirname, '../public/terms-of-service.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving terms of service:', err);
+      console.error('Attempted path:', filePath);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve terms of service' });
+      }
+    }
+  });
 });
 
 // Health check
@@ -80,10 +120,23 @@ app.use((req, res) => {
 // Error Handler (must be last)
 app.use(errorHandler);
 
+// Initialize Socket.IO
+let io = null;
+let broadcastFunctions = null;
+
+if (process.env.VERCEL !== '1') {
+  // Initialize Socket.IO for local development
+  io = initializeSocketIO(server);
+  broadcastFunctions = createBroadcastFunctions(io);
+
+  // Make broadcast functions available globally for use in other modules
+  global.socketBroadcast = broadcastFunctions;
+}
+
 // Start server (only if not on Vercel)
 // Vercel will use the exported handler instead
 if (process.env.VERCEL !== '1') {
-  app.listen(config.port, () => {
+  server.listen(config.port, () => {
     console.log(`
 ╔═══════════════════════════════════════════════╗
 ║                                               ║
@@ -94,6 +147,7 @@ if (process.env.VERCEL !== '1') {
 ║   URL: http://localhost:${config.port.toString().padEnd(23)}    ║
 ║                                               ║
 ║   ✅ Server is running successfully          ║
+║   🔌 Socket.IO initialized                   ║
 ║                                               ║
 ╚═══════════════════════════════════════════════╝
     `);
@@ -101,4 +155,8 @@ if (process.env.VERCEL !== '1') {
 }
 
 // Export for Vercel serverless function
+// Note: Socket.IO requires a persistent connection, so it may not work
+// perfectly with Vercel's serverless functions. Consider using a separate
+// Socket.IO server or Vercel's Edge Functions for better compatibility.
 export default app;
+export { broadcastFunctions, io, server };
