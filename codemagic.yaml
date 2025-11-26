@@ -1,0 +1,27 @@
+workflows:
+  ios-release-no-shorebird:
+    name: iOS Release
+    environment:
+      flutter: stable
+      xcode: latest
+    scripts:
+      - rm -f ios/Flutter/Generated.xcconfig
+      - flutter clean
+      - flutter pub get
+      - flutter build ios --release --no-codesign
+      - mkdir -p build/ios/ipa
+    artifacts:
+      - build/ios/ipa
+
+  ios-release-no-codesign:
+    name: iOS Release (No Codesign)
+    environment:
+      flutter: stable
+      xcode: latest
+    scripts:
+      - rm -f ios/Flutter/Generated.xcconfig
+      - flutter clean
+      - flutter pub get
+      - flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/**

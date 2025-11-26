@@ -1,0 +1,57 @@
+krt`# Dependencies
+node_modules
+npm-debug.log*
+
+# Build outputs
+build
+dist
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Test files
+test/
+tests/
+__tests__/
+*.test.js
+*.spec.js
+
+# Flutter specific (not needed for server)
+android/
+ios/
+linux/
+macos/
+windows/
+web/
+lib/
+assets/
+fonts/
+pubspec.yaml
+pubspec.lock
+
+# Other
+coverage/
+.nyc_output/
+.cache/

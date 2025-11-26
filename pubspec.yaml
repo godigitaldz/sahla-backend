@@ -1,0 +1,122 @@
+name: sahla
+description: "Sahla - Delivery app"
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.2.3 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  provider: ^6.1.1
+  cached_network_image: ^3.3.0
+  flutter_cache_manager: ^3.3.1
+  image_picker: ^1.0.4
+  supabase_flutter: ^2.9.1
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^7.0.0
+  google_fonts: ^6.3.0
+  lucide_icons: ^0.257.0
+  shared_preferences: ^2.2.2
+  path: ^1.8.3
+  crypto: ^3.0.3
+  url_launcher: ^6.2.4
+  share_plus: ^7.2.2
+  app_links: ^3.5.1
+  google_maps_flutter: ^2.6.1
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  table_calendar: ^3.0.9
+  intl: ^0.20.2
+  package_info_plus: ^8.0.0
+  flutter_local_notifications: ^17.2.4
+  permission_handler: ^12.0.1
+  timezone: ^0.9.4
+  connectivity_plus: ^7.0.0
+  device_info_plus: ^12.1.0
+  flutter_secure_storage: ^9.0.0
+  file_picker: ^10.3.3
+  intl_phone_field: ^3.2.0
+  flag: ^7.0.0
+  phosphor_flutter: ^2.0.0
+  photo_view: ^0.15.0
+  flutter_screenutil: ^5.9.3
+  # Shorebird for OTA updates
+  shorebird_code_push: ^2.0.5
+  # Firebase Cloud Messaging for push notifications
+  firebase_core: ^4.1.1
+  firebase_messaging: ^16.0.2
+  equatable: ^2.0.5
+  shimmer: ^3.0.0
+  path_provider: ^2.1.1
+  uuid: ^4.2.1
+  # HTTP client for backend API communication
+  dio: ^5.4.0
+  http: ^1.1.0
+  # Dependency Injection
+  get_it: ^7.7.0
+  # Utilities
+  collection: ^1.18.0
+  flutter_riverpod: ^2.6.1
+  freezed_annotation: ^3.1.0
+  hive_flutter: ^1.1.0
+  sentry_flutter: ^9.7.0
+  workmanager: ^0.9.0+3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.6
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - assets/icon/app_icon.png
+    - assets/icon/facebook.png
+    - assets/icon/instagram.png
+    - assets/icon/tiktok.png
+    - assets/icon/google maps.png
+    - assets/icon/bestchoices_en.png
+    - assets/icon/bestchoices_ar.png
+    - assets/icon/edge.png
+    - assets/manage_menu/
+    - assets/splash.gif
+    - assets/auth.png
+    - assets/main.png
+    - assets/main_menu.png
+    - assets/main_restaurants_details.png
+
+  fonts:
+    - family: Gilroy
+      fonts:
+        - asset: fonts/Gilroy-Light.ttf
+          weight: 300
+        - asset: fonts/Gilroy-Regular.ttf
+          weight: 400
+        - asset: fonts/Gilroy-Medium.ttf
+          weight: 500
+        - asset: fonts/Gilroy-SemiBold.ttf
+          weight: 600
+        - asset: fonts/Gilroy-Bold.ttf
+          weight: 700
+        - asset: fonts/Gilroy-ExtraBold.ttf
+          weight: 800
+        - asset: fonts/Gilroy-Heavy.ttf
+          weight: 900
+        - asset: fonts/Gilroy-Black.ttf
+          weight: 900
+          style: normal
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 21

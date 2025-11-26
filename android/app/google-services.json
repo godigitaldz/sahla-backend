@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "571974829727",
+    "project_id": "sahla-353bd",
+    "storage_bucket": "sahla-353bd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571974829727:android:9a9cd08936a4ad227984aa",
+        "android_client_info": {
+          "package_name": "com.godigital.sahla"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyfAGHlDwXDHm1aYd6tvSuoUi9VJKMkbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571974829727:android:dev_app_id_placeholder",
+        "android_client_info": {
+          "package_name": "com.example.sahlaApp.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyfAGHlDwXDHm1aYd6tvSuoUi9VJKMkbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571974829727:android:prod_app_id_placeholder",
+        "android_client_info": {
+          "package_name": "com.example.sahlaApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyfAGHlDwXDHm1aYd6tvSuoUi9VJKMkbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

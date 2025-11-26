@@ -1,0 +1,110 @@
+# ios/Podfile
+# Using Flutter's modern CocoaPods setup (flutter_ios_podfile_setup + flutter_install_all_ios_pods)
+# Do not modify unless required for a specific plugin issue. Document any change at the top.
+platform :ios, '15.0'
+
+# If you need dynamic frameworks, change to :dynamic. Static works for most Flutter plugins.
+use_frameworks! :linkage => :static
+
+install! 'cocoapods', :disable_input_output_paths => true
+
+# ---- Locate FLUTTER_ROOT & load podhelper.rb ----
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "Generated.xcconfig must exist. Run `flutter pub get` first."
+  end
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    match = line.match(/FLUTTER_ROOT\=(.*)/)
+    return match[1].strip if match
+  end
+  raise "FLUTTER_ROOT not found in: #{generated_xcode_build_settings_path}"
+end
+
+# Resolve FLUTTER_ROOT when Generated.xcconfig contains a Windows-style path (project created on Windows)
+def resolved_flutter_root
+  root = flutter_root
+  # If path looks like a Windows drive path, try to derive from local flutter binary
+  if root =~ /[A-Za-z]:\\/ || root.include?("\\")
+    flutter_bin = `which flutter`.strip
+    unless flutter_bin.nil? || flutter_bin.empty?
+      candidate = File.expand_path('..', File.expand_path('..', flutter_bin))
+      return candidate if File.exist?(File.join(candidate, 'packages', 'flutter_tools', 'bin', 'podhelper.rb'))
+    end
+    # Best effort: normalize backslashes to slashes so File.expand_path can work better
+    root = root.gsub('\\', '/')
+  end
+  return root
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), resolved_flutter_root)
+
+# Sets up CocoaPods for Flutter plugins
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  # If you see header/module issues, uncomment the next line:
+  # use_modular_headers!
+
+  # Installs all Flutter iOS pods (plugins + Flutter)
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+
+    target.build_configurations.each do |config|
+      # Permission configurations for iOS
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+
+        ## dart: PermissionGroup.camera
+        'PERMISSION_CAMERA=1',
+
+        ## dart: PermissionGroup.photos
+        'PERMISSION_PHOTOS=1',
+
+        ## dart: PermissionGroup.location
+        'PERMISSION_LOCATION=1',
+        'PERMISSION_LOCATION_WHENINUSE=1',
+
+        ## dart: PermissionGroup.notification
+        'PERMISSION_NOTIFICATIONS=1',
+
+        ## dart: PermissionGroup.microphone
+        'PERMISSION_MICROPHONE=1',
+
+        ## dart: PermissionGroup.contacts
+        'PERMISSION_CONTACTS=1',
+
+        ## dart: PermissionGroup.calendar
+        'PERMISSION_EVENTS=1',
+
+        ## dart: PermissionGroup.reminders
+        'PERMISSION_REMINDERS=1',
+
+        ## dart: PermissionGroup.speech
+        'PERMISSION_SPEECH_RECOGNIZER=1',
+
+        ## dart: PermissionGroup.mediaLibrary
+        'PERMISSION_MEDIA_LIBRARY=1',
+
+        ## dart: PermissionGroup.sensors
+        'PERMISSION_SENSORS=1',
+
+        ## dart: PermissionGroup.bluetooth
+        'PERMISSION_BLUETOOTH=1',
+
+        ## dart: PermissionGroup.appTrackingTransparency
+        'PERMISSION_APP_TRACKING_TRANSPARENCY=1',
+
+        ## dart: PermissionGroup.criticalAlerts
+        'PERMISSION_CRITICAL_ALERTS=1',
+
+        ## dart: PermissionGroup.assistant
+        'PERMISSION_ASSISTANT=1',
+      ]
+    end
+  end
+end
