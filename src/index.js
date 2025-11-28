@@ -88,8 +88,21 @@ app.get('/terms-of-service', (req, res) => {
   });
 });
 
-// Account Deletion Request route
+// Account Deletion Request route (handle both with and without .html)
 app.get('/delete-account', (req, res) => {
+  const filePath = resolve(__dirname, '../public/delete-account.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving delete account page:', err);
+      console.error('Attempted path:', filePath);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve delete account page' });
+      }
+    }
+  });
+});
+
+app.get('/delete-account.html', (req, res) => {
   const filePath = resolve(__dirname, '../public/delete-account.html');
   res.sendFile(filePath, (err) => {
     if (err) {
