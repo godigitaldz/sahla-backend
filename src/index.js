@@ -38,9 +38,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Rate limiting (excluding static files)
 app.use('/api', limiter);
 
-// Serve static files from public directory
-app.use(express.static(join(__dirname, '../public')));
-
+// Explicit routes for HTML pages (before static middleware to ensure they're handled)
 // Landing page route
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, '../public/index.html'));
@@ -114,6 +112,9 @@ app.get('/delete-account.html', (req, res) => {
     }
   });
 });
+
+// Serve static files from public directory (after explicit routes)
+app.use(express.static(join(__dirname, '../public')));
 
 // Health check
 app.get('/health', (req, res) => {
