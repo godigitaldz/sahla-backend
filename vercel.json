@@ -2,19 +2,46 @@
   "version": 2,
   "builds": [
     {
+      "src": "public/**",
+      "use": "@vercel/static"
+    },
+    {
       "src": "src/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/delete-account.html",
+      "dest": "src/index.js"
+    },
+    {
+      "src": "/delete-account",
+      "dest": "src/index.js"
+    },
+    {
+      "src": "/privacy-policy",
+      "dest": "src/index.js"
+    },
+    {
+      "src": "/terms-of-service",
+      "dest": "src/index.js"
+    },
+    {
+      "src": "/user-agreement",
+      "dest": "src/index.js"
+    },
+    {
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/(.*\\.(html|css|js|png|jpg|jpeg|gif|svg|ico|webp))",
+      "dest": "/public/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "src/index.js"
     }
-  ],
-  "functions": {
-    "src/index.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
