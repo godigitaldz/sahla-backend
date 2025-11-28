@@ -2,13 +2,11 @@ import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { createServer } from 'http';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/app.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { limiter } from './middleware/rateLimiter.js';
-import { createBroadcastFunctions, initializeSocketIO } from './socket/socketServer.js';
 
 // Import routes
 import cuisinesRouter from './routes/cuisines.js';
@@ -22,7 +20,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const server = createServer(app);
 
 // Security & Performance Middleware
 app.use(helmet({
@@ -91,6 +88,20 @@ app.get('/terms-of-service', (req, res) => {
   });
 });
 
+// Account Deletion Request route
+app.get('/delete-account', (req, res) => {
+  const filePath = resolve(__dirname, '../public/delete-account.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving delete account page:', err);
+      console.error('Attempted path:', filePath);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve delete account page' });
+      }
+    }
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({
@@ -120,29 +131,10 @@ app.use((req, res) => {
 // Error Handler (must be last)
 app.use(errorHandler);
 
-// Initialize Socket.IO
-let io = null;
-let broadcastFunctions = null;
-
-// Initialize Socket.IO for both local and Vercel
-// Note: On Vercel, Socket.IO will work but with limitations due to serverless nature
-try {
-  io = initializeSocketIO(server);
-  broadcastFunctions = createBroadcastFunctions(io);
-
-  // Make broadcast functions available globally for use in other modules
-  global.socketBroadcast = broadcastFunctions;
-  
-  console.log('✅ Socket.IO initialized successfully');
-} catch (error) {
-  console.error('❌ Socket.IO initialization error:', error);
-  // Continue without Socket.IO if initialization fails
-}
-
 // Start server (only if not on Vercel)
 // Vercel will use the exported handler instead
 if (process.env.VERCEL !== '1') {
-  server.listen(config.port, () => {
+  app.listen(config.port, () => {
     console.log(`
 ╔═══════════════════════════════════════════════╗
 ║                                               ║
@@ -153,7 +145,6 @@ if (process.env.VERCEL !== '1') {
 ║   URL: http://localhost:${config.port.toString().padEnd(23)}    ║
 ║                                               ║
 ║   ✅ Server is running successfully          ║
-║   🔌 Socket.IO initialized                   ║
 ║                                               ║
 ╚═══════════════════════════════════════════════╝
     `);
@@ -161,8 +152,4 @@ if (process.env.VERCEL !== '1') {
 }
 
 // Export for Vercel serverless function
-// Note: Socket.IO requires a persistent connection, so it may not work
-// perfectly with Vercel's serverless functions. Consider using a separate
-// Socket.IO server or Vercel's Edge Functions for better compatibility.
 export default app;
-export { broadcastFunctions, io, server };
