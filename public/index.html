@@ -18,7 +18,7 @@
         <div class="container">
             <div class="nav-content">
                 <div class="logo">
-                    <img src="logo.png" alt="Sahla Delivery" class="logo-icon">
+                    <img src="logo.webp" alt="Sahla Delivery" class="logo-icon">
                 </div>
                 <div class="language-switcher">
                     <button class="lang-btn" id="langBtn" aria-label="Change language" aria-haspopup="true" aria-expanded="false">
@@ -49,17 +49,30 @@
     <!-- Hero Section -->
     <section class="hero" id="home">
         <div class="hero-visual">
-            <img src="main_web.png" alt="Sahla Delivery App" class="hero-image">
+            <img src="main.webp" alt="Sahla Delivery App" class="hero-image">
         </div>
-        <div class="container">
+        <div class="container content-sheet">
             <div class="hero-content">
                 <div class="hero-text">
-                    <div class="hero-cta">
-                        <a href="#download" class="btn btn-primary btn-large">
-                            <span data-i18n="downloadApp">Download App</span>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M10 2V12M10 12L6 8M10 12L14 8M2 14V16C2 17.1 2.9 18 4 18H16C17.1 18 18 17.1 18 16V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <p class="hero-coming-soon" data-i18n="comingSoon">Coming soon on the App Store and Google Play.</p>
+                    <div class="hero-cta hero-download-buttons">
+                        <a href="#" class="download-btn app-store" aria-label="Download on App Store">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                             </svg>
+                            <div class="download-btn-text">
+                                <div class="download-btn-label" data-i18n="downloadOnAppStore">Download on the</div>
+                                <div class="download-btn-name" data-i18n="appStore">App Store</div>
+                            </div>
+                        </a>
+                        <a href="#" class="download-btn google-play" aria-label="Get it on Google Play">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+                            </svg>
+                            <div class="download-btn-text">
+                                <div class="download-btn-label" data-i18n="getItOn">Get it on</div>
+                                <div class="download-btn-name" data-i18n="googlePlay">Google Play</div>
+                            </div>
                         </a>
                     </div>
                     <p class="hero-subtitle" data-i18n="heroSubtitle">
@@ -303,7 +316,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <div class="footer-logo">
-                        <img src="assets/icon/app_icon.png" alt="Sahla Delivery" class="logo-icon">
+                        <img src="logo.webp" alt="Sahla Delivery" class="logo-icon">
                     </div>
                     <p class="footer-description" data-i18n="footerDescription">
                         Your favorite food, delivered fast. Order from the best restaurants

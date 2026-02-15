@@ -312,10 +312,14 @@
         <h3 data-i18n="privacySection1_2Title">1.2 Automatically Collected Information</h3>
         <p data-i18n="privacySection1_2Text">When you use our App, we automatically collect certain information, including:</p>
         <ul>
-            <li data-i18n="privacyDeviceInfo"><strong>Device Information:</strong> Device type, operating system, unique device identifiers, and mobile network information</li>
-            <li data-i18n="privacyUsageData"><strong>Usage Data:</strong> How you interact with our App, including pages visited, features used, time spent, and user behavior patterns</li>
-            <li data-i18n="privacyLocationDataAuto"><strong>Location Data:</strong> Real-time location information when you use location-based features (with your permission)</li>
-            <li data-i18n="privacyTechnicalData"><strong>Technical Data:</strong> IP address, browser type, access times, and error logs</li>
+            <li data-i18n="privacyDeviceInfo"><strong>Device Information:</strong> Device type, operating system version, device model, unique device identifiers (Android ID, iOS identifierForVendor), device language/locale settings, mobile network information, and device screen resolution</li>
+            <li data-i18n="privacyUsageData"><strong>Usage Data:</strong> How you interact with our App, including pages visited, features used, time spent, user behavior patterns, form interactions, button clicks, navigation paths, and feature usage statistics</li>
+            <li data-i18n="privacyLocationDataAuto"><strong>Location Data:</strong> Real-time location information when you use location-based features (with your permission), including GPS coordinates, location accuracy, and location history for delivery tracking</li>
+            <li data-i18n="privacyTechnicalData"><strong>Technical Data:</strong> IP address, network type, access times, error logs, crash reports, performance metrics (app load times, response times), and system performance data</li>
+            <li data-i18n="privacyAnalyticsData"><strong>Analytics Data:</strong> User journey tracking, session information (session duration, session start/end times), form completion analytics, form abandonment data, performance metrics, and user interaction events</li>
+            <li data-i18n="privacyErrorData"><strong>Error and Debug Data:</strong> Application errors, crash reports, stack traces, device screenshots (for error context), view hierarchy information (for debugging), and technical logs to help us diagnose and fix issues</li>
+            <li data-i18n="privacyNotificationData"><strong>Push Notification Data:</strong> Firebase Cloud Messaging (FCM) tokens, device tokens for push notifications, notification preferences, and notification interaction data</li>
+            <li data-i18n="privacySessionData"><strong>Session Data:</strong> Session identifiers, session duration, last activity timestamps, and session-related performance metrics</li>
         </ul>
 
         <h3 data-i18n="privacySection1_3Title">1.3 Information from Third-Party Services</h3>
@@ -347,8 +351,8 @@
         <p data-i18n="privacySection3_1Text">We share your information with trusted third-party service providers who assist us in operating our App, including:</p>
         <ul>
             <li data-i18n="privacySupabase"><strong>Supabase:</strong> Database and authentication services for user accounts and data storage</li>
-            <li data-i18n="privacyFirebase"><strong>Firebase:</strong> Analytics, crash reporting, and push notification services</li>
-            <li data-i18n="privacySentry"><strong>Sentry:</strong> Error tracking and performance monitoring</li>
+            <li data-i18n="privacyFirebase"><strong>Firebase:</strong> Analytics, crash reporting, push notification services (Firebase Cloud Messaging), and app performance monitoring</li>
+            <li data-i18n="privacySentry"><strong>Sentry:</strong> Error tracking, performance monitoring, crash reporting, and debugging services. Sentry may collect device screenshots and view hierarchy information when errors occur to help us diagnose and fix issues. This data is collected only when errors occur and is used solely for debugging purposes.</li>
             <li data-i18n="privacyGoogleMaps"><strong>Google Maps:</strong> Location services and mapping functionality</li>
             <li data-i18n="privacyPaymentProcessors"><strong>Payment Processors:</strong> To process payments for orders (if applicable)</li>
             <li data-i18n="privacyDeliveryPartners"><strong>Delivery Partners:</strong> To coordinate and fulfill deliveries</li>
@@ -460,13 +464,16 @@
 
         <p data-i18n="privacySection11Text1">While our mobile App does not use traditional web cookies, we use similar technologies such as:</p>
         <ul>
-            <li data-i18n="privacyDeviceIdentifiers">Device identifiers and advertising IDs</li>
-            <li data-i18n="privacyLocalStorage">Local storage and caching</li>
-            <li data-i18n="privacyAnalyticsSDKs">Analytics SDKs (Firebase Analytics)</li>
-            <li data-i18n="privacyCrashReporting">Crash reporting tools (Sentry)</li>
+            <li data-i18n="privacyDeviceIdentifiers"><strong>Device Identifiers:</strong> Unique device identifiers including Android ID (for Android devices) and identifierForVendor (for iOS devices) to identify your device for authentication, security, and service delivery purposes</li>
+            <li data-i18n="privacyLocalStorage"><strong>Local Storage:</strong> Local storage and caching on your device to improve app performance and store preferences</li>
+            <li data-i18n="privacyAnalyticsSDKs"><strong>Analytics SDKs:</strong> Firebase Analytics for app usage analytics, user behavior tracking, and feature usage statistics</li>
+            <li data-i18n="privacyCrashReporting"><strong>Error Tracking:</strong> Sentry for crash reporting, error tracking, performance monitoring, and debugging. This may include device screenshots and view hierarchy information when errors occur to help us diagnose issues</li>
+            <li data-i18n="privacyFormAnalytics"><strong>Form Analytics:</strong> Tracking of form interactions, form completion rates, form abandonment, validation errors, and form performance metrics to improve user experience</li>
+            <li data-i18n="privacyUserJourney"><strong>User Journey Tracking:</strong> Tracking of user navigation paths, screen visits, feature usage, and interaction patterns to understand how users engage with our App</li>
+            <li data-i18n="privacyPerformanceMetrics"><strong>Performance Metrics:</strong> Collection of app performance data including load times, response times, and system performance metrics</li>
         </ul>
 
-        <p data-i18n="privacySection11Text2">These technologies help us understand how you use our App and improve our services.</p>
+        <p data-i18n="privacySection11Text2">These technologies help us understand how you use our App, diagnose technical issues, improve our services, and provide you with a better user experience. You can limit some tracking through your device settings, though this may affect certain app features.</p>
 
         <h2 data-i18n="privacySection12Title">12. SMS and Phone Permissions</h2>
 
@@ -476,20 +483,275 @@
             <li data-i18n="privacyVerifyPhone">Verify phone numbers during registration and login</li>
         </ul>
 
-        <p data-i18n="privacySection12Text2">We do not read, store, or share your SMS messages beyond what is necessary for verification purposes.</p>
+        <p data-i18n="privacySection12Text2">We do not read, store, or share your SMS messages beyond what is necessary for verification purposes. SMS permissions are only requested on Android devices running Android 12 and below (API level 32 and below), as newer Android versions handle SMS verification automatically without requiring these permissions.</p>
 
-        <h2 data-i18n="privacySection13Title">13. Contact Us</h2>
+        <h2 data-i18n="privacySection12_5Title">12.5 Push Notifications and FCM Tokens</h2>
+
+        <p data-i18n="privacySection12_5Text1">To send you push notifications, we collect and store:</p>
+        <ul>
+            <li data-i18n="privacyFCMToken"><strong>Firebase Cloud Messaging (FCM) Tokens:</strong> Unique device tokens that allow us to send push notifications to your device</li>
+            <li data-i18n="privacyDeviceToken"><strong>Device Tokens:</strong> Platform-specific tokens (Android FCM tokens, iOS APNS tokens) associated with your device</li>
+            <li data-i18n="privacyNotificationPreferences"><strong>Notification Preferences:</strong> Your notification settings and preferences, including which types of notifications you want to receive</li>
+            <li data-i18n="privacyNotificationInteraction"><strong>Notification Interaction Data:</strong> Data about how you interact with notifications (e.g., whether you open notifications, dismiss them, or take actions based on them)</li>
+            <li data-i18n="privacyDevicePlatform"><strong>Device Platform Information:</strong> Your device platform (Android or iOS), device locale/language settings, and device identifier (for authentication and security purposes)</li>
+        </ul>
+
+        <p data-i18n="privacySection12_5Text2">FCM tokens are stored securely and are used solely for the purpose of delivering push notifications to your device. You can disable push notifications at any time through your device settings or App preferences. When you disable notifications, we will stop sending push notifications, but your token may remain stored until you delete your account.</p>
+
+        <h2 data-i18n="privacySection13Title">13. Camera and Photo Permissions</h2>
+
+        <p data-i18n="privacySection13Text1">Our App may request access to your device's camera and photo library for the following purposes:</p>
+        <ul>
+            <li data-i18n="privacyProfilePhotos"><strong>Profile Photos:</strong> To allow you to upload and update your profile picture</li>
+            <li data-i18n="privacyReviewPhotos"><strong>Review Photos:</strong> To enable you to share photos with your restaurant and menu item reviews</li>
+            <li data-i18n="privacyRestaurantImages"><strong>Restaurant Images:</strong> For restaurant owners to upload menu item images and restaurant photos</li>
+        </ul>
+
+        <p data-i18n="privacySection13Text2">We only access your camera and photos when you explicitly choose to upload an image. We do not access your entire photo library or monitor your camera usage. You can revoke these permissions at any time through your device settings.</p>
+
+        <p data-i18n="privacySection13Text3"><strong>Storage Permissions:</strong> On older Android devices (Android 10 and below), we may request storage permissions to save images you create or edit. On newer Android devices (Android 11+), we use scoped storage and do not require broad storage permissions. We only access storage when you explicitly choose to save or upload images.</p>
+
+        <h2 data-i18n="privacySection14Title">14. Payment Data and Security</h2>
+
+        <h3 data-i18n="privacySection14_1Title">14.1 Payment Information</h3>
+        <p data-i18n="privacySection14_1Text">When you make a purchase through our App, we collect payment information, including:</p>
+        <ul>
+            <li data-i18n="privacyPaymentMethod">Payment method details (cash on delivery, card payment, wallet payment)</li>
+            <li data-i18n="privacyTransactionData">Transaction history, amounts, and timestamps</li>
+            <li data-i18n="privacyBillingInfo">Billing information if provided</li>
+        </ul>
+
+        <h3 data-i18n="privacySection14_2Title">14.2 PCI Compliance</h3>
+        <p data-i18n="privacySection14_2Text">We comply with Payment Card Industry Data Security Standard (PCI DSS) requirements. Credit card information is processed securely through certified payment processors. We do not store full credit card numbers on our servers. All payment data is encrypted during transmission and storage.</p>
+
+        <h3 data-i18n="privacySection14_3Title">14.3 Payment Processors</h3>
+        <p data-i18n="privacySection14_3Text">Payment processing is handled by third-party payment processors who are PCI DSS compliant. These processors have their own privacy policies governing the use of your payment information.</p>
+
+        <h2 data-i18n="privacySection15Title">15. Marketing and Promotional Communications</h2>
+
+        <p data-i18n="privacySection15Text1">We may use your contact information to send you promotional materials, special offers, and marketing communications. You have the right to opt-out of these communications at any time by:</p>
+        <ul>
+            <li data-i18n="privacyUnsubscribeApp">Using the unsubscribe link in promotional emails</li>
+            <li data-i18n="privacyNotificationSettings">Adjusting your notification preferences in the App settings</li>
+            <li data-i18n="privacyContactOptOut">Contacting us directly to request removal from marketing lists</li>
+        </ul>
+
+        <p data-i18n="privacySection15Text2">Please note that even if you opt-out of marketing communications, we may still send you important service-related messages, such as order confirmations, delivery updates, and account notifications.</p>
+
+        <h2 data-i18n="privacySection16Title">16. Data Breach Notification</h2>
+
+        <p data-i18n="privacySection16Text1">In the event of a data breach that may affect your personal information, we will:</p>
+        <ul>
+            <li data-i18n="privacyBreachInvestigation">Investigate the breach immediately and take steps to contain it</li>
+            <li data-i18n="privacyBreachNotification">Notify affected users within 72 hours of becoming aware of the breach (as required by GDPR) or as soon as reasonably possible</li>
+            <li data-i18n="privacyBreachDetails">Provide information about the nature of the breach, the data affected, and steps we are taking to address it</li>
+            <li data-i18n="privacyBreachPrevention">Implement additional security measures to prevent future breaches</li>
+            <li data-i18n="privacyBreachAuthorities">Notify relevant data protection authorities when required by law</li>
+        </ul>
+
+        <p data-i18n="privacySection16Text2">We will notify you through the App, email, or other appropriate means based on the severity and nature of the breach.</p>
+
+        <h2 data-i18n="privacySection17Title">17. Review and Rating Data</h2>
+
+        <p data-i18n="privacySection17Text1">When you submit reviews, ratings, or photos for restaurants or menu items:</p>
+        <ul>
+            <li data-i18n="privacyReviewPublic"><strong>Public Display:</strong> Your reviews, ratings, and photos may be displayed publicly on the App, including your username and profile picture</li>
+            <li data-i18n="privacyReviewRestaurant"><strong>Restaurant Access:</strong> Restaurant owners can view reviews and ratings for their establishments, but not your personal contact information</li>
+            <li data-i18n="privacyReviewAnalytics"><strong>Analytics:</strong> We may use aggregated review data for analytics and service improvement</li>
+            <li data-i18n="privacyReviewDeletion"><strong>Deletion:</strong> You can delete your reviews at any time through the App, which will remove them from public display</li>
+        </ul>
+
+        <h2 data-i18n="privacySection18Title">18. Customer Support Interactions</h2>
+
+        <p data-i18n="privacySection18Text1">When you contact our customer support team, we may collect and store:</p>
+        <ul>
+            <li data-i18n="privacySupportConversations">Conversation transcripts and communication history</li>
+            <li data-i18n="privacySupportOrderInfo">Order-related information to assist with your inquiry</li>
+            <li data-i18n="privacySupportAccountInfo">Account information relevant to your support request</li>
+            <li data-i18n="privacySupportFeedback">Feedback and survey responses</li>
+        </ul>
+
+        <p data-i18n="privacySection18Text2">This information is used to provide customer support, improve our services, and train our support team. Support interactions are retained for a reasonable period to assist with future inquiries and quality assurance.</p>
+
+        <h2 data-i18n="privacySection19Title">19. Automated Decision-Making and Profiling</h2>
+
+        <h3 data-i18n="privacySection19_1Title">19.1 Automated Processing</h3>
+        <p data-i18n="privacySection19_1Text">We may use automated decision-making and profiling to:</p>
+        <ul>
+            <li data-i18n="privacyAutoRecommendations">Provide personalized restaurant and menu item recommendations based on your order history and preferences</li>
+            <li data-i18n="privacyAutoPricing">Calculate delivery fees and estimated delivery times based on location and distance</li>
+            <li data-i18n="privacyAutoFraud">Detect and prevent fraudulent activities and security threats</li>
+            <li data-i18n="privacyAutoMatching">Match delivery orders with available delivery partners</li>
+        </ul>
+
+        <h3 data-i18n="privacySection19_2Title">19.2 Your Rights</h3>
+        <p data-i18n="privacySection19_2Text">You have the right to:</p>
+        <ul>
+            <li data-i18n="privacyRightHumanReview">Request human review of any automated decision that significantly affects you</li>
+            <li data-i18n="privacyRightObjectProfiling">Object to profiling that is used for direct marketing purposes</li>
+            <li data-i18n="privacyRightOptOutAutomation">Opt-out of certain automated processing where legally permitted</li>
+        </ul>
+
+        <h2 data-i18n="privacySection20Title">20. Legal Basis for Processing (GDPR)</h2>
+
+        <p data-i18n="privacySection20Text">For users in the European Economic Area (EEA), we process your personal data based on the following legal grounds:</p>
+        <ul>
+            <li data-i18n="privacyLegalConsent"><strong>Consent:</strong> When you have given clear consent for specific processing activities (e.g., marketing communications)</li>
+            <li data-i18n="privacyLegalContract"><strong>Contract Performance:</strong> To fulfill our contractual obligations to provide delivery services</li>
+            <li data-i18n="privacyLegalLegal"><strong>Legal Obligation:</strong> To comply with applicable laws and regulations</li>
+            <li data-i18n="privacyLegalVital"><strong>Vital Interests:</strong> To protect your vital interests or those of another person</li>
+            <li data-i18n="privacyLegalPublic"><strong>Public Task:</strong> For tasks carried out in the public interest</li>
+            <li data-i18n="privacyLegalLegitimate"><strong>Legitimate Interests:</strong> For our legitimate business interests, such as improving our services, fraud prevention, and analytics (where your rights do not override these interests)</li>
+        </ul>
+
+        <h2 data-i18n="privacySection21Title">21. Specific Data Retention Periods</h2>
+
+        <p data-i18n="privacySection21Text1">We retain different types of data for varying periods:</p>
+        <ul>
+            <li data-i18n="privacyRetentionAccount"><strong>Account Data:</strong> Retained while your account is active and for 3 years after account deletion for legal and business purposes</li>
+            <li data-i18n="privacyRetentionOrders"><strong>Order History:</strong> Retained for 7 years for tax, accounting, and legal compliance purposes</li>
+            <li data-i18n="privacyRetentionReviews"><strong>Reviews and Ratings:</strong> Retained until you delete them or for 5 years after account deletion</li>
+            <li data-i18n="privacyRetentionSupport"><strong>Support Interactions:</strong> Retained for 3 years for quality assurance and dispute resolution</li>
+            <li data-i18n="privacyRetentionMarketing"><strong>Marketing Data:</strong> Retained until you opt-out or for 2 years after last interaction</li>
+            <li data-i18n="privacyRetentionAnalytics"><strong>Analytics Data:</strong> Aggregated and anonymized data may be retained indefinitely</li>
+            <li data-i18n="privacyRetentionPayment"><strong>Payment Data:</strong> Retained as required by financial regulations (typically 7 years)</li>
+        </ul>
+
+        <p data-i18n="privacySection21Text2">After the retention period expires, we will securely delete or anonymize your personal data, except where retention is required by law.</p>
+
+        <h2 data-i18n="privacySection22Title">22. Cross-Device Tracking</h2>
+
+        <p data-i18n="privacySection22Text1">We may use technologies to recognize you across different devices to provide a consistent experience. This allows us to:</p>
+        <ul>
+            <li data-i18n="privacyCrossDeviceSync">Sync your preferences and settings across devices</li>
+            <li data-i18n="privacyCrossDeviceAnalytics">Analyze usage patterns across devices for service improvement</li>
+            <li data-i18n="privacyCrossDeviceSecurity">Enhance security by detecting suspicious activity across devices</li>
+        </ul>
+
+        <p data-i18n="privacySection22Text2">You can limit cross-device tracking through your device settings and App preferences.</p>
+
+        <h2 data-i18n="privacySection23Title">23. Do Not Track Signals</h2>
+
+        <p data-i18n="privacySection23Text">Some browsers and devices support "Do Not Track" (DNT) signals. Currently, there is no industry standard for responding to DNT signals. We continue to monitor developments in this area. However, you can control tracking through your device settings and App preferences.</p>
+
+        <h2 data-i18n="privacySection24Title">24. Enhanced California Consumer Privacy Act (CCPA) Rights</h2>
+
+        <p data-i18n="privacySection24Text1">If you are a California resident, you have additional rights under the CCPA:</p>
+        <ul>
+            <li data-i18n="privacyCCPARightKnow"><strong>Right to Know:</strong> Request disclosure of the categories and specific pieces of personal information we collect, use, disclose, and sell</li>
+            <li data-i18n="privacyCCPARightDelete"><strong>Right to Delete:</strong> Request deletion of your personal information (subject to certain exceptions)</li>
+            <li data-i18n="privacyCCPARightOptOut"><strong>Right to Opt-Out:</strong> Opt-out of the sale of your personal information (we do not sell personal information, but you have this right)</li>
+            <li data-i18n="privacyCCPARightNonDiscrimination"><strong>Right to Non-Discrimination:</strong> Exercise your privacy rights without discrimination</li>
+            <li data-i18n="privacyCCPARightDisclosure"><strong>Right to Disclosure:</strong> Request information about data sharing practices</li>
+        </ul>
+
+        <p data-i18n="privacySection24Text2">To exercise your CCPA rights, please contact us using the information provided in the "Contact Us" section. We will respond to your request within 45 days.</p>
+
+        <h2 data-i18n="privacySection25Title">25. Enhanced GDPR Rights for EU Users</h2>
+
+        <p data-i18n="privacySection25Text1">If you are located in the European Economic Area (EEA), you have enhanced rights under GDPR:</p>
+        <ul>
+            <li data-i18n="privacyGDPRRightAccess"><strong>Right of Access:</strong> Obtain confirmation of whether we process your data and access to that data</li>
+            <li data-i18n="privacyGDPRRightRectification"><strong>Right to Rectification:</strong> Correct inaccurate or incomplete personal data</li>
+            <li data-i18n="privacyGDPRRightErasure"><strong>Right to Erasure:</strong> Request deletion of your data under certain circumstances</li>
+            <li data-i18n="privacyGDPRRightRestrict"><strong>Right to Restrict Processing:</strong> Limit how we use your data in certain situations</li>
+            <li data-i18n="privacyGDPRRightPortability"><strong>Right to Data Portability:</strong> Receive your data in a structured, machine-readable format</li>
+            <li data-i18n="privacyGDPRRightObject"><strong>Right to Object:</strong> Object to processing based on legitimate interests or for direct marketing</li>
+            <li data-i18n="privacyGDPRRightWithdraw"><strong>Right to Withdraw Consent:</strong> Withdraw consent at any time where processing is based on consent</li>
+            <li data-i18n="privacyGDPRRightLodge"><strong>Right to Lodge a Complaint:</strong> File a complaint with your local data protection authority</li>
+        </ul>
+
+        <p data-i18n="privacySection25Text2">To exercise your GDPR rights, please contact us or use the App's privacy settings. We will respond within one month (may be extended to two months for complex requests).</p>
+
+        <h2 data-i18n="privacySection26Title">26. Complaints and Supervisory Authorities</h2>
+
+        <h3 data-i18n="privacySection26_1Title">26.1 Filing a Complaint</h3>
+        <p data-i18n="privacySection26_1Text">If you have concerns about how we handle your personal data, you have the right to file a complaint with:</p>
+        <ul>
+            <li data-i18n="privacyComplaintUs">Our privacy team (contact information provided below)</li>
+            <li data-i18n="privacyComplaintAuthority">Your local data protection authority (for EU users) or relevant privacy regulator in your jurisdiction</li>
+        </ul>
+
+        <h3 data-i18n="privacySection26_2Title">26.2 EU Supervisory Authorities</h3>
+        <p data-i18n="privacySection26_2Text">EU users can find their local data protection authority at: <a href="https://edpb.europa.eu/about-edpb/board/members_en" target="_blank">https://edpb.europa.eu/about-edpb/board/members_en</a></p>
+
+        <h3 data-i18n="privacySection26_3Title">26.3 California Privacy Rights</h3>
+        <p data-i18n="privacySection26_3Text">California residents can file complaints with the California Attorney General's Office.</p>
+
+        <h2 data-i18n="privacySection27Title">27. Third-Party Links and Services</h2>
+
+        <p data-i18n="privacySection27Text1">Our App may contain links to third-party websites, services, or applications that are not operated by us. These include:</p>
+        <ul>
+            <li data-i18n="privacyThirdPartyRestaurants">Restaurant websites and menus</li>
+            <li data-i18n="privacyThirdPartyPayment">Payment processor websites</li>
+            <li data-i18n="privacyThirdPartySocial">Social media platforms</li>
+            <li data-i18n="privacyThirdPartyMaps">Mapping services (Google Maps)</li>
+        </ul>
+
+        <p data-i18n="privacySection27Text2">We are not responsible for the privacy practices of these third parties. We encourage you to review their privacy policies before providing any personal information.</p>
+
+        <h2 data-i18n="privacySection28Title">28. User Responsibilities</h2>
+
+        <p data-i18n="privacySection28Text1">To help protect your personal information, we recommend that you:</p>
+        <ul>
+            <li data-i18n="privacyUserStrongPassword">Use a strong, unique password for your account</li>
+            <li data-i18n="privacyUserKeepSecure">Keep your login credentials confidential and do not share them with others</li>
+            <li data-i18n="privacyUserLogout">Log out of your account when using shared devices</li>
+            <li data-i18n="privacyUserUpdate">Keep your App and device operating system updated</li>
+            <li data-i18n="privacyUserReport">Report any suspicious activity or security concerns immediately</li>
+            <li data-i18n="privacyUserReview">Review your account settings and privacy preferences regularly</li>
+        </ul>
+
+        <h2 data-i18n="privacySection29Title">29. Restaurant and Delivery Partner Data Sharing</h2>
+
+        <h3 data-i18n="privacySection29_1Title">29.1 Restaurant Partners</h3>
+        <p data-i18n="privacySection29_1Text">When you place an order, we share necessary information with restaurant partners, including:</p>
+        <ul>
+            <li data-i18n="privacyRestaurantOrderDetails">Order details (items, quantities, special instructions)</li>
+            <li data-i18n="privacyRestaurantDeliveryAddress">Delivery address and contact information</li>
+            <li data-i18n="privacyRestaurantCustomerName">Your name (for order identification)</li>
+            <li data-i18n="privacyRestaurantPhone">Phone number (for delivery coordination)</li>
+        </ul>
+        <p data-i18n="privacyRestaurantNoAccess">Restaurant partners do not have access to your payment information, full account details, or order history beyond the specific order.</p>
+
+        <h3 data-i18n="privacySection29_2Title">29.2 Delivery Partners</h3>
+        <p data-i18n="privacySection29_2Text">When your order is assigned to a delivery partner, we share:</p>
+        <ul>
+            <li data-i18n="privacyDeliveryPickupLocation">Restaurant pickup location</li>
+            <li data-i18n="privacyDeliveryDropoffLocation">Delivery address and location</li>
+            <li data-i18n="privacyDeliveryCustomerContact">Your name and phone number (for delivery coordination)</li>
+            <li data-i18n="privacyDeliveryOrderInfo">Order information necessary for delivery</li>
+        </ul>
+        <p data-i18n="privacyDeliveryNoAccess">Delivery partners do not have access to your payment information, email address, or full account details.</p>
+
+        <h2 data-i18n="privacySection30Title">30. Analytics and Advertising</h2>
+
+        <h3 data-i18n="privacySection30_1Title">30.1 Analytics Services</h3>
+        <p data-i18n="privacySection30_1Text">We use analytics services (such as Firebase Analytics and Sentry) to understand how users interact with our App. This includes:</p>
+        <ul>
+            <li data-i18n="privacyAnalyticsUsage"><strong>Usage Statistics:</strong> App usage statistics, user behavior patterns, screen visits, navigation paths, and feature usage frequency</li>
+            <li data-i18n="privacyAnalyticsPerformance"><strong>Performance Metrics:</strong> App performance metrics, crash reports, error rates, response times, load times, and system performance data</li>
+            <li data-i18n="privacyAnalyticsFeatures"><strong>Feature Engagement:</strong> Feature usage and engagement data, form completion rates, form abandonment patterns, and user interaction events</li>
+            <li data-i18n="privacyAnalyticsSession"><strong>Session Analytics:</strong> Session duration, session start/end times, session activity patterns, and user journey tracking</li>
+            <li data-i18n="privacyAnalyticsError"><strong>Error Analytics:</strong> Application errors, crash reports, stack traces, device information at time of error, screenshots (for error context), and view hierarchy data (for debugging purposes)</li>
+            <li data-i18n="privacyAnalyticsDevice"><strong>Device Analytics:</strong> Device type, operating system version, device model, device identifiers (for authentication and security), and device capabilities</li>
+        </ul>
+
+        <h3 data-i18n="privacySection30_2Title">30.2 Advertising</h3>
+        <p data-i18n="privacySection30_2Text">We may use your data to show you relevant advertisements within the App. We do not sell your personal information to third parties for advertising purposes. You can opt-out of personalized advertising through your device settings.</p>
+
+        <h2 data-i18n="privacySection31Title">31. Contact Us</h2>
 
         <div class="contact-info">
-            <p data-i18n="privacySection13Text">If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
+            <p data-i18n="privacySection31Text">If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
             <p><strong data-i18n="privacyEmail">Email:</strong> <a href="mailto:privacy@sahla-delivery.com">privacy@sahla-delivery.com</a></p>
             <p><strong data-i18n="privacyWebsite">Website:</strong> <a href="https://sahla-delivery.com">https://sahla-delivery.com</a></p>
             <p><strong data-i18n="privacyAddress">Address:</strong> Sahla Delivery Team</p>
         </div>
 
-        <h2 data-i18n="privacySection14Title">14. Consent</h2>
+        <h2 data-i18n="privacySection32Title">32. Consent</h2>
 
-        <p data-i18n="privacySection14Text">By using Sahla, you consent to our Privacy Policy and agree to its terms. If you do not agree to this policy, please do not use our App.</p>
+        <p data-i18n="privacySection32Text">By using Sahla, you consent to our Privacy Policy and agree to its terms. If you do not agree to this policy, please do not use our App.</p>
 
         <p style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #7f8c8d; font-size: 0.9em;" data-i18n="privacyFooterText">
             This Privacy Policy is effective as of November 2025 and applies to all users of the Sahla Delivery App.
