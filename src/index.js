@@ -88,6 +88,20 @@ app.get('/terms-of-service', (req, res) => {
   });
 });
 
+// Account Deletion (Data safety / Play Console requirement)
+app.get('/delete-account', (req, res) => {
+  const filePath = resolve(__dirname, '../public/delete-account.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving delete-account page:', err);
+      console.error('Attempted path:', filePath);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve account deletion page' });
+      }
+    }
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({
