@@ -71,6 +71,7 @@ const translations = {
         helpCenter: "Help Center",
         faq: "FAQ",
         termsOfService: "Terms of Service",
+        accountDeletion: "Account Deletion",
         copyright: "© 2025 Sahla Delivery. All rights reserved.",
         // Cookie Consent
         cookieTitle: "We use cookies",
@@ -961,6 +962,7 @@ const translations = {
         helpCenter: "مركز المساعدة",
         faq: "الأسئلة الشائعة",
         termsOfService: "شروط الخدمة",
+        accountDeletion: "حذف الحساب",
         copyright: "© 2025 سهلة للتوصيل. جميع الحقوق محفوظة.",
         // Cookie Consent
         cookieTitle: "نستخدم ملفات تعريف الارتباط",
@@ -1851,6 +1853,7 @@ const translations = {
         helpCenter: "Centre d'Aide",
         faq: "FAQ",
         termsOfService: "Conditions d'Utilisation",
+        accountDeletion: "Suppression du compte",
         copyright: "© 2025 Sahla Delivery. Tous droits réservés.",
         // Cookie Consent
         cookieTitle: "Nous utilisons des cookies",
