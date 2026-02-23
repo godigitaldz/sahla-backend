@@ -121,8 +121,19 @@ body {
 }
 
 .navbar.scrolled {
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: #FEB405; /* match app profile screen orange */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.navbar.scrolled .lang-btn {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.navbar.scrolled .lang-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #fff;
 }
 
 .nav-content {
