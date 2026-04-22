@@ -13,6 +13,11 @@ function normalizePhone(raw) {
   return s;
 }
 
+/** Compare phones ignoring formatting (+, spaces, dashes). */
+function phoneDigits(p) {
+  return String(p || '').replace(/\D/g, '');
+}
+
 /**
  * Admin-only bypass for broken SMS/OTP hooks (e.g. hook returns 501).
  * Verifies fixed code + admin profile, syncs auth password to that code,
@@ -64,10 +69,24 @@ router.post('/admin-fixed-otp', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Auth user not found for profile' });
     }
 
-    const authPhone = userWrap.user.phone || '';
-    if (authPhone && authPhone !== phone) {
+    const profilePhone = String(profile.phone || '').trim();
+    const authPhoneRaw = String(userWrap.user.phone || '').trim();
+    const profileDigits = phoneDigits(profilePhone);
+    const authDigits = phoneDigits(authPhoneRaw);
+
+    if (authDigits && profileDigits && authDigits !== profileDigits) {
       return res.status(403).json({ success: false, error: 'Phone mismatch for this account' });
     }
+
+    // GoTrue stores one canonical string; password grant must use that shape when set.
+    const signInPhone =
+      authPhoneRaw.length > 0
+        ? authPhoneRaw
+        : profilePhone.startsWith('+')
+          ? profilePhone
+          : profileDigits
+            ? `+${profileDigits}`
+            : phone;
 
     const { error: pwdError } = await supabaseAdmin.auth.admin.updateUserById(profile.id, {
       password: fixedOtp,
@@ -84,7 +103,7 @@ router.post('/admin-fixed-otp', async (req, res) => {
     });
 
     const { data: signInData, error: signInError } = await userClient.auth.signInWithPassword({
-      phone,
+      phone: signInPhone,
       password: fixedOtp,
     });
 
