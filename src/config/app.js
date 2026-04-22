@@ -7,6 +7,7 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isDevelopment: process.env.NODE_ENV === 'development',
   isProduction: process.env.NODE_ENV === 'production',
+  webAppBaseUrl: process.env.WEB_APP_BASE_URL || '',
 
   cors: {
     allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || ['*'],
