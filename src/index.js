@@ -102,19 +102,26 @@ app.get('/delete-account', (req, res) => {
   });
 });
 
-// Web app deep-link bridge: forward website /admin links to Flutter web host.
-app.get(['/admin', '/app/admin'], (req, res) => {
+// Web app deep-link bridge: forward website /login and /admin to Flutter web host.
+app.get(['/login', '/admin', '/app/admin'], (req, res) => {
   const baseUrl = (config.webAppBaseUrl || '').trim();
   if (!baseUrl) {
     return res.status(503).json({
       success: false,
-      error: 'Admin web app URL is not configured',
+      error: 'Web app URL is not configured',
       hint: 'Set WEB_APP_BASE_URL to your Flutter web host (e.g. https://app.sahla-delivery.com)',
     });
   }
 
   const normalizedBase = baseUrl.replace(/\/+$/, '');
-  return res.redirect(302, `${normalizedBase}/admin`);
+  // Support both plain hosts and hash-router hosts:
+  // - https://host.tld      -> https://host.tld/#/admin
+  // - https://host.tld/#    -> https://host.tld/#/admin
+  const hashBase = normalizedBase.includes('#')
+    ? normalizedBase
+    : `${normalizedBase}/#`;
+  const route = req.path === '/login' ? 'login' : 'admin';
+  return res.redirect(302, `${hashBase}/${route}`);
 });
 
 // Health check
