@@ -2,6 +2,7 @@ import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/app.js';
@@ -19,6 +20,10 @@ import adminAuthRouter from './routes/adminAuth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const flutterWebDir = join(__dirname, '../public/app');
+const flutterIndexPath = join(flutterWebDir, 'index.html');
+const flutterWebDeployed = existsSync(flutterIndexPath);
 
 const app = express();
 
@@ -94,7 +99,7 @@ app.get('/delete-account', (req, res) => {
   const filePath = resolve(__dirname, '../public/delete-account.html');
   res.sendFile(filePath, (err) => {
     if (err) {
-      console.error('Error serving delete-account page:', err);
+      console.error('Error serving delete-account:', err);
       console.error('Attempted path:', filePath);
       if (!res.headersSent) {
         res.status(500).json({ error: 'Failed to serve account deletion page' });
@@ -103,13 +108,31 @@ app.get('/delete-account', (req, res) => {
   });
 });
 
-// Same-domain auth pages.
+// Same-domain auth: HTML login (fixed admin OTP) + Flutter admin when bundle is deployed.
 app.get('/login', (req, res) => {
   res.sendFile(join(__dirname, '../public/login.html'));
 });
-app.get(['/admin', '/app/admin'], (req, res) => {
-  res.sendFile(join(__dirname, '../public/admin.html'));
-});
+
+if (flutterWebDeployed) {
+  app.use('/app', express.static(flutterWebDir));
+  app.get(['/admin', '/app/admin'], (req, res) => {
+    res.sendFile(flutterIndexPath, (err) => {
+      if (err) {
+        console.error('Error serving Flutter web shell (admin):', err);
+        if (!res.headersSent) {
+          res.status(500).json({
+            success: false,
+            error: 'Failed to serve web application',
+          });
+        }
+      }
+    });
+  });
+} else {
+  app.get(['/admin', '/app/admin'], (req, res) => {
+    res.sendFile(join(__dirname, '../public/admin.html'));
+  });
+}
 
 app.use('/api/auth', adminAuthRouter);
 
