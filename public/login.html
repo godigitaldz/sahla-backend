@@ -12,31 +12,27 @@
       label { display: block; margin: 10px 0 6px; font-weight: 600; }
       input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
       button { width: 100%; margin-top: 12px; padding: 12px; border: none; border-radius: 10px; background: #fb8c00; color: #fff; font-weight: 700; cursor: pointer; }
-      button.secondary { background: #222; }
       .muted { font-size: 12px; color: #777; margin-top: 12px; }
       .msg { margin-top: 12px; font-size: 14px; }
       .ok { color: #0a7c2f; }
       .err { color: #b00020; }
-      .hidden { display: none; }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <h1>Sign in</h1>
-      <p>Use your phone number. Admins are redirected to `/admin`.</p>
+      <h1>Admin sign in</h1>
+      <p>Uses the fixed admin code (no SMS). Only accounts with role <strong>admin</strong> in <code>user_profiles</code> can continue.</p>
 
-      <label for="phone">Phone (E.164 format)</label>
-      <input id="phone" type="text" placeholder="+2136xxxxxxx" />
-      <button id="sendBtn">Send OTP</button>
+      <label for="phone">Phone (E.164)</label>
+      <input id="phone" type="text" placeholder="+213799790530" autocomplete="tel" />
 
-      <div id="otpBox" class="hidden">
-        <label for="otp">OTP code</label>
-        <input id="otp" type="text" placeholder="123456" />
-        <button id="verifyBtn" class="secondary">Verify and Continue</button>
-      </div>
+      <label for="code">Admin code</label>
+      <input id="code" type="password" value="05102002" autocomplete="one-time-code" />
+
+      <button id="signInBtn">Sign in</button>
 
       <div id="msg" class="msg"></div>
-      <div class="muted">If you are not admin, you will be sent to home page.</div>
+      <div class="muted">Non-admin accounts are rejected on the server.</div>
     </div>
 
     <script type="module">
@@ -47,57 +43,41 @@
       const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       const phoneEl = document.getElementById("phone");
-      const otpEl = document.getElementById("otp");
+      const codeEl = document.getElementById("code");
       const msgEl = document.getElementById("msg");
-      const otpBox = document.getElementById("otpBox");
-      const sendBtn = document.getElementById("sendBtn");
-      const verifyBtn = document.getElementById("verifyBtn");
 
       function setMsg(text, ok = true) {
         msgEl.className = `msg ${ok ? "ok" : "err"}`;
         msgEl.textContent = text;
       }
 
-      sendBtn.onclick = async () => {
+      document.getElementById("signInBtn").onclick = async () => {
         const phone = phoneEl.value.trim();
+        const otp = codeEl.value.trim();
         if (!phone.startsWith("+")) {
           setMsg("Phone must be in E.164 format (starts with +).", false);
           return;
         }
-        const { error } = await supabase.auth.signInWithOtp({ phone });
-        if (error) {
-          setMsg(error.message || "Failed to send OTP", false);
-          return;
-        }
-        otpBox.classList.remove("hidden");
-        setMsg("OTP sent. Check your phone.");
-      };
-
-      verifyBtn.onclick = async () => {
-        const phone = phoneEl.value.trim();
-        const token = otpEl.value.trim();
-        const { data, error } = await supabase.auth.verifyOtp({
-          phone,
-          token,
-          type: "sms",
+        setMsg("Signing in…", true);
+        const resp = await fetch("/api/auth/admin-fixed-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone, otp }),
         });
-        if (error || !data?.user?.id) {
-          setMsg(error?.message || "OTP verification failed", false);
+        const json = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          setMsg(json.error || `Sign-in failed (${resp.status})`, false);
           return;
         }
-        const userId = data.user.id;
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("role")
-          .eq("id", userId)
-          .maybeSingle();
-
-        const role = (profile?.role || "").toLowerCase();
-        if (role === "admin" || role === "super_admin") {
-          window.location.href = "/admin";
-        } else {
-          window.location.href = "/";
+        const { error } = await supabase.auth.setSession({
+          access_token: json.access_token,
+          refresh_token: json.refresh_token,
+        });
+        if (error) {
+          setMsg(error.message || "Failed to apply session", false);
+          return;
         }
+        window.location.href = "/admin";
       };
     </script>
   </body>

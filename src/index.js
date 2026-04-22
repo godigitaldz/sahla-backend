@@ -15,6 +15,7 @@ import menuRouter from './routes/menu.js';
 import ordersRouter from './routes/orders.js';
 import promoCodesRouter from './routes/promoCodes.js';
 import restaurantsRouter from './routes/restaurants.js';
+import adminAuthRouter from './routes/adminAuth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -109,6 +110,8 @@ app.get('/login', (req, res) => {
 app.get(['/admin', '/app/admin'], (req, res) => {
   res.sendFile(join(__dirname, '../public/admin.html'));
 });
+
+app.use('/api/auth', adminAuthRouter);
 
 // Health check
 app.get('/health', (req, res) => {
