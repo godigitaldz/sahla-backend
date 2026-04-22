@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sahla Login</title>
+    <style>
+      body { font-family: Inter, Arial, sans-serif; margin: 0; background: #f7f7f7; color: #111; }
+      .wrap { max-width: 420px; margin: 72px auto; background: #fff; border-radius: 14px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+      h1 { margin: 0 0 8px; font-size: 24px; }
+      p { margin: 0 0 16px; color: #555; }
+      label { display: block; margin: 10px 0 6px; font-weight: 600; }
+      input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+      button { width: 100%; margin-top: 12px; padding: 12px; border: none; border-radius: 10px; background: #fb8c00; color: #fff; font-weight: 700; cursor: pointer; }
+      button.secondary { background: #222; }
+      .muted { font-size: 12px; color: #777; margin-top: 12px; }
+      .msg { margin-top: 12px; font-size: 14px; }
+      .ok { color: #0a7c2f; }
+      .err { color: #b00020; }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Sign in</h1>
+      <p>Use your phone number. Admins are redirected to `/admin`.</p>
+
+      <label for="phone">Phone (E.164 format)</label>
+      <input id="phone" type="text" placeholder="+2136xxxxxxx" />
+      <button id="sendBtn">Send OTP</button>
+
+      <div id="otpBox" class="hidden">
+        <label for="otp">OTP code</label>
+        <input id="otp" type="text" placeholder="123456" />
+        <button id="verifyBtn" class="secondary">Verify and Continue</button>
+      </div>
+
+      <div id="msg" class="msg"></div>
+      <div class="muted">If you are not admin, you will be sent to home page.</div>
+    </div>
+
+    <script type="module">
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+      const SUPABASE_URL = "https://wtowqpejzxlsmgywkjvn.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0b3dxcGVqenhsc21neXdranZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3NzUzNzIsImV4cCI6MjA3MjM1MTM3Mn0.2hDTLo1QVJ82DlceZgvndItMvUz5-q3xqoiX0zOtOG0";
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const phoneEl = document.getElementById("phone");
+      const otpEl = document.getElementById("otp");
+      const msgEl = document.getElementById("msg");
+      const otpBox = document.getElementById("otpBox");
+      const sendBtn = document.getElementById("sendBtn");
+      const verifyBtn = document.getElementById("verifyBtn");
+
+      function setMsg(text, ok = true) {
+        msgEl.className = `msg ${ok ? "ok" : "err"}`;
+        msgEl.textContent = text;
+      }
+
+      sendBtn.onclick = async () => {
+        const phone = phoneEl.value.trim();
+        if (!phone.startsWith("+")) {
+          setMsg("Phone must be in E.164 format (starts with +).", false);
+          return;
+        }
+        const { error } = await supabase.auth.signInWithOtp({ phone });
+        if (error) {
+          setMsg(error.message || "Failed to send OTP", false);
+          return;
+        }
+        otpBox.classList.remove("hidden");
+        setMsg("OTP sent. Check your phone.");
+      };
+
+      verifyBtn.onclick = async () => {
+        const phone = phoneEl.value.trim();
+        const token = otpEl.value.trim();
+        const { data, error } = await supabase.auth.verifyOtp({
+          phone,
+          token,
+          type: "sms",
+        });
+        if (error || !data?.user?.id) {
+          setMsg(error?.message || "OTP verification failed", false);
+          return;
+        }
+        const userId = data.user.id;
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle();
+
+        const role = (profile?.role || "").toLowerCase();
+        if (role === "admin" || role === "super_admin") {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/";
+        }
+      };
+    </script>
+  </body>
+</html>
