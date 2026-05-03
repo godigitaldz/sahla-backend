@@ -1,13 +1,13 @@
 # Scheduled pending-order escalation + pickup-delay admin alerts (no performance web required).
 #
-# Required repository secret:
-#   SAHLA_CRON_SECRET — same value as Vercel CRON_SECRET
+# Cron auth (same value as Vercel env CRON_SECRET), either:
+#   A) Repository secret SAHLA_CRON_SECRET (Settings → Secrets → Actions → Repository secrets), or
+#   B) GitHub Environment "SAHLA_CRON_SECRET" with an environment secret named CRON_SECRET (your current setup).
 # Optional:
 #   SAHLA_PENDING_ORDERS_POLL_URL — override poll URL (defaults to www.sahla-delivery.com below)
 #   VERCEL_AUTOMATION_BYPASS_SECRET — if Deployment Protection is on (Vercel bypass token)
 #
-# Scheduled runs: if SAHLA_CRON_SECRET is missing, exits 0 with a notice (no spam).
-# workflow_dispatch: fails if SAHLA_CRON_SECRET is missing so misconfiguration is visible.
+# If no secret resolves, scheduled runs exit 0 with a notice; workflow_dispatch fails.
 
 name: Pending orders poll
 
@@ -24,21 +24,25 @@ jobs:
   tick:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Exposes environment secret CRON_SECRET (must match Vercel CRON_SECRET). Create env "SAHLA_CRON_SECRET" in repo Settings → Environments if missing.
+    environment: SAHLA_CRON_SECRET
     steps:
       - name: GET /api/internal/pending-orders-poll
         shell: bash
         env:
           URL: ${{ secrets.SAHLA_PENDING_ORDERS_POLL_URL }}
-          SECRET: ${{ secrets.SAHLA_CRON_SECRET }}
+          SAHLA_REPO_CRON: ${{ secrets.SAHLA_CRON_SECRET }}
+          ENV_CRON: ${{ secrets.CRON_SECRET }}
           BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           set -euo pipefail
+          SECRET="${SAHLA_REPO_CRON:-${ENV_CRON:-}}"
           if [[ -z "${SECRET:-}" ]]; then
             if [[ "${GITHUB_EVENT_NAME:-}" == "workflow_dispatch" ]]; then
-              echo "::error::Set repository secret SAHLA_CRON_SECRET (same as Vercel CRON_SECRET)."
+              echo "::error::Set Vercel CRON_SECRET, then either (1) GitHub repo secret SAHLA_CRON_SECRET or (2) Environment SAHLA_CRON_SECRET → secret CRON_SECRET."
               exit 1
             fi
-            echo "::notice::Set SAHLA_CRON_SECRET to enable scheduled polls (no performance dashboard needed)."
+            echo "::notice::Set cron auth (see workflow header) to enable scheduled polls."
             exit 0
           fi
           POLL_URL="${URL:-https://www.sahla-delivery.com/api/internal/pending-orders-poll}"
