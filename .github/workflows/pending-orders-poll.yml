@@ -1,0 +1,44 @@
+# Calls the same tick as Vercel Cron would: pending-order escalation + pickup-delay admin alerts.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   SAHLA_PENDING_ORDERS_POLL_URL — e.g. https://www.sahla-delivery.com/api/internal/pending-orders-poll
+#   SAHLA_CRON_SECRET — must match Vercel env CRON_SECRET
+# Optional:
+#   VERCEL_AUTOMATION_BYPASS_SECRET — if Deployment Protection is on, same value as Vercel bypass token
+#
+# If URL or secret is missing, the job exits 0 (no failure) so schedules do not spam errors until you configure them.
+
+name: Pending orders poll
+
+on:
+  schedule:
+    - cron: '*/2 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: sahla-pending-orders-poll
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: GET /api/internal/pending-orders-poll
+        shell: bash
+        env:
+          URL: ${{ secrets.SAHLA_PENDING_ORDERS_POLL_URL }}
+          SECRET: ${{ secrets.SAHLA_CRON_SECRET }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${URL:-}" || -z "${SECRET:-}" ]]; then
+            echo "::notice::Configure Actions secrets SAHLA_PENDING_ORDERS_POLL_URL and SAHLA_CRON_SECRET to enable this job."
+            exit 0
+          fi
+          args=(-fsS -H "Authorization: Bearer ${SECRET}")
+          if [[ -n "${BYPASS:-}" ]]; then
+            args+=(-H "x-vercel-protection-bypass: ${BYPASS}")
+          fi
+          curl "${args[@]}" "$URL"
+          echo
