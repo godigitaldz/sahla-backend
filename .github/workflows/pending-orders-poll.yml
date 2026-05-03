@@ -1,4 +1,5 @@
-# Calls the same tick as Vercel Cron would: pending-order escalation + pickup-delay admin alerts.
+# Primary scheduler on Vercel Hobby: serverless has no reliable background interval, and
+# Vercel Cron is at most once/day. This workflow hits the same endpoint as GET /api/internal/pending-orders-poll.
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   SAHLA_PENDING_ORDERS_POLL_URL — e.g. https://www.sahla-delivery.com/api/internal/pending-orders-poll
