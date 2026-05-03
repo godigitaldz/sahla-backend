@@ -30,14 +30,6 @@ const app = express();
 // Vercel sets X-Forwarded-*; without this, express-rate-limit throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
 app.set('trust proxy', 1);
 
-if (process.env.VERCEL === '1') {
-  console.info(
-    '[scheduler] Vercel serverless: pending-order pushes are not driven by a long-lived timer. ' +
-      'Primary: schedule GET /api/internal/pending-orders-poll (GitHub Actions in this repo, or cron-job.org). ' +
-      'Hobby Vercel Cron is at most once/day (see vercel.json crons). Optional supplement: PERFORMANCE_OPEN_DASHBOARD_POLL_MS on /api/performance/alerts.',
-  );
-}
-
 app.use(helmet({
   contentSecurityPolicy: false,
 }));
@@ -141,8 +133,8 @@ app.use('/api/images', imagesRouter);
 
 /**
  * Pending-order escalation + pickup-delay admin alerts (single HTTP tick).
- * Auth: CRON_SECRET via Authorization: Bearer, query ?secret=, or (when set) Vercel Cron automatic Bearer.
- * Vercel Hobby: native Cron is once/day max (vercel.json) — for 2m/5m escalation use GitHub Actions or Pro (per-minute crons).
+ * Primary on Vercel: scheduled GET (GitHub Actions in this repo, or any external cron) every 1–2 min with Bearer CRON_SECRET.
+ * Vercel Cron here is once/day on Hobby (vercel.json); Pro allows per-minute crons. Vercel injects Authorization: Bearer CRON_SECRET for cron.
  * Local: curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3001/api/internal/pending-orders-poll
  */
 app.get('/api/internal/pending-orders-poll', async (req, res) => {

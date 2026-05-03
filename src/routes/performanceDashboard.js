@@ -790,9 +790,9 @@ router.get('/alerts', requirePerformanceAuth, async (req, res) => {
       .filter((o) => o.ageMinutes != null && o.ageMinutes >= minutes);
 
     /**
-     * Supplementary only: when the performance dashboard is open it polls this route often,
-     * so we can piggy-back the same push logic on a throttle. This does NOT replace a real
-     * schedule (GitHub Actions / Vercel Cron / external) — alerts stop if nobody loads alerts.
+     * Supplementary only: when set, throttles runPendingOrdersPollOnce while this endpoint
+     * receives traffic (e.g. performance UI open). Production alerts must not rely on this:
+     * use scheduled GET /api/internal/pending-orders-poll (repo workflow or external cron).
      */
     const dashboardPollMs = Number(process.env.PERFORMANCE_OPEN_DASHBOARD_POLL_MS || 0);
     if (Number.isFinite(dashboardPollMs) && dashboardPollMs >= 30_000) {

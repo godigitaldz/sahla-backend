@@ -15,7 +15,7 @@
   "crons": [
     {
       "path": "/api/internal/pending-orders-poll",
-      "schedule": "0 9 * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }

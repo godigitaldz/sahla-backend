@@ -377,7 +377,7 @@ export function startPendingOrdersPoller({ logger = console } = {}) {
 
   if (process.env.VERCEL === '1') {
     logger.info?.(
-      '[pending-orders-poller] VERCEL=1: in-process interval disabled; schedule GET /api/internal/pending-orders-poll (GitHub Actions workflow or external cron; Hobby Vercel Cron is daily at most)',
+      '[pending-orders-poller] VERCEL=1: in-process interval disabled; schedule GET /api/internal/pending-orders-poll (GitHub Actions, Vercel Cron, or external) with CRON_SECRET',
     );
     return { stop: () => { } };
   }

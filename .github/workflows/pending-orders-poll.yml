@@ -1,13 +1,13 @@
-# Primary scheduler on Vercel Hobby: serverless has no reliable background interval, and
-# Vercel Cron is at most once/day. This workflow hits the same endpoint as GET /api/internal/pending-orders-poll.
+# Scheduled pending-order escalation + pickup-delay admin alerts (no performance web required).
 #
-# Repository secrets (Settings → Secrets and variables → Actions):
-#   SAHLA_PENDING_ORDERS_POLL_URL — e.g. https://www.sahla-delivery.com/api/internal/pending-orders-poll
-#   SAHLA_CRON_SECRET — must match Vercel env CRON_SECRET
+# Required repository secret:
+#   SAHLA_CRON_SECRET — same value as Vercel CRON_SECRET
 # Optional:
-#   VERCEL_AUTOMATION_BYPASS_SECRET — if Deployment Protection is on, same value as Vercel bypass token
+#   SAHLA_PENDING_ORDERS_POLL_URL — override poll URL (defaults to www.sahla-delivery.com below)
+#   VERCEL_AUTOMATION_BYPASS_SECRET — if Deployment Protection is on (Vercel bypass token)
 #
-# If URL or secret is missing, the job exits 0 (no failure) so schedules do not spam errors until you configure them.
+# Scheduled runs: if SAHLA_CRON_SECRET is missing, exits 0 with a notice (no spam).
+# workflow_dispatch: fails if SAHLA_CRON_SECRET is missing so misconfiguration is visible.
 
 name: Pending orders poll
 
@@ -33,13 +33,18 @@ jobs:
           BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           set -euo pipefail
-          if [[ -z "${URL:-}" || -z "${SECRET:-}" ]]; then
-            echo "::notice::Configure Actions secrets SAHLA_PENDING_ORDERS_POLL_URL and SAHLA_CRON_SECRET to enable this job."
+          if [[ -z "${SECRET:-}" ]]; then
+            if [[ "${GITHUB_EVENT_NAME:-}" == "workflow_dispatch" ]]; then
+              echo "::error::Set repository secret SAHLA_CRON_SECRET (same as Vercel CRON_SECRET)."
+              exit 1
+            fi
+            echo "::notice::Set SAHLA_CRON_SECRET to enable scheduled polls (no performance dashboard needed)."
             exit 0
           fi
+          POLL_URL="${URL:-https://www.sahla-delivery.com/api/internal/pending-orders-poll}"
           args=(-fsS -H "Authorization: Bearer ${SECRET}")
           if [[ -n "${BYPASS:-}" ]]; then
             args+=(-H "x-vercel-protection-bypass: ${BYPASS}")
           fi
-          curl "${args[@]}" "$URL"
+          curl "${args[@]}" "$POLL_URL"
           echo
