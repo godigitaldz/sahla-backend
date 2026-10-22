@@ -1747,43 +1747,108 @@ router.post('/force-push-notification', requirePerformanceAuth, async (req, res)
       return res.status(400).json({ success: false, error: 'title and body are required' });
     }
 
-    if (send_all_devices) {
-      const invokeRes = await supabaseAdmin.functions.invoke('send-push-notification', {
-        body: {
-          send_all_devices: true,
-          title,
-          body,
-          force_activate_inactive_tokens: Boolean(force_activate_inactive_tokens),
-        },
-      });
-      if (invokeRes.error) throw invokeRes.error;
-      const payload = invokeRes.data || {};
-      const totalSent = payload?.total_sent ?? payload?.summary?.total_sent ?? 0;
-      return res.json({
-        success: true,
-        total_sent: totalSent,
-        summary: payload?.summary || { total_sent: totalSent, total_failed: 0 },
-      });
-    }
+    let targetUserIds = [];
 
     if (user_id) {
-      const sent = await supabasePushGateway.sendPush({
-        userIds: [user_id],
-        title,
-        body,
-        data: { source: 'force_push_admin' },
-      });
+      targetUserIds = [String(user_id).trim()];
+    } else if (device_token) {
+      const { data: tokRow, error: tokErr } = await supabaseAdmin
+        .from('user_device_tokens')
+        .select('user_id')
+        .eq('token', String(device_token).trim())
+        .maybeSingle();
+      if (tokErr) throw tokErr;
+      if (!tokRow?.user_id) {
+        return res.status(404).json({ success: false, error: 'Device token not found in database' });
+      }
+      targetUserIds = [String(tokRow.user_id).trim()];
+    } else if (send_all_devices) {
+      let allRows = [];
+      let page = 0;
+      while (true) {
+        let q = supabaseAdmin
+          .from('user_device_tokens')
+          .select('user_id')
+          .range(page * 1000, (page + 1) * 1000 - 1);
+        if (!force_activate_inactive_tokens) {
+          q = q.eq('is_active', true);
+        }
+        const { data, error } = await q;
+        if (error) throw error;
+        if (!data || !data.length) break;
+        allRows.push(...data);
+        if (data.length < 1000) break;
+        page++;
+      }
+      targetUserIds = [...new Set(allRows.map((r) => String(r.user_id || '').trim()).filter(Boolean))];
+    } else {
+      return res.status(400).json({ success: false, error: 'user_id, device_token, or send_all_devices is required' });
+    }
+
+    if (!targetUserIds.length) {
       return res.json({
         success: true,
-        total_sent: sent.total_sent ?? (sent.success ? 1 : 0),
-        summary: { total_sent: sent.total_sent ?? (sent.success ? 1 : 0), total_failed: sent.success ? 0 : 1 },
+        skipped: true,
+        total_sent: 0,
+        summary: { total_sent: 0, total_failed: 0, reason: 'no_target_devices_found' },
       });
     }
 
-    return res.status(400).json({ success: false, error: 'user_id or send_all_devices is required' });
+    let totalSent = 0;
+    let totalFailed = 0;
+    const errors = [];
+    const BATCH_SIZE = 100;
+
+    for (let i = 0; i < targetUserIds.length; i += BATCH_SIZE) {
+      const batch = targetUserIds.slice(i, i + BATCH_SIZE);
+      try {
+        const sent = await supabasePushGateway.sendPush({
+          userIds: batch,
+          title,
+          body,
+          data: { source: 'force_push_admin' },
+        });
+        if (sent && sent.success) {
+          totalSent += sent.total_sent || batch.length;
+        } else {
+          totalFailed += batch.length;
+          if (sent?.error) errors.push(sent.error);
+        }
+      } catch (batchErr) {
+        totalFailed += batch.length;
+        errors.push(batchErr.message || String(batchErr));
+      }
+    }
+
+    if (totalSent === 0 && totalFailed > 0 && errors.length) {
+      return res.status(500).json({
+        success: false,
+        error: errors[0] || 'Push delivery failed for all target devices',
+        summary: { total_sent: 0, total_failed: totalFailed, target_users: targetUserIds.length, errors: errors.slice(0, 3) },
+      });
+    }
+
+    return res.json({
+      success: true,
+      total_sent: totalSent,
+      summary: {
+        total_sent: totalSent,
+        total_failed: totalFailed,
+        target_users: targetUserIds.length,
+        errors: errors.slice(0, 3),
+      },
+    });
   } catch (e) {
     console.error('performance /force-push-notification', e);
-    return res.status(500).json({ success: false, error: e.message || 'Push failed' });
+    let errorMsg = e.message || 'Push failed';
+    if (e.context && typeof e.context.text === 'function') {
+      try {
+        const txt = await e.context.text();
+        const parsed = JSON.parse(txt);
+        errorMsg = parsed.error || parsed.message || txt;
+      } catch (_) {}
+    }
+    return res.status(500).json({ success: false, error: errorMsg });
   }
 });
 

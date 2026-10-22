@@ -2075,6 +2075,8 @@
         if (banner) banner.classList.add('hidden');
       }
 
+      let pollBackoffUntil = 0;
+
       async function api(path, opts) {
         let r;
         try {
@@ -2090,6 +2092,9 @@
         }
         const j = await r.json().catch(() => ({}));
         if (!r.ok) {
+          if (r.status === 429) {
+            pollBackoffUntil = Date.now() + 30000;
+          }
           const detail = j.error || r.statusText || ('HTTP ' + r.status);
           const msg = detail + ' (' + path + ' [' + r.status + '])';
           showDashboardError(msg);
@@ -4859,9 +4864,10 @@
       });
 
       /** Alerts + global badges (incl. request & review counts): ~real-time while dashboard is open. */
-      const REALTIME_POLL_MS = 3000;
+      const REALTIME_POLL_MS = 5000;
       setInterval(() => {
         if ($('app').classList.contains('hidden')) return;
+        if (Date.now() < pollBackoffUntil) return;
         loadAlerts().catch(() => {});
         const tab = document.querySelector('.tab.active')?.getAttribute('data-tab');
         if (tab === 'reviews') loadReviews().catch(() => {});
@@ -4871,6 +4877,7 @@
       /** Other tabs: lighter refresh interval. */
       setInterval(() => {
         if ($('app').classList.contains('hidden')) return;
+        if (Date.now() < pollBackoffUntil) return;
         const tab = document.querySelector('.tab.active')?.getAttribute('data-tab');
         if (tab === 'alerts') loadOrders().catch(() => {});
         if (tab === 'delivery-men') loadDeliveryPersonnel().catch(() => {});
