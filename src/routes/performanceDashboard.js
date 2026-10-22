@@ -1797,7 +1797,8 @@ router.post('/force-push-notification', requirePerformanceAuth, async (req, res)
     let totalSent = 0;
     let totalFailed = 0;
     const errors = [];
-    const BATCH_SIZE = 100;
+    // Edge function enforces user_ids.length <= 50
+    const BATCH_SIZE = 45;
 
     for (let i = 0; i < targetUserIds.length; i += BATCH_SIZE) {
       const batch = targetUserIds.slice(i, i + BATCH_SIZE);
@@ -1808,11 +1809,12 @@ router.post('/force-push-notification', requirePerformanceAuth, async (req, res)
           body,
           data: { source: 'force_push_admin' },
         });
-        if (sent && sent.success) {
-          totalSent += sent.total_sent || batch.length;
-        } else {
-          totalFailed += batch.length;
-          if (sent?.error) errors.push(sent.error);
+        const batchSent = Number(sent?.total_sent ?? sent?.raw?.total_sent ?? sent?.raw?.summary?.total_sent ?? 0);
+        totalSent += batchSent;
+        const failedInBatch = Math.max(0, batch.length - batchSent);
+        totalFailed += failedInBatch;
+        if (sent && !sent.success && sent.error) {
+          errors.push(sent.error);
         }
       } catch (batchErr) {
         totalFailed += batch.length;
@@ -1820,7 +1822,7 @@ router.post('/force-push-notification', requirePerformanceAuth, async (req, res)
       }
     }
 
-    if (totalSent === 0 && totalFailed > 0 && errors.length) {
+    if (totalSent === 0 && totalFailed > 0 && errors.length && errors.every((e) => !e.includes('No active FCM tokens'))) {
       return res.status(500).json({
         success: false,
         error: errors[0] || 'Push delivery failed for all target devices',
