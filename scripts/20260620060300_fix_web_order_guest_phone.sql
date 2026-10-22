@@ -1,0 +1,8 @@
+-- =============================================================================
+-- SUPERSEDED — do not run
+--
+-- manual_phone_order=true fixed dial but broke restaurant item summary in app.
+--
+-- Use instead:
+--   scripts/20260620060400_fix_web_order_summary_and_phone.sql
+-- =============================================================================

@@ -10,3 +10,4 @@ coverage/
 .idea/
 .vercel
 .env*.local
+supabase/.temp/

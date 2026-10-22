@@ -2,11 +2,45 @@
   "version": 2,
   "builds": [
     {
+      "src": "web/package.json",
+      "use": "@vercel/next"
+    },
+    {
       "src": "src/index.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 60
+      }
     }
   ],
   "routes": [
+    {
+      "src": "/api/internal/web-order-push/(.*)",
+      "dest": "/api/internal/web-order-push/$1"
+    },
+    {
+      "src": "/api/internal/(.*)",
+      "dest": "src/index.js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/api/public/(.*)",
+      "dest": "/api/public/$1"
+    },
+    {
+      "src": "/restaurants/(.*)",
+      "dest": "/restaurants/$1"
+    },
+    {
+      "src": "/t/(.*)",
+      "dest": "/t/$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "src/index.js"
+    },
     {
       "src": "/(.*)",
       "dest": "src/index.js"

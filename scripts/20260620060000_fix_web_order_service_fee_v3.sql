@@ -1,0 +1,11 @@
+-- =============================================================================
+-- SUPERSEDED — do not run
+--
+-- v3 failed with:
+--   42601 — dynamic patch split IF COALESCE (fixed in v4 C2)
+--   55006 — ALTER TABLE DISABLE TRIGGER inside AFTER INSERT / backfill loop
+--
+-- Use instead:
+--   VERIFY: scripts/20260620060100_verify_web_order_financials.sql
+--   FIX:    scripts/20260620060200_fix_web_order_service_fee_v4.sql
+-- =============================================================================

@@ -1,0 +1,4891 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sahla — Performance</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --border: #d9e1ee;
+        --text: #1b2430;
+        --muted: #5f6b7a;
+        --accent: #fb8c00;
+        --danger: #e53935;
+        --ok: #43a047;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+      header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+      h1 span {
+        color: var(--accent);
+      }
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .alert-bubble {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        height: 28px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: linear-gradient(160deg, #ff5252, #b71c1c);
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 800;
+        line-height: 1;
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.2),
+          0 4px 14px rgba(198, 40, 40, 0.55);
+        letter-spacing: -0.02em;
+      }
+      .alert-bubble.visible {
+        display: inline-flex;
+        cursor: pointer;
+      }
+      .login-panel {
+        max-width: 380px;
+        margin: 64px auto;
+        padding: 28px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+      }
+      .login-panel h2 {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+      }
+      .login-panel p {
+        margin: 0 0 16px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input[type='password'] {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        font-size: 1rem;
+      }
+      button {
+        cursor: pointer;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+      .btn-primary {
+        width: 100%;
+        margin-top: 14px;
+        padding: 12px;
+        background: var(--accent);
+        color: #111;
+      }
+      .btn-ghost {
+        padding: 8px 14px;
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .err {
+        color: var(--danger);
+        font-size: 0.85rem;
+        margin-top: 10px;
+      }
+      main {
+        padding: 0 0 40px;
+        max-width: none;
+        margin: 0;
+      }
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin: 0 0 16px;
+        background: #fb8c00;
+        border-radius: 0;
+        padding: 6px 8px 0;
+      }
+      .tabs button {
+        padding: 10px 14px;
+        background: transparent;
+        color: #fff;
+        border: none;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        font-weight: 800;
+      }
+      .tabs button.active {
+        background: transparent;
+        color: #fff;
+        border-bottom-color: rgba(255, 255, 255, 0.75);
+      }
+      .tabs button.force-tab {
+        margin-left: auto;
+        align-self: center;
+        padding: 8px 14px;
+        background: #fff;
+        color: #1b2430;
+        border: 1px solid rgba(17, 24, 39, 0.12);
+        border-radius: 12px;
+        line-height: 1;
+        box-shadow: 0 4px 12px rgba(17, 24, 39, 0.2);
+      }
+      .tabs button.force-tab.active {
+        background: #fff;
+        color: #1b2430;
+        border-bottom-color: rgba(17, 24, 39, 0.12);
+      }
+      .pin-star-btn {
+        padding: 2px 6px;
+        background: transparent;
+        border: none;
+        font-size: 1.1rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #cbd5e1;
+      }
+      .pin-star-btn.pinned {
+        color: #f59e0b;
+      }
+      .pin-star-btn:hover {
+        color: #fbbf24;
+      }
+            tr.delivery-man-pinned {
+        background: #fffbeb;
+      }
+      .delivery-man-notes-cell {
+        min-width: 220px;
+        max-width: 320px;
+      }
+      .delivery-man-notes-input {
+        width: 100%;
+        min-height: 52px;
+        max-height: 120px;
+        resize: vertical;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        font-size: 0.85rem;
+        line-height: 1.35;
+      }
+      .delivery-man-notes-input:focus {
+        outline: 2px solid #fdba74;
+        outline-offset: 1px;
+        border-color: #f97316;
+      }
+      .delivery-man-notes-status {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.75rem;
+        color: var(--muted);
+        min-height: 1em;
+      }
+      .delivery-man-notes-status.is-error {
+        color: var(--danger);
+      }
+                  .delivery-man-notes-status.is-ok {
+        color: #166534;
+      }
+      .btn-block-courier {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid #fecaca;
+        background: #fef2f2;
+        color: #b91c1c;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .btn-block-courier:hover:not(:disabled) {
+        background: #fee2e2;
+      }
+      .btn-unblock-courier {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid #bbf7d0;
+        background: #f0fdf4;
+        color: #166534;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .btn-unblock-courier:hover:not(:disabled) {
+        background: #dcfce7;
+      }
+      .btn-block-courier:disabled,
+      .btn-unblock-courier:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .btn-mock-order {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid #bfdbfe;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .btn-mock-order:hover:not(:disabled) {
+        background: #dbeafe;
+      }
+      .btn-mock-order:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .delivery-man-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: stretch;
+      }
+      tr.delivery-man-blocked {
+        background: #fef2f2;
+      }
+      .delivery-man-status-select {
+        min-width: 72px;
+        padding: 4px 6px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .delivery-man-status-select:focus {
+        outline: 2px solid #93c5fd;
+        outline-offset: 1px;
+        border-color: #3b82f6;
+      }
+      .delivery-man-status-select:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .delivery-man-status-select.is-saving {
+        opacity: 0.7;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: flex-end;
+        margin-bottom: 14px;
+      }
+      .portal-card {
+        margin: 0 16px 14px;
+        padding: 14px 16px;
+        background: #fffbeb;
+        border: 1px solid #fbbf24;
+        border-radius: 12px;
+      }
+      .portal-card h3 {
+        margin: 0 0 10px;
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+      .portal-card input[type='text'],
+      .portal-card input[type='password'] {
+        min-width: 180px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-size: 0.9rem;
+      }
+      .portal-card input[readonly] {
+        background: #f8fafc;
+        color: #334155;
+      }
+      .portal-status-ok {
+        color: #166534;
+        font-weight: 600;
+      }
+      .portal-status-warn {
+        color: #b45309;
+        font-weight: 600;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      select {
+        min-width: 180px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        font-size: 0.9rem;
+      }
+      .btn-refresh {
+        padding: 10px 16px;
+        background: #edf2fa;
+        color: var(--text);
+      }
+      .btn-rebroadcast {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: #fff;
+        color: #fb8c00;
+        border: 1px solid #fb8c00;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+      .btn-rebroadcast:hover:not(:disabled) {
+        background: #fff7ee;
+      }
+      .btn-rebroadcast:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn-accept-order {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: #fff;
+        color: #1b5e20;
+        border: 1px solid #2e7d32;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+      .btn-accept-order:hover:not(:disabled) {
+        background: #eef9f0;
+      }
+      .btn-accept-order:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn-delivered-order {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: #fff;
+        color: #0d47a1;
+        border: 1px solid #1565c0;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+      .btn-delivered-order:hover:not(:disabled) {
+        background: #edf4ff;
+      }
+      .btn-delivered-order:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn-pickup-order {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: #fff;
+        color: #6a1b9a;
+        border: 1px solid #8e24aa;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+      .btn-pickup-order:hover:not(:disabled) {
+        background: #f8f0ff;
+      }
+      .btn-pickup-order:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn-drop-assignment {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: #fff;
+        color: #5d4037;
+        border: 1px solid #795548;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+      .btn-drop-assignment:hover:not(:disabled) {
+        background: #f7f0ed;
+      }
+      .btn-drop-assignment:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn-collect-payment {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: #fff;
+        color: #ad1457;
+        border: 1px solid #d81b60;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+      .btn-collect-payment:hover:not(:disabled) {
+        background: #fff0f6;
+      }
+      .btn-collect-payment:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn-collect-all {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        background: #fff;
+        color: #ad1457;
+        border: 1px solid #d81b60;
+        border-radius: 10px;
+        white-space: nowrap;
+      }
+      .btn-collect-all:hover:not(:disabled) {
+        background: #fff0f6;
+      }
+      .btn-collect-all:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .meta {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        background: var(--card);
+        border: 1px solid #000;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #000;
+      }
+      th {
+        background: #fb8c00;
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      .status-pill {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: #edf2fa;
+        color: var(--text);
+      }
+      .order-status-select {
+        min-width: 118px;
+        padding: 7px 9px;
+        border-radius: 9px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+      .num {
+        font-variant-numeric: tabular-nums;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .tab-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tab-badge {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 7px;
+        margin-left: 8px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1;
+        background: #000;
+        color: #fff;
+        vertical-align: middle;
+        border: 1px solid #000;
+        box-shadow: none;
+      }
+      .tab-badge.visible {
+        display: inline-flex;
+      }
+      .alerts-head {
+        font-size: 0.95rem;
+        font-weight: 800;
+        margin: 20px 0 10px;
+        color: #000;
+        text-align: left;
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+      }
+      #alertsOrdersMeta,
+      #alertsPickedUpMeta,
+      #ordersMeta,
+      #alertsTasksMeta {
+        display: none !important;
+      }
+      .order-box-wrap {
+        overflow-x: auto;
+        border: 1px solid #000;
+        border-radius: 14px;
+        margin-left: max(12px, env(safe-area-inset-left));
+        margin-right: max(12px, env(safe-area-inset-right));
+        box-sizing: border-box;
+      }
+      .alerts-head:first-of-type {
+        margin-top: 0;
+      }
+      .row-warn td {
+        background: rgba(229, 57, 53, 0.06);
+      }
+      .order-summary-inline {
+        display: block;
+        margin-top: 6px;
+        color: #fb8c00;
+        font-weight: 700;
+        font-size: 0.78rem;
+        line-height: 1.35;
+        white-space: normal;
+      }
+      .destination-cell {
+        max-width: 240px;
+        white-space: normal;
+        line-height: 1.35;
+      }
+      .destination-cell a {
+        display: inline-block;
+        margin-top: 4px;
+        color: #1565c0;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .manual-assign-select {
+        min-width: 210px;
+        max-width: 260px;
+        padding: 7px 9px;
+        font-size: 0.8rem;
+      }
+      .help-card {
+        margin-bottom: 16px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #141820;
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+      .help-card strong {
+        color: var(--accent);
+      }
+      .help-card a {
+        color: #64b5f6;
+        text-decoration: none;
+      }
+      .help-card a:hover {
+        text-decoration: underline;
+      }
+      .partner-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin: 0 12px 16px;
+      }
+      .partner-stat-card {
+        padding: 14px 16px;
+        text-align: left;
+        background: var(--card);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
+      }
+      .partner-stat-card.active {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(251, 140, 0, 0.16);
+      }
+      .partner-stat-label {
+        display: block;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      .partner-stat-value {
+        display: block;
+        margin-top: 4px;
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: #111;
+      }
+      .btn-row {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .btn-mini {
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-mini-ok {
+        background: var(--ok);
+        color: #0d1a0d;
+      }
+      .btn-mini-warn {
+        background: #5c1a1a;
+        color: #ffebee;
+      }
+      .btn-cancel-order {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: #fff;
+        color: #c62828;
+        border: 1px solid #e53935;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+      .btn-cancel-order:hover:not(:disabled) {
+        background: #ffebee;
+      }
+      .btn-cancel-order:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(15, 22, 32, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .modal-overlay.hidden {
+        display: none !important;
+      }
+      .modal-dialog {
+        width: 100%;
+        max-width: 420px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+      }
+      .modal-dialog h3 {
+        margin: 0 0 10px;
+        font-size: 1.05rem;
+      }
+      .modal-dialog label {
+        margin-top: 12px;
+      }
+      .modal-dialog input[type='text'],
+      .modal-dialog textarea {
+        width: 100%;
+        margin-top: 6px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        font-size: 0.95rem;
+        font-family: inherit;
+      }
+      .modal-dialog textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+      .modal-actions button {
+        flex: 1;
+        min-width: 120px;
+        padding: 10px 14px;
+      }
+      .btn-modal-danger {
+        background: #e53935;
+        color: #fff;
+      }
+      .btn-modal-danger:hover:not(:disabled) {
+        background: #c62828;
+      }
+      .form-card {
+        width: min(720px, calc(100% - 24px));
+        margin: 0 auto 20px;
+        padding: 22px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+      }
+      .form-card h2 {
+        margin: 0 0 6px;
+        font-size: 1.15rem;
+      }
+      .form-card input[type='text'],
+      .form-card textarea {
+        width: 100%;
+        margin: 6px 0 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        font-size: 0.95rem;
+        font-family: inherit;
+      }
+      .form-card textarea {
+        min-height: 92px;
+        resize: vertical;
+      }
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 12px 0;
+        color: var(--text);
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+      .checkbox-row input {
+        width: 18px;
+        height: 18px;
+      }
+      .btn-force-send {
+        width: 100%;
+        margin-top: 8px;
+        padding: 12px 14px;
+        background: #d47b00;
+        color: #fff;
+      }
+      .btn-force-send:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .force-push-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+        align-items: start;
+      }
+      .force-push-result {
+        margin: 8px 0 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+      .force-push-result.ok {
+        background: #e8f5e9;
+        color: #1b5e20;
+        border: 1px solid #a5d6a7;
+      }
+      .force-push-result.err {
+        background: #ffebee;
+        color: #b71c1c;
+        border: 1px solid #ef9a9a;
+      }
+      .force-push-result.warn {
+        background: #fff8e1;
+        color: #e65100;
+        border: 1px solid #ffcc80;
+      }
+      .dashboard-error-banner {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ef9a9a;
+        padding: 10px 16px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+      .btn-dismiss-banner {
+        background: transparent;
+        border: none;
+        font-size: 1.1rem;
+        color: #c62828;
+        cursor: pointer;
+        padding: 0 4px;
+      }
+      .meta-error {
+        color: #c62828;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gate">
+      <div class="login-panel">
+        <h2>Performance dashboard</h2>
+        <p>Enter the access password to load live orders and tasks from the database.</p>
+        <label for="pw">Password</label>
+        <input id="pw" type="password" autocomplete="current-password" />
+        <button class="btn-primary" type="button" id="unlockBtn">Unlock</button>
+        <div class="err hidden" id="gateErr"></div>
+      </div>
+    </div>
+
+    <div id="app" class="hidden">
+      <main>
+        <div id="dashboardErrorBanner" class="hidden dashboard-error-banner" role="alert">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:1.2rem;">⚠️</span>
+            <span id="dashboardErrorMsg"></span>
+          </div>
+          <button type="button" class="btn-dismiss-banner" onclick="clearDashboardError()" title="Dismiss">✕</button>
+        </div>
+        <div class="tabs">
+          <button type="button" class="tab active" data-tab="alerts" id="alertsTabBtn">
+            Orders + alerts<span id="alertsBadge" class="tab-badge">0</span>
+          </button>
+          <button type="button" class="tab" data-tab="delivery-history">Delivered history</button>
+          <button type="button" class="tab" data-tab="delivery-men">Delivery man</button>
+          <button type="button" class="tab" data-tab="parcel-alerts" id="parcelAlertsTabBtn">
+            Parcel + alerts<span id="parcelAlertsBadge" class="tab-badge">0</span>
+          </button>
+          <button type="button" class="tab" data-tab="reviews" id="reviewsTabBtn">
+            Restaurant reviews<span id="reviewsBadge" class="tab-badge">0</span>
+          </button>
+          <button type="button" class="tab" data-tab="delivery-reviews" id="deliveryReviewsTabBtn">
+            Delivery reviews<span id="deliveryReviewsBadge" class="tab-badge">0</span>
+          </button>
+          <button type="button" class="tab" data-tab="partner-requests" id="partnerReqTabBtn">
+            Sahla Partner Requests<span id="partnerReqBadge" class="tab-badge">0</span>
+          </button>
+          <button type="button" class="tab" data-tab="restaurant-tables">Restaurant tables</button>
+          <button type="button" class="tab" data-tab="tasks">Tasks</button>
+          <button type="button" class="tab force-tab" data-tab="force-push" id="forcePushTabBtn">
+            Forced Push Notification
+          </button>
+        </div>
+
+        <section id="panel-force-push" class="hidden">
+          <div class="force-push-grid">
+            <div class="form-card">
+              <h2>Forced Push Notification</h2>
+              <p class="meta" id="forcePushModeHint">
+                Targets one exact device token and can reactivate inactive rows.
+              </p>
+
+              <label class="checkbox-row" for="forcePushSendAll">
+                <input id="forcePushSendAll" type="checkbox" />
+                Send to all devices
+              </label>
+
+              <div id="forcePushTargetFields">
+                <label for="forcePushUserId">User ID *</label>
+                <input id="forcePushUserId" type="text" autocomplete="off" placeholder="Enter target user ID" />
+                <label for="forcePushDeviceToken">Device Token *</label>
+                <textarea id="forcePushDeviceToken" rows="3" placeholder="Paste exact FCM token"></textarea>
+              </div>
+
+              <label class="checkbox-row" for="forcePushActivate">
+                <input id="forcePushActivate" type="checkbox" checked />
+                Force activate inactive tokens
+              </label>
+
+              <label class="checkbox-row" for="forcePushSchedule">
+                <input id="forcePushSchedule" type="checkbox" />
+                Schedule send
+              </label>
+              <div id="forcePushScheduleFields" class="hidden">
+                <label for="forcePushScheduledAt">Send at (your local time)</label>
+                <input id="forcePushScheduledAt" type="datetime-local" />
+              </div>
+              <p class="meta hidden" id="forcePushBatchHint">
+                Broadcasts are queued and delivered in background batches (avoids Edge timeouts).
+              </p>
+
+              <label for="forcePushTitle">Title *</label>
+              <input id="forcePushTitle" type="text" maxlength="100" autocomplete="off" placeholder="Enter notification title" />
+              <label for="forcePushBody">Message *</label>
+              <textarea id="forcePushBody" maxlength="500" rows="4" placeholder="Enter notification message"></textarea>
+
+              <div id="forcePushResult" class="force-push-result hidden"></div>
+              <button type="button" class="btn-force-send" id="forcePushSend">Force Send</button>
+            </div>
+
+            <div class="form-card">
+              <h2>Availability Reminder</h2>
+              <p class="meta">
+                Sends a reminder to delivery men currently marked as unavailable.
+              </p>
+
+              <label for="availabilityReminderTitle">Suggested title</label>
+              <input
+                id="availabilityReminderTitle"
+                type="text"
+                maxlength="100"
+                autocomplete="off"
+                value="أنت غير متاح حالياً"
+              />
+              <label for="availabilityReminderBody">Suggested message</label>
+              <textarea id="availabilityReminderBody" maxlength="500" rows="4">فعّل التوفر لاستقبال الطلبات.</textarea>
+
+              <div id="availabilityReminderResult" class="force-push-result hidden"></div>
+              <button type="button" class="btn-force-send" id="availabilityReminderSend">
+                Send Availability Reminder
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-alerts">
+          <h3 class="alerts-head">Orders stuck in pending (≥ threshold)</h3>
+          <p class="meta" id="alertsOrdersMeta"></p>
+          <div class="order-box-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Status</th>
+                  <th>Restaurant</th>
+                  <th>Courier</th>
+                  <th>Courier phone</th>
+                  <th>Customer phone</th>
+                  <th>Destination</th>
+                  <th>Del. FF (orig)</th>
+                  <th>Assigned</th>
+                  <th>Manual assign</th>
+                  <th>Total</th>
+                  <th>Created</th>
+                  <th>Age (min)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="alertsOrdersBody"></tbody>
+            </table>
+          </div>
+          <h3 class="alerts-head">Picked up — not delivered (≥ delay)</h3>
+          <p class="meta" id="alertsPickedUpMeta"></p>
+          <div class="order-box-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Status</th>
+                  <th>Restaurant</th>
+                  <th>Courier</th>
+                  <th>Courier phone</th>
+                  <th>Customer phone</th>
+                  <th>Destination</th>
+                  <th>Del. FF (orig)</th>
+                  <th>Assigned</th>
+                  <th>Total</th>
+                  <th>Pickup ref.</th>
+                  <th>Min since ref.</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="alertsPickedUpBody"></tbody>
+            </table>
+          </div>
+          <h3 class="alerts-head">New orders (without active alerts)</h3>
+          <p class="meta" id="ordersMeta"></p>
+          <div class="order-box-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Order</th>
+                  <th>Status</th>
+                  <th>Restaurant</th>
+                  <th>Courier</th>
+                  <th>Courier phone</th>
+                  <th>Customer phone</th>
+                  <th>Destination</th>
+                  <th>Del. FF (orig)</th>
+                  <th>Assigned</th>
+                  <th>Manual assign</th>
+                  <th>Total</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+          </div>
+          <h3 class="alerts-head">Cancelled orders</h3>
+          <div class="toolbar">
+            <div class="field">
+              <label for="cancelledOrdersDatePreset">Date filter</label>
+              <select id="cancelledOrdersDatePreset">
+                <option value="today" selected>Today</option>
+                <option value="all">All</option>
+                <option value="custom">Custom date</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="cancelledOrdersDate">Date</label>
+              <input id="cancelledOrdersDate" type="date" />
+            </div>
+            <button type="button" class="btn-refresh" id="refreshCancelledOrders">Refresh</button>
+          </div>
+          <p class="meta" id="cancelledOrdersMeta"></p>
+          <div class="order-box-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Order</th>
+                  <th>Status</th>
+                  <th>Restaurant</th>
+                  <th>Courier</th>
+                  <th>Courier phone</th>
+                  <th>Customer phone</th>
+                  <th>Del. FF (orig)</th>
+                  <th>Assigned</th>
+                  <th>Total</th>
+                  <th>Cancelled by</th>
+                  <th>Reason</th>
+                  <th>Cancelled at</th>
+                </tr>
+              </thead>
+              <tbody id="cancelledOrdersBody"></tbody>
+            </table>
+          </div>
+          <h3 class="alerts-head">Open tasks with no cost offers (≥ threshold)</h3>
+          <p class="meta" id="alertsTasksMeta"></p>
+          <div class="order-box-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Status</th>
+                  <th>Courier</th>
+                  <th>Phone</th>
+                  <th>Assigned</th>
+                  <th>Location</th>
+                  <th>Created</th>
+                  <th>Age (min)</th>
+                </tr>
+              </thead>
+              <tbody id="alertsTasksBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="panel-parcel-alerts" class="hidden">
+          <h3 class="alerts-head">Parcel waiting alerts (≥ 5 min)</h3>
+          <p class="meta" id="alertsParcelMeta"></p>
+          <div class="order-box-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Parcel sender</th>
+                  <th>Status</th>
+                  <th>Courier</th>
+                  <th>Courier phone</th>
+                  <th>Customer phone</th>
+                  <th>Del. FF (orig)</th>
+                  <th>Total</th>
+                  <th>Waiting ref.</th>
+                  <th>Min waiting</th>
+                </tr>
+              </thead>
+              <tbody id="alertsParcelBody"></tbody>
+            </table>
+          </div>
+          <h3 class="alerts-head">Parcel orders</h3>
+          <p class="meta" id="parcelOrdersMeta"></p>
+          <div class="order-box-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Order</th>
+                  <th>Status</th>
+                  <th>Parcel sender</th>
+                  <th>Courier</th>
+                  <th>Courier phone</th>
+                  <th>Customer phone</th>
+                  <th>Del. FF (orig)</th>
+                  <th>Total</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="parcelOrdersBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="panel-tasks" class="hidden">
+          <div class="toolbar">
+            <div class="field">
+              <label for="taskStatus">Status</label>
+              <select id="taskStatus">
+                <option value="">All statuses</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="taskCourier">Delivery person</label>
+              <select id="taskCourier">
+                <option value="">All couriers</option>
+              </select>
+            </div>
+            <button type="button" class="btn-refresh" id="refreshTasks">Refresh</button>
+          </div>
+          <p class="meta" id="tasksMeta"></p>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Task</th>
+                  <th>Status</th>
+                  <th>Courier</th>
+                  <th>Phone</th>
+                  <th>Assigned</th>
+                  <th>Location</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="tasksBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+                <section id="panel-delivery-men" class="hidden">
+          <div class="toolbar">
+            <button type="button" class="btn-refresh" id="refreshDeliveryMen">Refresh</button>
+            <div class="field">
+              <label for="deliveryMenAvailableFilter">Available</label>
+              <select id="deliveryMenAvailableFilter">
+                <option value="all" selected>All</option>
+                <option value="yes">Available only</option>
+                <option value="no">Not available</option>
+              </select>
+            </div>
+            <label class="field" style="flex-direction: row; align-items: center; gap: 8px; padding-top: 18px">
+              <input type="checkbox" id="deliveryMenShowBlocked" />
+              <span>Show blocked</span>
+            </label>
+          </div>
+          <p class="meta" id="deliveryMenMeta"></p>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th title="Pin to top">★</th>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Work phone</th>
+                  <th>Available</th>
+                  <th>Online</th>
+                  <th>Has device token</th>
+                  <th>Device</th>
+                  <th>Delivered orders</th>
+                  <th>Sahla tax</th>
+                  <th>Notes</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="deliveryMenBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="panel-delivery-history" class="hidden">
+          <div class="toolbar">
+            <div class="field">
+              <label for="deliveryHistoryDatePreset">Date filter</label>
+              <select id="deliveryHistoryDatePreset">
+                <option value="today" selected>Today</option>
+                <option value="all">All</option>
+                <option value="custom">Custom date</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="deliveryHistoryDate">Date</label>
+              <input id="deliveryHistoryDate" type="date" />
+            </div>
+            <button type="button" class="btn-refresh" id="refreshDeliveryHistory">Refresh</button>
+            <button type="button" class="btn-collect-all" id="collectAllDeliveryHistory" disabled>Collect all</button>
+          </div>
+          <p class="meta" id="deliveryHistoryMeta"></p>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Order</th>
+                  <th>Restaurant</th>
+                  <th>Total</th>
+                  <th>Payment method</th>
+                  <th>Payment status</th>
+                  <th>Collect payment</th>
+                  <th>Delivered at</th>
+                </tr>
+              </thead>
+              <tbody id="deliveryHistoryBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="panel-restaurant-tables" class="hidden">
+          <div class="toolbar" style="padding: 0 16px">
+            <div class="field" style="min-width: 280px">
+              <label for="tableRestSelect">Restaurant</label>
+              <select id="tableRestSelect">
+                <option value="">— Select restaurant —</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tableOrderingEnabled">Table ordering</label>
+              <select id="tableOrderingEnabled">
+                <option value="false">Disabled</option>
+                <option value="true">Enabled</option>
+              </select>
+            </div>
+            <button type="button" class="btn-refresh" id="saveTableOrderingFlag">Save flag</button>
+            <button type="button" class="btn-refresh" id="refreshRestaurantTables">Refresh</button>
+          </div>
+          <div class="portal-card hidden" id="tablePortalCard">
+            <h3>Staff portal — manage table orders in the restaurant</h3>
+            <div class="toolbar" style="margin-bottom: 0">
+              <div class="field" style="min-width: 160px">
+                <label for="tablePortalCodeDisplay">Portal code</label>
+                <input id="tablePortalCodeDisplay" type="text" readonly placeholder="—" />
+              </div>
+              <div class="field" style="min-width: 280px; flex: 1">
+                <label for="tablePortalUrlDisplay">Staff URL</label>
+                <input id="tablePortalUrlDisplay" type="text" readonly placeholder="Enable table ordering first" />
+              </div>
+              <div class="field" style="min-width: 200px">
+                <label for="tablePortalPassword">Portal password</label>
+                <input
+                  id="tablePortalPassword"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="Min 6 characters"
+                />
+              </div>
+              <button type="button" class="btn-primary" id="saveTablePortalPassword" style="width: auto">
+                Save password
+              </button>
+              <button type="button" class="btn-ghost" id="regenerateTablePortalCode">New portal code</button>
+            </div>
+            <p class="meta" id="tablePortalStatus" style="margin: 10px 0 0"></p>
+          </div>
+          <p class="meta" id="restaurantTablesMeta" style="padding: 0 16px">
+            Select a verified restaurant. Enable <strong>Table ordering</strong> after adding tables. Restaurant also needs
+            <strong>web menu</strong> (<code>is_public_web_enabled</code>) for customers to order.
+          </p>
+          <div class="toolbar" style="padding: 0 16px">
+            <div class="field">
+              <label for="newTableNumber">Table number</label>
+              <input id="newTableNumber" type="text" placeholder="e.g. 12" maxlength="32" />
+            </div>
+            <div class="field">
+              <label for="newTableLabel">Label (optional)</label>
+              <input id="newTableLabel" type="text" placeholder="Terrace" maxlength="64" />
+            </div>
+            <button type="button" class="btn-primary" id="addRestaurantTable" style="width: auto; margin-top: 22px">
+              Add table + QR
+            </button>
+          </div>
+          <p class="meta" id="lastTableQrMeta" style="padding: 0 16px; word-break: break-all"></p>
+          <div style="overflow-x: auto; padding: 0 16px 24px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Table</th>
+                  <th>Label</th>
+                  <th>QR URL</th>
+                  <th>Active</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="restaurantTablesBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="panel-partner-requests" class="hidden">
+          <div class="partner-stats" id="partnerReqStats">
+            <button type="button" class="partner-stat-card" data-partner-type-card="delivery">
+              <span class="partner-stat-label">Pending delivery requests</span>
+              <span class="partner-stat-value" id="partnerDeliveryPending">0</span>
+            </button>
+            <button type="button" class="partner-stat-card" data-partner-type-card="restaurant">
+              <span class="partner-stat-label">Pending restaurant requests</span>
+              <span class="partner-stat-value" id="partnerRestaurantPending">0</span>
+            </button>
+            <button type="button" class="partner-stat-card" data-partner-type-card="parcel">
+              <span class="partner-stat-label">Pending parcel sender requests</span>
+              <span class="partner-stat-value" id="partnerParcelPending">0</span>
+            </button>
+          </div>
+          <input id="partnerReqType" type="hidden" value="delivery" />
+          <div id="partnerDeliverySection">
+            <h3 class="alerts-head">Delivery man requests</h3>
+          <div class="toolbar">
+            <div class="field">
+              <label for="dmReqStatus">Status</label>
+              <select id="dmReqStatus">
+                <option value="pending">Pending</option>
+                <option value="all">All</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <button type="button" class="btn-refresh" id="refreshDeliveryReq">Refresh</button>
+            <a class="btn-ghost" id="deliveryQueueLink" href="/admin-requests" style="text-decoration: none; display: inline-block"
+              >Shareable queue link</a
+            >
+          </div>
+          <p class="meta" id="deliveryReqMeta"></p>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Applicant</th>
+                  <th>Phone</th>
+                  <th>Vehicle</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="deliveryReqBody"></tbody>
+            </table>
+          </div>
+          </div>
+          <div id="partnerRestaurantSection" class="hidden">
+            <h3 class="alerts-head">Restaurant requests</h3>
+          <div class="toolbar">
+            <div class="field">
+              <label for="restReqStatus">Status</label>
+              <select id="restReqStatus">
+                <option value="pending">Pending</option>
+                <option value="all">All</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <button type="button" class="btn-refresh" id="refreshRestaurantReq">Refresh</button>
+            <a
+              class="btn-ghost"
+              href="/performance?view=partner-requests"
+              style="text-decoration: none; display: inline-block"
+              >Partner requests URL</a
+            >
+          </div>
+          <p class="meta" id="restaurantReqMeta"></p>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Restaurant</th>
+                  <th>Owner</th>
+                  <th>Phone</th>
+                  <th>Wilaya</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="restaurantReqBody"></tbody>
+            </table>
+          </div>
+          </div>
+          <div id="partnerParcelSection" class="hidden">
+            <h3 class="alerts-head">Parcel sender requests</h3>
+          <div class="toolbar">
+            <div class="field">
+              <label for="parcelSenderReqStatus">Status</label>
+              <select id="parcelSenderReqStatus">
+                <option value="pending">Pending</option>
+                <option value="all">All</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <button type="button" class="btn-refresh" id="refreshParcelSenderReq">Refresh</button>
+          </div>
+          <p class="meta" id="parcelSenderReqMeta"></p>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Parcel sender</th>
+                  <th>Owner</th>
+                  <th>Phone</th>
+                  <th>Wilaya</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="parcelSenderReqBody"></tbody>
+            </table>
+          </div>
+          </div>
+        </section>
+
+        <section id="panel-reviews" class="hidden">
+          <div class="toolbar">
+            <div class="field">
+              <label for="reviewRestaurant">Restaurant</label>
+              <select id="reviewRestaurant">
+                <option value="">All restaurants</option>
+              </select>
+            </div>
+            <button type="button" class="btn-refresh" id="refreshReviews">Refresh</button>
+          </div>
+          <p class="meta" id="reviewsMeta"></p>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Restaurant</th>
+                  <th>Customer</th>
+                  <th>Rating</th>
+                  <th>Comment</th>
+                  <th>Order</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="reviewsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="panel-delivery-reviews" class="hidden">
+          <div class="toolbar">
+            <div class="field">
+              <label for="reviewDeliveryPerson">Delivery person</label>
+              <select id="reviewDeliveryPerson">
+                <option value="">All delivery personnel</option>
+              </select>
+            </div>
+            <button type="button" class="btn-refresh" id="refreshDeliveryReviews">Refresh</button>
+          </div>
+          <p class="meta" id="deliveryReviewsMeta"></p>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Delivery person</th>
+                  <th>Customer</th>
+                  <th>Rating</th>
+                  <th>Comment</th>
+                  <th>Order</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="deliveryReviewsBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="cancelOrderModal" class="modal-overlay hidden" role="dialog" aria-labelledby="cancelModalTitle" aria-modal="true">
+      <div class="modal-dialog">
+        <h3 id="cancelModalTitle">Cancel order</h3>
+        <p class="meta" id="cancelModalHint" style="margin: 0 0 8px"></p>
+        <p class="meta" style="margin: 0 0 12px">
+          The customer receives a push notification with the title and message below.
+        </p>
+        <label for="cancelNotifTitle">Notification title</label>
+        <input id="cancelNotifTitle" type="text" maxlength="200" autocomplete="off" />
+        <label for="cancelNotifBody">Notification body</label>
+        <textarea id="cancelNotifBody" maxlength="4000" rows="4"></textarea>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="cancelModalDismiss">Close</button>
+          <button type="button" class="btn-modal-danger" id="cancelModalConfirm">Cancel order &amp; send</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API = '/api/performance';
+      /** Algeria — UTC+1 all year (no DST). All “today” filters and timestamps use this zone. */
+      const SAHLA_TIME_ZONE = 'Africa/Algiers';
+      const SAHLA_UTC_OFFSET_MS = 60 * 60 * 1000;
+
+      const $ = (id) => document.getElementById(id);
+      let activeAlertOrderIds = new Set();
+      let parcelAlertCount = 0;
+      let parcelActiveOrderCount = 0;
+      let cancelModalOrderId = null;
+      let partnerPendingCounts = { delivery: 0, restaurant: 0, parcel: 0 };
+      let availableOrderCouriers = [];
+
+            const PINNED_DELIVERY_MEN_KEY = 'sahla_perf_pinned_delivery_men';
+      const PINNED_DELIVERY_USER_IDS_KEY = 'sahla_perf_pinned_delivery_user_ids';
+      const DELIVERY_MAN_NOTES_LOCAL_KEY = 'sahla_perf_delivery_man_notes';
+      const ACTIVE_TAB_KEY = 'sahla_perf_active_tab';
+            let cachedPinnedUserIds = null;
+      let cachedDeliveryManNotes = {};
+      let cachedDeliveryPersonnelRows = [];
+      const deliveryManNoteSaveTimers = new Map();
+
+      function readPinnedDeliveryMenLegacy() {
+        try {
+          const raw = localStorage.getItem(PINNED_DELIVERY_MEN_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed.map(String) : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function readPinnedUserIdsLocal() {
+        try {
+          const raw = localStorage.getItem(PINNED_DELIVERY_USER_IDS_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed.map(String) : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function writePinnedUserIdsLocal(ids) {
+        try {
+          localStorage.setItem(PINNED_DELIVERY_USER_IDS_KEY, JSON.stringify(ids));
+        } catch {
+          /* Safari private mode / blocked storage */
+        }
+      }
+
+      async function syncPinnedDeliveryMenFromServer(personnelRows) {
+        let userIds = [];
+        try {
+          const data = await api('/pinned-delivery-men');
+          if (Array.isArray(data.user_ids)) {
+            userIds = data.user_ids.map(String);
+          }
+        } catch {
+          /* fall back to local cache */
+        }
+
+        if (!userIds.length) {
+          const localUserIds = readPinnedUserIdsLocal();
+          if (localUserIds.length) {
+            userIds = localUserIds;
+          } else {
+            const legacyPersonnelIds = readPinnedDeliveryMenLegacy();
+            if (legacyPersonnelIds.length && Array.isArray(personnelRows)) {
+              const byPersonnelId = new Map(
+                personnelRows.map((row) => [String(row.id), String(row.user_id || '')]),
+              );
+              userIds = legacyPersonnelIds
+                .map((id) => byPersonnelId.get(id) || id)
+                .filter(Boolean);
+            }
+          }
+          if (userIds.length) {
+            try {
+              await api('/pinned-delivery-men', {
+                method: 'PUT',
+                body: JSON.stringify({ user_ids: userIds }),
+              });
+            } catch {
+              /* keep local-only until server save works */
+            }
+          }
+        }
+
+        cachedPinnedUserIds = [...new Set(userIds.map(String))];
+        writePinnedUserIdsLocal(cachedPinnedUserIds);
+        return cachedPinnedUserIds;
+      }
+
+      async function persistPinnedDeliveryMen(userIds) {
+        const normalized = [...new Set(userIds.map(String))];
+        cachedPinnedUserIds = normalized;
+        writePinnedUserIdsLocal(normalized);
+        try {
+          await api('/pinned-delivery-men', {
+            method: 'PUT',
+            body: JSON.stringify({ user_ids: normalized }),
+          });
+        } catch (e) {
+          console.warn('Failed to persist pinned delivery men:', e);
+        }
+        return normalized;
+      }
+
+            async function togglePinnedDeliveryMan(userId) {
+        const key = String(userId || '').trim();
+        if (!key) return false;
+        const pinned = [...(cachedPinnedUserIds || readPinnedUserIdsLocal())];
+        const idx = pinned.indexOf(key);
+        if (idx >= 0) pinned.splice(idx, 1);
+        else pinned.push(key);
+        await persistPinnedDeliveryMen(pinned);
+        return pinned.includes(key);
+      }
+
+      function readDeliveryManNotesLocal() {
+        try {
+          const raw = localStorage.getItem(DELIVERY_MAN_NOTES_LOCAL_KEY);
+          const parsed = raw ? JSON.parse(raw) : {};
+          return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+        } catch {
+          return {};
+        }
+      }
+
+      function writeDeliveryManNotesLocal(notes) {
+        try {
+          localStorage.setItem(DELIVERY_MAN_NOTES_LOCAL_KEY, JSON.stringify(notes || {}));
+        } catch {
+          /* Safari private mode / blocked storage */
+        }
+      }
+
+      async function syncDeliveryManNotesFromServer() {
+        let notes = {};
+        try {
+          const data = await api('/delivery-personnel-notes');
+          if (data && data.notes && typeof data.notes === 'object') {
+            notes = data.notes;
+          }
+        } catch {
+          notes = readDeliveryManNotesLocal();
+        }
+        cachedDeliveryManNotes = { ...notes };
+        writeDeliveryManNotesLocal(cachedDeliveryManNotes);
+        return cachedDeliveryManNotes;
+      }
+
+      async function persistDeliveryManNote(userId, noteText) {
+        const key = String(userId || '').trim();
+        if (!key) return '';
+        const note = String(noteText ?? '').trim();
+        if (note) cachedDeliveryManNotes[key] = note;
+        else delete cachedDeliveryManNotes[key];
+        writeDeliveryManNotesLocal(cachedDeliveryManNotes);
+        const data = await api('/delivery-personnel-notes', {
+          method: 'PUT',
+          body: JSON.stringify({ user_id: key, note }),
+        });
+        const saved = data && data.note != null ? String(data.note) : note;
+        if (saved) cachedDeliveryManNotes[key] = saved;
+        else delete cachedDeliveryManNotes[key];
+        writeDeliveryManNotesLocal(cachedDeliveryManNotes);
+        return saved;
+      }
+
+      function scheduleDeliveryManNoteSave(userId, textarea, statusEl) {
+        const key = String(userId || '').trim();
+        if (!key || !textarea) return;
+        const existing = deliveryManNoteSaveTimers.get(key);
+        if (existing) clearTimeout(existing);
+        if (statusEl) {
+          statusEl.textContent = 'Saving…';
+          statusEl.classList.remove('is-error', 'is-ok');
+        }
+        const timer = setTimeout(() => {
+          deliveryManNoteSaveTimers.delete(key);
+          void persistDeliveryManNote(key, textarea.value)
+            .then((saved) => {
+              if (document.activeElement !== textarea) {
+                textarea.value = saved;
+              }
+              if (statusEl) {
+                statusEl.textContent = saved ? 'Saved' : 'Cleared';
+                statusEl.classList.add('is-ok');
+                statusEl.classList.remove('is-error');
+              }
+            })
+            .catch((e) => {
+              if (statusEl) {
+                statusEl.textContent = e.message || 'Save failed';
+                statusEl.classList.add('is-error');
+                statusEl.classList.remove('is-ok');
+              }
+            });
+        }, 450);
+        deliveryManNoteSaveTimers.set(key, timer);
+      }
+
+      function sortDeliveryPersonnelRows(rows, pinnedUserIds) {
+        const pinnedSet = new Set(pinnedUserIds);
+        const pinned = [];
+        const unpinned = [];
+        for (const row of rows) {
+          const uid = String(row.user_id || '');
+          if (uid && pinnedSet.has(uid)) pinned.push(row);
+          else unpinned.push(row);
+        }
+        pinned.sort(
+          (a, b) =>
+            pinnedUserIds.indexOf(String(a.user_id)) - pinnedUserIds.indexOf(String(b.user_id)),
+        );
+        return pinned.concat(unpinned);
+      }
+
+      const DASHBOARD_CANCELLABLE_STATUSES = ['pending', 'confirmed', 'preparing', 'ready'];
+
+      function orderCanCancelFromDashboard(o) {
+        const st = String(o?.status || '').toLowerCase();
+        return DASHBOARD_CANCELLABLE_STATUSES.includes(st);
+      }
+
+      function closeCancelOrderModal() {
+        cancelModalOrderId = null;
+        const m = $('cancelOrderModal');
+        if (m) m.classList.add('hidden');
+      }
+
+      function openCancelOrderModal(orderId, orderLabel) {
+        cancelModalOrderId = orderId;
+        const hint = $('cancelModalHint');
+        if (hint) {
+          hint.textContent = orderLabel ? 'Order ' + String(orderLabel) : String(orderId);
+        }
+        const t = $('cancelNotifTitle');
+        const b = $('cancelNotifBody');
+        /* Same default copy as auto-cancel (10m) customer push — admins can edit before send. */
+        if (t) t.value = 'المطعم تحت الضغط حاليا';
+        if (b) b.value = 'نعتذر لعدم قبول طلبكم نرجو منكم التفهم.';
+        const m = $('cancelOrderModal');
+        if (m) {
+          m.classList.remove('hidden');
+          if (t) t.focus();
+        }
+      }
+
+      async function submitCancelOrderFromModal() {
+        const id = cancelModalOrderId;
+        if (!id) return;
+        const title = ($('cancelNotifTitle') && $('cancelNotifTitle').value.trim()) || '';
+        const bodyText = ($('cancelNotifBody') && $('cancelNotifBody').value.trim()) || '';
+        if (!title || !bodyText) {
+          alert('Please enter both notification title and body.');
+          return;
+        }
+        const btn = $('cancelModalConfirm');
+        const prev = btn ? btn.textContent : '';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Working…';
+        }
+        try {
+          await api('/orders/' + encodeURIComponent(id) + '/cancel', {
+            method: 'POST',
+            body: JSON.stringify({
+              notification_title: title,
+              notification_body: bodyText,
+            }),
+          });
+          closeCancelOrderModal();
+          await loadAlerts().catch(() => {});
+          await loadOrders().catch(() => {});
+          await loadCancelledOrders().catch(() => {});
+        } catch (e) {
+          alert(e.message || 'Cancel failed');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || 'Cancel order & send';
+          }
+        }
+      }
+
+      function updateForcePushTargetFields() {
+        const sendAll = !!($('forcePushSendAll') && $('forcePushSendAll').checked);
+        const fields = $('forcePushTargetFields');
+        const hint = $('forcePushModeHint');
+        const batchHint = $('forcePushBatchHint');
+        if (fields) fields.classList.toggle('hidden', sendAll);
+        if (batchHint) batchHint.classList.toggle('hidden', !sendAll);
+        if (hint) {
+          hint.textContent = sendAll
+            ? 'Broadcast mode: targets all devices in user_device_tokens.'
+            : 'Targets one exact device token and can reactivate inactive rows.';
+        }
+      }
+
+      function updateForcePushScheduleFields() {
+        const enabled = !!($('forcePushSchedule') && $('forcePushSchedule').checked);
+        const wrap = $('forcePushScheduleFields');
+        if (wrap) wrap.classList.toggle('hidden', !enabled);
+        if (enabled) {
+          const input = $('forcePushScheduledAt');
+          if (input && !input.value) {
+            const d = new Date(Date.now() + 15 * 60 * 1000);
+            d.setSeconds(0, 0);
+            const pad = (n) => String(n).padStart(2, '0');
+            input.value =
+              d.getFullYear() +
+              '-' +
+              pad(d.getMonth() + 1) +
+              '-' +
+              pad(d.getDate()) +
+              'T' +
+              pad(d.getHours()) +
+              ':' +
+              pad(d.getMinutes());
+          }
+        }
+      }
+
+      function setForcePushResult(kind, message) {
+        const box = $('forcePushResult');
+        if (!box) return;
+        box.textContent = message || '';
+        box.className = 'force-push-result ' + (kind || '');
+        box.classList.toggle('hidden', !message);
+      }
+
+      function setAvailabilityReminderResult(kind, message) {
+        const box = $('availabilityReminderResult');
+        if (!box) return;
+        box.textContent = message || '';
+        box.className = 'force-push-result ' + (kind || '');
+        box.classList.toggle('hidden', !message);
+      }
+
+      async function submitForcePushNotification() {
+        const sendAll = !!($('forcePushSendAll') && $('forcePushSendAll').checked);
+        const scheduleSend = !!($('forcePushSchedule') && $('forcePushSchedule').checked);
+        const userId = ($('forcePushUserId') && $('forcePushUserId').value.trim()) || '';
+        const deviceToken = ($('forcePushDeviceToken') && $('forcePushDeviceToken').value.trim()) || '';
+        const title = ($('forcePushTitle') && $('forcePushTitle').value.trim()) || '';
+        const bodyText = ($('forcePushBody') && $('forcePushBody').value.trim()) || '';
+        const forceActivate = !$('forcePushActivate') || $('forcePushActivate').checked;
+        const useCampaign = sendAll || scheduleSend;
+
+        setForcePushResult('', '');
+        if (!sendAll && (!userId || !deviceToken)) {
+          setForcePushResult('err', 'Please enter both user ID and device token.');
+          return;
+        }
+        if (!title || !bodyText) {
+          setForcePushResult('err', 'Please enter both title and message.');
+          return;
+        }
+
+        let scheduledFor = '';
+        if (scheduleSend) {
+          const raw = ($('forcePushScheduledAt') && $('forcePushScheduledAt').value) || '';
+          if (!raw) {
+            setForcePushResult('err', 'Please pick a date and time for scheduled send.');
+            return;
+          }
+          const when = new Date(raw);
+          if (Number.isNaN(when.getTime())) {
+            setForcePushResult('err', 'Invalid schedule date/time.');
+            return;
+          }
+          if (when.getTime() < Date.now() - 60_000) {
+            setForcePushResult('err', 'Scheduled time must be in the future.');
+            return;
+          }
+          scheduledFor = when.toISOString();
+        }
+
+        const btn = $('forcePushSend');
+        const prev = btn ? btn.textContent : '';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = scheduleSend ? 'Scheduling...' : 'Sending...';
+        }
+        try {
+          const payload = {
+            send_all_devices: sendAll,
+            user_id: userId,
+            device_token: deviceToken,
+            force_activate_inactive_tokens: forceActivate,
+            title,
+            body: bodyText,
+            schedule_send: scheduleSend,
+            use_campaign: useCampaign,
+          };
+          if (scheduledFor) payload.scheduled_for = scheduledFor;
+
+          const response = await api('/force-push-notification', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
+
+          if (response.campaign_id) {
+            const whenLabel = response.scheduled_for
+              ? ' Scheduled for ' + new Date(response.scheduled_for).toLocaleString() + '.'
+              : ' Delivery runs in the background.';
+            const modeLabel =
+              response.delivery_mode === 'db_reconcile'
+                ? ' QStash unavailable — campaign saved; reconcile worker will start it at the scheduled time.'
+                : response.delivery_mode === 'direct_worker'
+                  ? ' Started via direct worker (QStash bypass).'
+                  : '';
+            const warnLabel = response.warning ? ' ' + response.warning : '';
+            setForcePushResult(
+              response.delivery_mode === 'db_reconcile' ? 'warn' : 'ok',
+              'Push campaign queued (ID: ' + response.campaign_id + ').' + whenLabel + modeLabel + warnLabel,
+            );
+            return;
+          }
+
+          const total = Number(response.total_sent ?? response.summary?.total_sent ?? 0);
+          const failed = Number(response.summary?.total_failed ?? 0);
+          let okMsg = sendAll
+            ? 'Forced push sent to all devices successfully'
+            : 'Forced push sent successfully';
+          if (total) okMsg += ' (' + total + ' sent)';
+          if (failed) okMsg += ', ' + failed + ' failed';
+          okMsg += '.';
+          setForcePushResult('ok', okMsg);
+        } catch (e) {
+          setForcePushResult('err', e.message || 'Failed to send forced push.');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || 'Force Send';
+          }
+        }
+      }
+
+      async function submitAvailabilityReminder() {
+        const title = ($('availabilityReminderTitle') && $('availabilityReminderTitle').value.trim()) || '';
+        const bodyText = ($('availabilityReminderBody') && $('availabilityReminderBody').value.trim()) || '';
+
+        setAvailabilityReminderResult('', '');
+        if (!title || !bodyText) {
+          setAvailabilityReminderResult('err', 'Please enter both title and message.');
+          return;
+        }
+
+        if (!confirm('Send availability reminder to all currently unavailable delivery men?')) return;
+
+        const btn = $('availabilityReminderSend');
+        const prev = btn ? btn.textContent : '';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Sending...';
+        }
+        try {
+          const response = await api('/delivery-personnel/non-available-reminder', {
+            method: 'POST',
+            body: JSON.stringify({ title, body: bodyText }),
+          });
+          if (response.success !== true && response.skipped !== true) {
+            throw new Error(response.result?.error || 'Reminder push failed');
+          }
+          const target = Number(response.target_count ?? 0);
+          const sent = Number(response.total_sent ?? 0);
+          if (response.skipped) {
+            setAvailabilityReminderResult('ok', 'No unavailable delivery men found.');
+          } else {
+            setAvailabilityReminderResult(
+              'ok',
+              'Availability reminder sent. Targeted ' + target + ' delivery men; sent ' + sent + ' notification(s).',
+            );
+          }
+        } catch (e) {
+          setAvailabilityReminderResult('err', e.message || 'Failed to send availability reminder.');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || 'Send Availability Reminder';
+          }
+        }
+      }
+
+      function showDashboardError(msg) {
+        const banner = $('dashboardErrorBanner');
+        const txt = $('dashboardErrorMsg');
+        if (banner && txt) {
+          txt.textContent = msg;
+          banner.classList.remove('hidden');
+        }
+        console.error('[Performance Dashboard Error]', msg);
+      }
+
+      function clearDashboardError() {
+        const banner = $('dashboardErrorBanner');
+        if (banner) banner.classList.add('hidden');
+      }
+
+      async function api(path, opts) {
+        let r;
+        try {
+          r = await fetch(API + path, {
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', ...(opts && opts.headers) },
+            ...opts,
+          });
+        } catch (networkErr) {
+          const msg = 'Network error reaching ' + path + ': ' + (networkErr.message || 'Connection failed');
+          showDashboardError(msg);
+          throw new Error(msg);
+        }
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          const detail = j.error || r.statusText || ('HTTP ' + r.status);
+          const msg = detail + ' (' + path + ' [' + r.status + '])';
+          showDashboardError(msg);
+          throw new Error(msg);
+        }
+        return j;
+      }
+
+      function fmtOrigDeliveryFf(o) {
+        const v =
+          o.display_original_delivery_fee ?? o.original_delivery_fee ?? o.delivery_fee;
+        if (v == null || Number.isNaN(Number(v))) return '—';
+        return Number(v).toFixed(0) + ' DA';
+      }
+
+      function parseMaybeJsonObject(value) {
+        if (!value) return null;
+        if (typeof value === 'object') return value;
+        if (typeof value === 'string') {
+          try {
+            const parsed = JSON.parse(value);
+            return parsed && typeof parsed === 'object' ? parsed : null;
+          } catch {
+            return null;
+          }
+        }
+        return null;
+      }
+
+      function deliveryDestination(o) {
+        const raw = o && o.delivery_address;
+        const obj = parseMaybeJsonObject(raw);
+        const direct = typeof raw === 'string' ? raw.trim() : '';
+        const parts = [];
+        if (obj) {
+          [
+            obj.formatted_address,
+            obj.formattedAddress,
+            obj.full_address,
+            obj.fullAddress,
+            obj.address,
+            obj.address_line1,
+            obj.addressLine1,
+            obj.street,
+            obj.building,
+            obj.neighborhood,
+            obj.city,
+            obj.commune,
+            obj.wilaya,
+          ].forEach((v) => {
+            const s = String(v || '').trim();
+            if (s.toLowerCase() === 'selected location') return;
+            if (s && !parts.includes(s)) parts.push(s);
+          });
+        }
+        const lat = obj?.latitude ?? obj?.lat ?? obj?.delivery_latitude ?? o?.delivery_latitude;
+        const lng =
+          obj?.longitude ??
+          obj?.lng ??
+          obj?.lon ??
+          obj?.delivery_longitude ??
+          o?.delivery_longitude;
+        const hasCoords =
+          lat != null &&
+          lng != null &&
+          Number.isFinite(Number(lat)) &&
+          Number.isFinite(Number(lng));
+        const directText = direct.toLowerCase() === 'selected location' ? '' : direct;
+        const text = parts.join(', ') || directText || (hasCoords ? '' : '—');
+        const query = hasCoords ? Number(lat) + ',' + Number(lng) : text;
+        const lookupUrl =
+          text !== '—' || hasCoords
+            ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query)
+            : '';
+        return { text, lookupUrl };
+      }
+
+      function destinationCellHtml(o) {
+        const d = deliveryDestination(o);
+        if (!d.lookupUrl) return esc(d.text);
+        return (
+          (d.text ? esc(d.text) + '<br>' : '') +
+          '<a href="' +
+          esc(d.lookupUrl) +
+          '" target="_blank" rel="noopener">Look up</a>'
+        );
+      }
+
+      function courierOptionLabel(c) {
+        return String(c?.label || c?.name || c?.phone || c?.id || '').trim() || 'Unknown courier';
+      }
+
+      const orderStatusOptions = [
+        'pending',
+        'confirmed',
+        'preparing',
+        'ready',
+        'picked_up',
+        'delivered',
+        'cancelled',
+      ];
+
+      function orderStatusLabel(status) {
+        const s = String(status || '').trim();
+        if (!s) return '—';
+        return s.replace(/_/g, ' ');
+      }
+
+      async function changeOrderStatus(order, nextStatus, sel) {
+        const current = String(order?.status || '').toLowerCase();
+        if (!nextStatus || nextStatus === current) return;
+        if (nextStatus === 'cancelled') {
+          sel.value = current;
+          openCancelOrderModal(order.id, order.order_number || order.id);
+          return;
+        }
+        if (!confirm('Change order ' + (order.order_number || order.id) + ' to ' + orderStatusLabel(nextStatus) + '?')) {
+          sel.value = current;
+          return;
+        }
+        sel.disabled = true;
+        try {
+          await api('/orders/' + encodeURIComponent(order.id) + '/status', {
+            method: 'POST',
+            body: JSON.stringify({ status: nextStatus }),
+          });
+          await loadAlerts().catch(() => {});
+          await loadOrders().catch(() => {});
+          await loadCancelledOrders().catch(() => {});
+        } catch (e) {
+          alert('Status update failed: ' + (e && e.message ? e.message : String(e)));
+          sel.disabled = false;
+          sel.value = current;
+        }
+      }
+
+      function appendOrderStatusSelect(td, order) {
+        const current = String(order?.status || '').toLowerCase();
+        const sel = document.createElement('select');
+        sel.className = 'order-status-select';
+        for (const status of orderStatusOptions) {
+          const opt = document.createElement('option');
+          opt.value = status;
+          opt.textContent = orderStatusLabel(status);
+          sel.appendChild(opt);
+        }
+        if (current && !orderStatusOptions.includes(current)) {
+          const opt = document.createElement('option');
+          opt.value = current;
+          opt.textContent = orderStatusLabel(current);
+          sel.appendChild(opt);
+        }
+        sel.value = current || 'pending';
+        sel.addEventListener('change', () => changeOrderStatus(order, sel.value, sel));
+        td.appendChild(sel);
+      }
+
+      function esc(s) {
+        return String(s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function boolCell(v) {
+        if (v === true) return '<span class="status-pill">Yes</span>';
+        if (v === false) return '<span class="status-pill">No</span>';
+        return '—';
+      }
+
+      function deliveryStatusSelectCell(userId, field, value, disabled) {
+        const selected = value === true ? 'true' : 'false';
+        return (
+          '<select class="delivery-man-status-select" data-delivery-status-user-id="' +
+          esc(userId) +
+          '" data-delivery-status-field="' +
+          esc(field) +
+          '"' +
+          (disabled ? ' disabled' : '') +
+          '>' +
+          '<option value="true"' +
+          (selected === 'true' ? ' selected' : '') +
+          '>Yes</option>' +
+          '<option value="false"' +
+          (selected === 'false' ? ' selected' : '') +
+          '>No</option>' +
+          '</select>'
+        );
+      }
+
+      function devicePlatformCell(row) {
+        const rawPlatforms = Array.isArray(row.device_platforms)
+          ? row.device_platforms
+          : [row.device_platform];
+        const labels = [];
+        rawPlatforms.forEach((value) => {
+          const platform = String(value || '').trim().toLowerCase();
+          if (!platform) return;
+          const label =
+            platform === 'ios' || platform === 'iphone'
+              ? 'iPhone'
+              : platform === 'android'
+                ? 'Android'
+                : platform;
+          if (!labels.includes(label)) labels.push(label);
+        });
+        if (!labels.length) return '—';
+        return '<span class="status-pill">' + esc(labels.join(' + ')) + '</span>';
+      }
+
+      function fmtDate(iso) {
+        if (!iso) return '—';
+        try {
+          const d = new Date(iso);
+          if (Number.isNaN(d.getTime())) return '—';
+          return new Intl.DateTimeFormat(undefined, {
+            timeZone: SAHLA_TIME_ZONE,
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          }).format(d);
+        } catch {
+          return '—';
+        }
+      }
+
+      function sahlaTodayYmd() {
+        const wall = new Date(Date.now() + SAHLA_UTC_OFFSET_MS);
+        const y = wall.getUTCFullYear();
+        const m = String(wall.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(wall.getUTCDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+      }
+
+      function unwrapReviewEmbed(v) {
+        if (v == null) return null;
+        if (Array.isArray(v)) return v[0] ?? null;
+        return v;
+      }
+
+      function ratingStarsHtml(n) {
+        const r = Math.min(5, Math.max(0, Math.round(Number(n) || 0)));
+        const filled = '★'.repeat(r);
+        const empty = '☆'.repeat(5 - r);
+        return '<span class="num" title="' + r + '/5">' + filled + empty + '</span>';
+      }
+
+      function updateReviewsBadge(n) {
+        const el = $('reviewsBadge');
+        const c = n || 0;
+        if (c > 0) {
+          el.textContent = c > 99 ? '99+' : String(c);
+          el.classList.add('visible');
+        } else {
+          el.textContent = '0';
+          el.classList.remove('visible');
+        }
+      }
+
+      function updateDeliveryReviewsBadge(n) {
+        const el = $('deliveryReviewsBadge');
+        const c = n || 0;
+        if (c > 0) {
+          el.textContent = c > 99 ? '99+' : String(c);
+          el.classList.add('visible');
+        } else {
+          el.textContent = '0';
+          el.classList.remove('visible');
+        }
+      }
+
+      const taskStatuses = [
+        'pending',
+        'cost_review',
+        'cost_proposed',
+        'cost_accepted',
+        'user_counter_proposed',
+        'delivery_counter_proposed',
+        'negotiation_finalized',
+        'assigned',
+        'completed',
+        'scheduled',
+        'expired',
+        'cancelled',
+      ];
+
+      function fillStatusSelect(sel, values) {
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">All statuses</option>';
+        for (const v of values) {
+          const o = document.createElement('option');
+          o.value = v;
+          o.textContent = v;
+          sel.appendChild(o);
+        }
+        sel.value = cur;
+      }
+
+      async function tryBootstrap() {
+        try {
+          await api('/meta', { method: 'GET' });
+          showApp();
+          await loadMeta();
+          await loadAlerts();
+          await loadOrders();
+          applyViewFromQuery();
+        } catch {
+          /* stay on gate */
+        }
+      }
+
+      function showApp() {
+        $('gate').classList.add('hidden');
+        $('app').classList.remove('hidden');
+      }
+
+      function fillAdminRequestHelps(m) {
+        const phone = m.admin_phone || '+213799790530';
+        const waDigits = String(phone).replace(/\D/g, '').replace(/^0+/, '');
+        const name = (m.admin_profile && m.admin_profile.name && String(m.admin_profile.name).trim()) || '';
+        const profLine = name
+          ? '<strong>' + esc(name) + '</strong> — ' + esc(phone)
+          : '<strong>' + esc(phone) + '</strong>';
+        const safeTel = String(phone).replace(/[^+0-9]/g, '');
+        const html =
+          '<p style="margin:0 0 8px">Approvals from this page are recorded under the admin profile matching ' +
+          profLine +
+          ' (from <code>user_profiles</code> when found). Same database updates as the app; optional in-app notifications or WhatsApp may only run when approving inside Sahla. Sign in with that number → <strong>Admin dashboard</strong> → <strong>Sahla Partner Requests</strong>.</p>' +
+          '<p style="margin:0">' +
+          '<a href="tel:' +
+          esc(safeTel) +
+          '">Call</a> · <a href="https://wa.me/' +
+          esc(waDigits) +
+          '" target="_blank" rel="noopener">WhatsApp</a> · <a href="/admin-requests">Shareable queue link</a> <span class="meta">(/admin-requests)</span></p>';
+        const help = $('partnerReqHelp');
+        if (help) help.innerHTML = html;
+      }
+
+      function updateRequestBadges(dm, rr, ps) {
+        const d = dm || 0;
+        const r = rr || 0;
+        const p = ps || 0;
+        partnerPendingCounts = { delivery: d, restaurant: r, parcel: p };
+        const total = d + r + p;
+        const el = $('partnerReqBadge');
+        if (total > 0) {
+          el.textContent = total > 99 ? '99+' : String(total);
+          el.classList.add('visible');
+        } else {
+          el.textContent = '0';
+          el.classList.remove('visible');
+        }
+        updatePartnerRequestStats();
+      }
+
+      function updatePartnerRequestStats() {
+        if ($('partnerDeliveryPending')) $('partnerDeliveryPending').textContent = String(partnerPendingCounts.delivery || 0);
+        if ($('partnerRestaurantPending')) $('partnerRestaurantPending').textContent = String(partnerPendingCounts.restaurant || 0);
+        if ($('partnerParcelPending')) $('partnerParcelPending').textContent = String(partnerPendingCounts.parcel || 0);
+        const active = $('partnerReqType')?.value || 'delivery';
+        document.querySelectorAll('[data-partner-type-card]').forEach((card) => {
+          card.classList.toggle('active', card.getAttribute('data-partner-type-card') === active);
+        });
+      }
+
+      function syncPartnerRequestTypeVisibility() {
+        const type = $('partnerReqType')?.value || 'delivery';
+        $('partnerDeliverySection').classList.toggle('hidden', type !== 'delivery');
+        $('partnerRestaurantSection').classList.toggle('hidden', type !== 'restaurant');
+        $('partnerParcelSection').classList.toggle('hidden', type !== 'parcel');
+        updatePartnerRequestStats();
+      }
+
+      function setPartnerRequestType(type) {
+        const sel = $('partnerReqType');
+        if (!sel) return;
+        sel.value = type;
+        syncPartnerRequestTypeVisibility();
+        loadPartnerRequests().catch(() => {});
+      }
+
+      async function loadMeta() {
+        const m = await api('/meta');
+        availableOrderCouriers = Array.isArray(m.available_order_couriers)
+          ? m.available_order_couriers
+          : [];
+        const cs = $('taskCourier');
+        cs.innerHTML = '<option value="">All couriers</option>';
+        for (const c of m.couriers || []) {
+          const o = document.createElement('option');
+          o.value = c.id;
+          o.textContent = (c.name || c.phone || c.id).slice(0, 48);
+          cs.appendChild(o);
+        }
+        fillStatusSelect($('taskStatus'), taskStatuses);
+        const rv = $('reviewRestaurant');
+        const prevRv = rv.value;
+        rv.innerHTML = '<option value="">All restaurants</option>';
+        for (const r of m.restaurants || []) {
+          const o = document.createElement('option');
+          o.value = r.id;
+          o.textContent = r.name || r.id;
+          rv.appendChild(o);
+        }
+        rv.value = prevRv;
+        const dv = $('reviewDeliveryPerson');
+        const prevDv = dv.value;
+        dv.innerHTML = '<option value="">All delivery personnel</option>';
+        for (const p of m.delivery_personnel_options || []) {
+          const o = document.createElement('option');
+          o.value = p.id;
+          o.textContent = p.name || p.id;
+          dv.appendChild(o);
+        }
+        dv.value = prevDv;
+        updateRequestBadges(
+          m.pending_delivery_man_requests,
+          m.pending_restaurant_requests,
+          m.pending_parcel_sender_requests,
+        );
+        if (m.new_restaurant_reviews_in_window != null) {
+          updateReviewsBadge(m.new_restaurant_reviews_in_window);
+        }
+        if (m.new_delivery_reviews_in_window != null) {
+          updateDeliveryReviewsBadge(m.new_delivery_reviews_in_window);
+        }
+        fillAdminRequestHelps(m);
+      }
+
+      function applyViewFromQuery() {
+        const v = new URLSearchParams(window.location.search).get('view');
+        if (v === 'delivery-requests' || v === 'restaurant-requests' || v === 'parcel-sender-requests' || v === 'partner-requests') {
+          const type =
+            v === 'restaurant-requests'
+              ? 'restaurant'
+              : v === 'parcel-sender-requests'
+                ? 'parcel'
+                : 'delivery';
+          $('partnerReqType').value = type;
+          syncPartnerRequestTypeVisibility();
+          selectTab('partner-requests', { skipPersist: true });
+        }
+        else if (v === 'delivery-men') selectTab('delivery-men', { skipPersist: true });
+        else if (v === 'delivery-history') selectTab('delivery-history', { skipPersist: true });
+        else if (v === 'reviews') selectTab('reviews', { skipPersist: true });
+        else if (v === 'delivery-reviews') selectTab('delivery-reviews', { skipPersist: true });
+        else if (v === 'force-push') selectTab('force-push', { skipPersist: true });
+        else if (v === 'orders') selectTab('alerts', { skipPersist: true });
+        else if (v === 'parcel' || v === 'parcel-alerts') selectTab('parcel-alerts', { skipPersist: true });
+        else if (v === 'tasks') selectTab('tasks', { skipPersist: true });
+        else if (v === 'restaurant-tables') selectTab('restaurant-tables', { skipPersist: true });
+        else if (v === 'alerts') selectTab('alerts', { skipPersist: true });
+        else {
+          let savedTab = '';
+          try {
+            savedTab = localStorage.getItem(ACTIVE_TAB_KEY) || '';
+          } catch {
+            savedTab = '';
+          }
+          if (savedTab === 'reports' || savedTab === 'courier-map') savedTab = '';
+          selectTab(savedTab || 'alerts', { skipPersist: true });
+        }
+      }
+
+      async function loadReviews() {
+        try {
+          const qs = new URLSearchParams();
+          const rid = $('reviewRestaurant').value;
+          if (rid) qs.set('restaurant_id', rid);
+          const q = qs.toString();
+          const data = await api('/reviews' + (q ? '?' + q : ''));
+          const rows = data.reviews || [];
+          const hours = data.new_reviews_hours ?? 48;
+          const newCount = data.new_reviews_in_window ?? 0;
+          const thresholdMs = Date.now() - hours * 3600 * 1000;
+          const filterLabel = rid ? ' (filtered)' : '';
+          $('reviewsMeta').textContent =
+            rows.length +
+            ' review(s), newest first.' +
+            filterLabel +
+            ' Badge = new in last ' +
+            hours +
+            'h for this filter (' +
+            newCount +
+            '). Live updates about every 3s while this tab is open.';
+          updateReviewsBadge(newCount);
+          const tb = $('reviewsBody');
+          tb.innerHTML = '';
+          if (!rows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="7" class="meta">No reviews found.</td>';
+            tb.appendChild(tr);
+          } else {
+            rows.forEach((row, i) => {
+              const tr = document.createElement('tr');
+              const createdMs = new Date(row.created_at).getTime();
+              if (!Number.isNaN(createdMs) && createdMs >= thresholdMs) {
+                tr.className = 'row-warn';
+              }
+              const rest = unwrapReviewEmbed(row.restaurant || row.restaurants);
+              const cust = unwrapReviewEmbed(row.user_profiles || row.customer);
+              const restName = rest && (rest.name || rest.id);
+              const custName = cust && (cust.name || cust.id);
+              const comment = (row.comment || '').trim();
+              const short =
+                comment.length > 120 ? esc(comment.slice(0, 120)) + '…' : esc(comment || '—');
+              tr.innerHTML =
+                '<td class="num">' +
+                (i + 1) +
+                '</td><td>' +
+                esc(restName || row.restaurant_id || '—') +
+                '</td><td>' +
+                esc(custName || row.customer_id || '—') +
+                '</td><td>' +
+                ratingStarsHtml(row.rating) +
+                '</td><td title="' +
+                esc(comment) +
+                '">' +
+                short +
+                '</td><td class="num">' +
+                (row.order_id
+                  ? '<span title="' +
+                    esc(String(row.order_id)) +
+                    '">' +
+                    esc(String(row.order_id).slice(0, 8)) +
+                    '…</span>'
+                  : '—') +
+                '</td><td>' +
+                esc(fmtDate(row.created_at)) +
+                '</td>';
+              tb.appendChild(tr);
+            });
+          }
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load reviews';
+          $('reviewsMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const tb = $('reviewsBody');
+          if (tb) {
+            tb.innerHTML = '<tr><td colspan="7" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load reviews:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadReviews()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      async function loadDeliveryReviews() {
+        try {
+          const qs = new URLSearchParams();
+          const dpId = $('reviewDeliveryPerson').value;
+          if (dpId) qs.set('delivery_person_id', dpId);
+          const q = qs.toString();
+          const data = await api('/delivery-reviews' + (q ? '?' + q : ''));
+          const rows = data.reviews || [];
+          const hours = data.new_reviews_hours ?? 48;
+          const newCount = data.new_reviews_in_window ?? 0;
+          const thresholdMs = Date.now() - hours * 3600 * 1000;
+          const filterLabel = dpId ? ' (filtered)' : '';
+          $('deliveryReviewsMeta').textContent =
+            rows.length +
+            ' delivery review(s), newest first.' +
+            filterLabel +
+            ' Badge = new in last ' +
+            hours +
+            'h for this filter (' +
+            newCount +
+            '). Live updates about every 3s while this tab is open.';
+          updateDeliveryReviewsBadge(newCount);
+          const tb = $('deliveryReviewsBody');
+          tb.innerHTML = '';
+          if (!rows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="7" class="meta">No delivery reviews found.</td>';
+            tb.appendChild(tr);
+          } else {
+            rows.forEach((row, i) => {
+              const tr = document.createElement('tr');
+              const createdMs = new Date(row.created_at).getTime();
+              if (!Number.isNaN(createdMs) && createdMs >= thresholdMs) {
+                tr.className = 'row-warn';
+              }
+              const dp = unwrapReviewEmbed(row.delivery_personnel);
+              const cust = unwrapReviewEmbed(row.user_profiles || row.customer);
+              const order = unwrapReviewEmbed(row.orders || row.order);
+              const dpUser = dp ? unwrapReviewEmbed(dp.user) : null;
+              const dpName =
+                (dp && (dp.delivery_name || dpUser?.name || dp.id)) || row.delivery_person_id || '—';
+              const custName = cust && (cust.name || cust.id);
+              const comment = (row.comment || '').trim();
+              const short =
+                comment.length > 120 ? esc(comment.slice(0, 120)) + '…' : esc(comment || '—');
+              const orderLabel = order?.order_number || row.order_id;
+              tr.innerHTML =
+                '<td class="num">' +
+                (i + 1) +
+                '</td><td>' +
+                esc(dpName) +
+                '</td><td>' +
+                esc(custName || row.customer_id || '—') +
+                '</td><td>' +
+                ratingStarsHtml(row.rating) +
+                '</td><td title="' +
+                esc(comment) +
+                '">' +
+                short +
+                '</td><td class="num">' +
+                (orderLabel
+                  ? '<span title="' +
+                    esc(String(row.order_id || '')) +
+                    '">' +
+                    esc(String(orderLabel)) +
+                    '</span>'
+                  : '—') +
+                '</td><td>' +
+                esc(fmtDate(row.created_at)) +
+                '</td>';
+              tb.appendChild(tr);
+            });
+          }
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load delivery reviews';
+          $('deliveryReviewsMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const tb = $('deliveryReviewsBody');
+          if (tb) {
+            tb.innerHTML = '<tr><td colspan="7" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load delivery reviews:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryReviews()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      async function approveDeliveryManRequest(id) {
+        if (!confirm('Approve this delivery man request?')) return;
+        try {
+          await api('/delivery-man-requests/' + encodeURIComponent(id) + '/approve', { method: 'POST', body: '{}' });
+          await loadMeta();
+          await loadPartnerRequests();
+          await loadAlerts().catch(() => {});
+        } catch (e) {
+          alert(e.message || 'Approve failed');
+        }
+      }
+
+      async function rejectDeliveryManRequest(id) {
+        const reason = window.prompt('Rejection reason (required):');
+        if (reason == null) return;
+        const r = String(reason).trim();
+        if (!r) {
+          alert('Reason is required.');
+          return;
+        }
+        try {
+          await api('/delivery-man-requests/' + encodeURIComponent(id) + '/reject', {
+            method: 'POST',
+            body: JSON.stringify({ reason: r }),
+          });
+          await loadMeta();
+          await loadPartnerRequests();
+          await loadAlerts().catch(() => {});
+        } catch (e) {
+          alert(e.message || 'Reject failed');
+        }
+      }
+
+      async function approveRestaurantRequest(id) {
+        if (!confirm('Approve this restaurant request? A restaurant row will be created.')) return;
+        try {
+          await api('/restaurant-requests/' + encodeURIComponent(id) + '/approve', { method: 'POST', body: '{}' });
+          await loadMeta();
+          await loadPartnerRequests();
+          await loadAlerts().catch(() => {});
+        } catch (e) {
+          alert(e.message || 'Approve failed');
+        }
+      }
+
+      async function rejectRestaurantRequest(id) {
+        const reason = window.prompt('Rejection reason (required):');
+        if (reason == null) return;
+        const r = String(reason).trim();
+        if (!r) {
+          alert('Reason is required.');
+          return;
+        }
+        try {
+          await api('/restaurant-requests/' + encodeURIComponent(id) + '/reject', {
+            method: 'POST',
+            body: JSON.stringify({ reason: r }),
+          });
+          await loadMeta();
+          await loadPartnerRequests();
+          await loadAlerts().catch(() => {});
+        } catch (e) {
+          alert(e.message || 'Reject failed');
+        }
+      }
+
+      async function approveParcelSenderRequest(id) {
+        if (!confirm('Approve this parcel sender request?')) return;
+        try {
+          await api('/parcel-sender-requests/' + encodeURIComponent(id) + '/approve', { method: 'POST', body: '{}' });
+          await loadMeta();
+          await loadPartnerRequests();
+          await loadAlerts().catch(() => {});
+        } catch (e) {
+          alert(e.message || 'Approve failed');
+        }
+      }
+
+      async function rejectParcelSenderRequest(id) {
+        const reason = window.prompt('Rejection reason (required):');
+        if (reason == null) return;
+        const r = String(reason).trim();
+        if (!r) {
+          alert('Reason is required.');
+          return;
+        }
+        try {
+          await api('/parcel-sender-requests/' + encodeURIComponent(id) + '/reject', {
+            method: 'POST',
+            body: JSON.stringify({ reason: r }),
+          });
+          await loadMeta();
+          await loadPartnerRequests();
+          await loadAlerts().catch(() => {});
+        } catch (e) {
+          alert(e.message || 'Reject failed');
+        }
+      }
+
+      async function loadDeliveryManRequests() {
+        try {
+          const st = $('dmReqStatus').value;
+          const qs = new URLSearchParams();
+          if (st) qs.set('status', st);
+          const q = qs.toString();
+          const data = await api('/delivery-man-requests' + (q ? '?' + q : ''));
+          const rows = data.requests || [];
+          $('deliveryReqMeta').textContent = rows.length + ' request(s).';
+          const tb = $('deliveryReqBody');
+          tb.innerHTML = '';
+          if (!rows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="7" class="meta">No delivery man requests found.</td>';
+            tb.appendChild(tr);
+            return;
+          }
+          rows.forEach((row, i) => {
+            const tr = document.createElement('tr');
+            const veh =
+              esc(row.vehicle_type || '—') +
+              (row.plate_number ? ' · ' + esc(row.plate_number) : '');
+            const pending = row.status === 'pending';
+            let actions = '—';
+            if (pending) {
+              actions =
+                '<span class="btn-row"><button type="button" class="btn-mini btn-mini-ok" data-dm-approve="' +
+                row.id +
+                '">Approve</button><button type="button" class="btn-mini btn-mini-warn" data-dm-reject="' +
+                row.id +
+                '">Reject</button></span>';
+            }
+            tr.innerHTML =
+              '<td class="num">' +
+              (i + 1) +
+              '</td><td>' +
+              esc(row.full_name || row.user_name || '—') +
+              '</td><td>' +
+              esc(row.phone || '—') +
+              '</td><td>' +
+              veh +
+              '</td><td><span class="status-pill">' +
+              esc(row.status) +
+              '</span></td><td>' +
+              esc(fmtDate(row.created_at)) +
+              '</td><td>' +
+              actions +
+              '</td>';
+            tb.appendChild(tr);
+          });
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load delivery man requests';
+          $('deliveryReqMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const tb = $('deliveryReqBody');
+          if (tb) {
+            tb.innerHTML = '<tr><td colspan="7" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load requests:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryManRequests()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      async function loadRestaurantRequests() {
+        try {
+          const st = $('restReqStatus').value;
+          const qs = new URLSearchParams();
+          if (st) qs.set('status', st);
+          const q = qs.toString();
+          const data = await api('/restaurant-requests' + (q ? '?' + q : ''));
+          const rows = data.requests || [];
+          $('restaurantReqMeta').textContent = rows.length + ' request(s).';
+          const tb = $('restaurantReqBody');
+          tb.innerHTML = '';
+          if (!rows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="7" class="meta">No restaurant requests found.</td>';
+            tb.appendChild(tr);
+            return;
+          }
+          rows.forEach((row, i) => {
+            const tr = document.createElement('tr');
+            const pending = row.status === 'pending';
+            let actions = '—';
+            if (pending) {
+              actions =
+                '<span class="btn-row"><button type="button" class="btn-mini btn-mini-ok" data-rest-approve="' +
+                row.id +
+                '">Approve</button><button type="button" class="btn-mini btn-mini-warn" data-rest-reject="' +
+                row.id +
+                '">Reject</button></span>';
+            }
+            tr.innerHTML =
+              '<td class="num">' +
+              (i + 1) +
+              '</td><td>' +
+              esc(row.restaurant_name || '—') +
+              '</td><td>' +
+              esc(row.user_name || '—') +
+              '</td><td>' +
+              esc(row.restaurant_phone || '—') +
+              '</td><td>' +
+              esc(row.wilaya || '—') +
+              '</td><td><span class="status-pill">' +
+              esc(row.status) +
+              '</span></td><td>' +
+              esc(fmtDate(row.created_at)) +
+              '</td><td>' +
+              actions +
+              '</td>';
+            tb.appendChild(tr);
+          });
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load restaurant requests';
+          $('restaurantReqMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const tb = $('restaurantReqBody');
+          if (tb) {
+            tb.innerHTML = '<tr><td colspan="7" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load requests:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadRestaurantRequests()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      async function loadParcelSenderRequests() {
+        try {
+          const st = $('parcelSenderReqStatus').value;
+          const qs = new URLSearchParams();
+          if (st) qs.set('status', st);
+          const q = qs.toString();
+          const data = await api('/parcel-sender-requests' + (q ? '?' + q : ''));
+          const rows = data.requests || [];
+          $('parcelSenderReqMeta').textContent = rows.length + ' request(s).';
+          const tb = $('parcelSenderReqBody');
+          tb.innerHTML = '';
+          if (!rows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="7" class="meta">No parcel sender requests found.</td>';
+            tb.appendChild(tr);
+            return;
+          }
+          rows.forEach((row, i) => {
+            const tr = document.createElement('tr');
+            const pending = row.status === 'pending';
+            let actions = '—';
+            if (pending) {
+              actions =
+                '<span class="btn-row"><button type="button" class="btn-mini btn-mini-ok" data-parcel-sender-approve="' +
+                row.id +
+                '">Approve</button><button type="button" class="btn-mini btn-mini-warn" data-parcel-sender-reject="' +
+                row.id +
+                '">Reject</button></span>';
+            }
+            tr.innerHTML =
+              '<td class="num">' +
+              (i + 1) +
+              '</td><td>' +
+              esc(row.name || '—') +
+              '</td><td>' +
+              esc(row.user_name || '—') +
+              '</td><td>' +
+              esc(row.phone || '—') +
+              '</td><td>' +
+              esc(row.wilaya || '—') +
+              '</td><td><span class="status-pill">' +
+              esc(row.status) +
+              '</span></td><td>' +
+              esc(fmtDate(row.created_at)) +
+              '</td><td>' +
+              actions +
+              '</td>';
+            tb.appendChild(tr);
+          });
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load parcel sender requests';
+          $('parcelSenderReqMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const tb = $('parcelSenderReqBody');
+          if (tb) {
+            tb.innerHTML = '<tr><td colspan="7" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load requests:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadParcelSenderRequests()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      let tableEligibleRestaurants = [];
+
+      async function loadTableEligibleRestaurants() {
+        const j = await api('/restaurants/table-ordering-eligible');
+        tableEligibleRestaurants = j.restaurants || [];
+        const sel = $('tableRestSelect');
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">— Select restaurant —</option>';
+        if (!tableEligibleRestaurants.length) {
+          $('restaurantTablesMeta').textContent =
+            'No verified restaurants found. Restaurants must be is_verified=true in Supabase.';
+        }
+        tableEligibleRestaurants.forEach((r) => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          const web = r.is_public_web_enabled ? 'web' : 'no web';
+          const tables = r.table_ordering_enabled ? 'tables ON' : 'tables OFF';
+          opt.textContent =
+            (r.name || r.id) +
+            (r.wilaya ? ' — ' + r.wilaya : '') +
+            ' [' +
+            web +
+            ', ' +
+            tables +
+            ']';
+          sel.appendChild(opt);
+        });
+        if (prev) sel.value = prev;
+        syncTableOrderingFlagSelect();
+      }
+
+      function syncTableOrderingFlagSelect() {
+        const id = $('tableRestSelect').value;
+        const row = tableEligibleRestaurants.find((r) => r.id === id);
+        $('tableOrderingEnabled').value = row && row.table_ordering_enabled ? 'true' : 'false';
+      }
+
+      function syncTablePortalPanel(meta) {
+        const card = $('tablePortalCard');
+        const restaurantId = $('tableRestSelect').value;
+        if (!restaurantId) {
+          card.classList.add('hidden');
+          return;
+        }
+        card.classList.remove('hidden');
+        const code = meta?.portal_code || '';
+        const url = meta?.portal_url || '';
+        $('tablePortalCodeDisplay').value = code;
+        $('tablePortalUrlDisplay').value = url;
+        const statusEl = $('tablePortalStatus');
+        if (!code) {
+          statusEl.innerHTML =
+            '<span class="portal-status-warn">No portal code yet — enable <strong>Table ordering</strong> and click Save flag.</span>';
+        } else if (meta?.portal_password_configured) {
+          statusEl.innerHTML =
+            '<span class="portal-status-ok">Password is set.</span> Staff open the URL above and sign in with this restaurant\'s password.';
+        } else {
+          statusEl.innerHTML =
+            '<span class="portal-status-warn">Password not set yet.</span> Enter a password above and click <strong>Save password</strong>.';
+        }
+      }
+
+      async function loadRestaurantTablesList() {
+        try {
+          const restaurantId = $('tableRestSelect').value;
+          const tb = $('restaurantTablesBody');
+          tb.innerHTML = '';
+          if (!restaurantId) {
+            $('restaurantTablesMeta').textContent =
+              'Select a verified web-enabled restaurant to manage tables.';
+            syncTablePortalPanel(null);
+            return;
+          }
+          const j = await api('/restaurants/' + encodeURIComponent(restaurantId) + '/tables');
+          const tables = j.tables || [];
+          syncTablePortalPanel(j);
+          let meta = tables.length + ' table(s) configured.';
+          $('restaurantTablesMeta').textContent = meta;
+          if (!tables.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="6" class="meta">No tables configured for this restaurant.</td>';
+            tb.appendChild(tr);
+            return;
+          }
+          tables.forEach((t) => {
+            const tr = document.createElement('tr');
+            const created = t.created_at ? fmtDate(t.created_at) : '—';
+            const qrCell = t.qr_url
+              ? '<a href="' +
+                esc(t.qr_url) +
+                '" target="_blank" rel="noopener" style="word-break:break-all;font-size:12px">' +
+                esc(t.qr_url) +
+                '</a>'
+              : '<span class="meta">Regenerate QR to get URL</span>';
+            tr.innerHTML =
+              '<td>' +
+              esc(t.table_number) +
+              '</td><td>' +
+              esc(t.table_label || '—') +
+              '</td><td>' +
+              qrCell +
+              '</td><td>' +
+              (t.is_active ? 'Yes' : 'No') +
+              '</td><td>' +
+              created +
+              '</td><td class="actions-cell">' +
+              '<button type="button" class="btn-ghost" data-regen-table="' +
+              esc(t.id) +
+              '">Regenerate QR</button> ' +
+              '<button type="button" class="btn-ghost" data-revoke-table="' +
+              esc(t.id) +
+              '">Revoke sessions</button>' +
+              '</td>';
+            tb.appendChild(tr);
+          });
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load restaurant tables';
+          $('restaurantTablesMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const tb = $('restaurantTablesBody');
+          if (tb) {
+            tb.innerHTML = '<tr><td colspan="6" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load tables:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadRestaurantTablesList()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      async function loadRestaurantTablesPanel() {
+        try {
+          await loadTableEligibleRestaurants();
+          await loadRestaurantTablesList();
+        } catch (e) {
+          $('restaurantTablesMeta').textContent =
+            'Failed to load restaurants: ' + (e && e.message ? e.message : String(e));
+        }
+      }
+
+      async function loadPartnerRequests() {
+        syncPartnerRequestTypeVisibility();
+        const type = $('partnerReqType')?.value || 'delivery';
+        if (type === 'restaurant') {
+          await loadRestaurantRequests();
+        } else if (type === 'parcel') {
+          await loadParcelSenderRequests();
+        } else {
+          await loadDeliveryManRequests();
+        }
+      }
+
+      function updateAlertsBadge(orderN, taskN) {
+        const n = (orderN || 0) + (taskN || 0);
+        const label = n > 99 ? '99+' : String(n);
+        const tabBadge = $('alertsBadge');
+        if (n > 0) {
+          tabBadge.textContent = label;
+          tabBadge.classList.add('visible');
+        } else {
+          tabBadge.textContent = '0';
+          tabBadge.classList.remove('visible');
+        }
+      }
+
+      function updateParcelAlertsBadge() {
+        const n = (parcelAlertCount || 0) + (parcelActiveOrderCount || 0);
+        const label = n > 99 ? '99+' : String(n);
+        const tabBadge = $('parcelAlertsBadge');
+        if (!tabBadge) return;
+        if (n > 0) {
+          tabBadge.textContent = label;
+          tabBadge.classList.add('visible');
+        } else {
+          tabBadge.textContent = '0';
+          tabBadge.classList.remove('visible');
+        }
+      }
+
+      async function loadAlerts() {
+        try {
+        const data = await api('/alerts');
+        const mo = data.stalePendingOrders || [];
+        const mp = data.pickedUpDeliveryDelayed || [];
+        const mw = data.parcelWaitingOrders || [];
+        const mt = data.tasksWithoutOffers || [];
+        const pickupDelayMin = data.picked_up_delay_minutes ?? 15;
+        const parcelWaitMin = data.parcel_waiting_minutes ?? 5;
+        const alertOrderIds = new Set();
+        mo.forEach((o) => {
+          if (o && o.id) alertOrderIds.add(String(o.id));
+        });
+        mp.forEach((o) => {
+          if (o && o.id) alertOrderIds.add(String(o.id));
+        });
+        mw.forEach((o) => {
+          if (o && o.id) alertOrderIds.add(String(o.id));
+        });
+        (data.activeAlertOrderIds || []).forEach((id) => {
+          if (id) alertOrderIds.add(String(id));
+        });
+        activeAlertOrderIds = alertOrderIds;
+
+        $('alertsOrdersMeta').textContent = mo.length
+          ? mo.length + ' order(s) need attention.'
+          : 'No pending alerts.';
+        $('alertsPickedUpMeta').textContent = mp.length
+          ? mp.length +
+            ' delayed picked-up order(s).'
+          : 'No picked-up alerts.';
+        $('alertsTasksMeta').textContent = mt.length
+          ? mt.length + ' task(s) need attention.'
+          : 'No tasks waiting for first offer.';
+        updateAlertsBadge(mo.length + mp.length, mt.length);
+        parcelAlertCount = mw.length;
+        updateParcelAlertsBadge();
+        $('alertsParcelMeta').textContent = mw.length
+          ? mw.length + ' parcel order(s) waiting ≥ ' + parcelWaitMin + ' min.'
+          : 'No parcel waiting alerts.';
+        if (data.pending_delivery_man_requests != null && data.pending_restaurant_requests != null) {
+          updateRequestBadges(
+            data.pending_delivery_man_requests,
+            data.pending_restaurant_requests,
+            data.pending_parcel_sender_requests,
+          );
+        }
+        const activeTab = document.querySelector('.tab.active')?.getAttribute('data-tab');
+        if (data.new_restaurant_reviews_in_window != null && activeTab !== 'reviews') {
+          updateReviewsBadge(data.new_restaurant_reviews_in_window);
+        }
+        if (data.new_delivery_reviews_in_window != null && activeTab !== 'delivery-reviews') {
+          updateDeliveryReviewsBadge(data.new_delivery_reviews_in_window);
+        }
+
+        const ob = $('alertsOrdersBody');
+        ob.innerHTML = '';
+        mo.forEach((o) => {
+          const tr = document.createElement('tr');
+          tr.className = 'row-warn';
+          const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
+          let assignedCell = '—';
+          if (o.courier_assigned_ago_label) {
+            assignedCell =
+              esc(o.courier_assigned_ago_label) +
+              (o.courier_assigned_time_exact === false
+                ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                : '');
+          }
+          tr.innerHTML =
+            '<td>' +
+            esc(o.order_number || o.id) +
+            '<span class="order-summary-inline">Items: ' +
+            esc(o.order_items_summary || 'No items') +
+            '</span>' +
+            '</td><td data-status-cell></td><td>' +
+            esc(rest || o.restaurant_id || '—') +
+            '</td><td>' +
+            esc(o.courier_display_name || '—') +
+            '</td><td>' +
+            esc(o.courier_display_phone || '—') +
+            '</td><td>' +
+            esc(o.customer_display_phone || '—') +
+            '</td><td class="destination-cell">' +
+            destinationCellHtml(o) +
+            '</td><td class="num">' +
+            esc(fmtOrigDeliveryFf(o)) +
+            '</td><td>' +
+            assignedCell +
+            '</td><td data-manual-assign></td><td class="num">' +
+            esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
+            '</td><td>' +
+            esc(fmtDate(o.created_at)) +
+            '</td><td class="num"><strong>' +
+            esc(o.ageMinutes != null ? o.ageMinutes : '—') +
+            '</strong></td>';
+          appendOrderStatusSelect(tr.querySelector('[data-status-cell]'), o);
+          appendManualAssignSelect(tr.querySelector('[data-manual-assign]'), o);
+          const tdAct = document.createElement('td');
+          const btnRow = document.createElement('span');
+          btnRow.className = 'btn-row';
+          const oid = o.id;
+          const acceptBtn = document.createElement('button');
+          acceptBtn.type = 'button';
+          acceptBtn.className = 'btn-accept-order';
+          acceptBtn.textContent = 'Accept order';
+          acceptBtn.title = 'Confirm this pending order (same fallback flow)';
+          acceptBtn.addEventListener('click', () => acceptOrder(oid, acceptBtn));
+          btnRow.appendChild(acceptBtn);
+          const rbBtn = document.createElement('button');
+          rbBtn.type = 'button';
+          rbBtn.className = 'btn-rebroadcast';
+          rbBtn.textContent = 'Re-broadcast';
+          rbBtn.title = 'Notify restaurant owner and admin team (push)';
+          rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
+          btnRow.appendChild(rbBtn);
+          appendDropAssignmentButton(btnRow, o);
+          const cancelBtn = document.createElement('button');
+          cancelBtn.type = 'button';
+          cancelBtn.className = 'btn-cancel-order';
+          cancelBtn.textContent = 'Cancel';
+          cancelBtn.title = 'Cancel order and notify customer (push)';
+          cancelBtn.addEventListener('click', () =>
+            openCancelOrderModal(oid, o.order_number || o.id),
+          );
+          btnRow.appendChild(cancelBtn);
+          tdAct.appendChild(btnRow);
+          tr.appendChild(tdAct);
+          ob.appendChild(tr);
+        });
+        if (!mo.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="14" class="meta">None</td>';
+          ob.appendChild(tr);
+        }
+
+        const pb = $('alertsPickedUpBody');
+        pb.innerHTML = '';
+        mp.forEach((o) => {
+          const tr = document.createElement('tr');
+          tr.className = 'row-warn';
+          const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
+          let assignedCell = '—';
+          if (o.courier_assigned_ago_label) {
+            assignedCell =
+              esc(o.courier_assigned_ago_label) +
+              (o.courier_assigned_time_exact === false
+                ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                : '');
+          }
+          tr.innerHTML =
+            '<td>' +
+            esc(o.order_number || o.id) +
+            '<span class="order-summary-inline">Items: ' +
+            esc(o.order_items_summary || 'No items') +
+            '</span>' +
+            '</td><td data-status-cell></td><td>' +
+            esc(rest || o.restaurant_id || '—') +
+            '</td><td>' +
+            esc(o.courier_display_name || '—') +
+            '</td><td>' +
+            esc(o.courier_display_phone || '—') +
+            '</td><td>' +
+            esc(o.customer_display_phone || '—') +
+            '</td><td class="destination-cell">' +
+            destinationCellHtml(o) +
+            '</td><td class="num">' +
+            esc(fmtOrigDeliveryFf(o)) +
+            '</td><td>' +
+            assignedCell +
+            '</td><td class="num">' +
+            esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
+            '</td><td>' +
+            esc(fmtDate(o.pickup_reference_iso)) +
+            '</td><td class="num"><strong>' +
+            esc(o.minutes_since_pickup_ref != null ? o.minutes_since_pickup_ref : '—') +
+            '</strong></td>';
+          appendOrderStatusSelect(tr.querySelector('[data-status-cell]'), o);
+          const tdAct = document.createElement('td');
+          const btnRow = document.createElement('span');
+          btnRow.className = 'btn-row';
+          const doneBtn = document.createElement('button');
+          doneBtn.type = 'button';
+          doneBtn.className = 'btn-delivered-order';
+          doneBtn.textContent = 'Delivered';
+          doneBtn.title = 'Mark this picked-up order as delivered';
+          doneBtn.addEventListener('click', () => markDelivered(o.id, doneBtn));
+          btnRow.appendChild(doneBtn);
+          appendDropAssignmentButton(btnRow, o);
+          tdAct.appendChild(btnRow);
+          tr.appendChild(tdAct);
+          pb.appendChild(tr);
+        });
+        if (!mp.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="13" class="meta">None</td>';
+          pb.appendChild(tr);
+        }
+
+        const wb = $('alertsParcelBody');
+        wb.innerHTML = '';
+        mw.forEach((o) => {
+          const tr = document.createElement('tr');
+          tr.className = 'row-warn';
+          const sender = o.parcel_sender && (o.parcel_sender.name || o.parcel_sender.id);
+          tr.innerHTML =
+            '<td>' +
+            esc(o.order_number || o.id) +
+            '<span class="order-summary-inline">Items: ' +
+            esc(o.order_items_summary || 'No items') +
+            '</span>' +
+            '</td><td>' +
+            esc(sender || o.parcel_sender_id || '—') +
+            '</td><td data-status-cell></td><td>' +
+            esc(o.courier_display_name || '—') +
+            '</td><td>' +
+            esc(o.courier_display_phone || '—') +
+            '</td><td>' +
+            esc(o.customer_display_phone || '—') +
+            '</td><td class="num">' +
+            esc(fmtOrigDeliveryFf(o)) +
+            '</td><td class="num">' +
+            esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
+            '</td><td>' +
+            esc(fmtDate(o.waiting_reference_iso)) +
+            '</td><td class="num"><strong>' +
+            esc(o.waiting_minutes != null ? o.waiting_minutes : '—') +
+            '</strong></td>';
+          appendOrderStatusSelect(tr.querySelector('[data-status-cell]'), o);
+          wb.appendChild(tr);
+        });
+        if (!mw.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="10" class="meta">None</td>';
+          wb.appendChild(tr);
+        }
+
+        // Keep New orders section synchronized with current alert ids
+        // to avoid temporary duplication between sections.
+        loadOrders().catch(() => {});
+
+        const tb = $('alertsTasksBody');
+        tb.innerHTML = '';
+        mt.forEach((t) => {
+          const tr = document.createElement('tr');
+          tr.className = 'row-warn';
+          const desc = (t.description || '').slice(0, 56) + ((t.description || '').length > 56 ? '…' : '');
+          let assignedCell = '—';
+          if (t.courier_assigned_ago_label) {
+            assignedCell = esc(t.courier_assigned_ago_label);
+            if (t.courier_assigned_time_exact === false) {
+              assignedCell +=
+                ' <span class="meta" title="No assigned_at; using updated_at">(approx.)</span>';
+            }
+          }
+          tr.innerHTML =
+            '<td title="' +
+            esc(t.description) +
+            '">' +
+            esc(desc || t.id) +
+            '</td><td><span class="status-pill">' +
+            esc(t.status) +
+            '</span></td><td>' +
+            esc(t.courier_display_name || '—') +
+            '</td><td>' +
+            esc(t.courier_display_phone || '—') +
+            '</td><td>' +
+            assignedCell +
+            '</td><td>' +
+            esc(t.location_name || '—') +
+            '</td><td>' +
+            esc(fmtDate(t.created_at)) +
+            '</td><td class="num"><strong>' +
+            esc(t.ageMinutes != null ? t.ageMinutes : '—') +
+            '</strong></td>';
+          tb.appendChild(tr);
+        });
+        if (!mt.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="8" class="meta">None</td>';
+          tb.appendChild(tr);
+        }
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load alerts';
+          const am = $('alertsOrdersMeta');
+          if (am) am.innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+        }
+      }
+
+      async function rebroadcastOrder(orderId, btn) {
+        const prev = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+        try {
+          const r = await fetch(
+            API + '/orders/' + encodeURIComponent(orderId) + '/rebroadcast',
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: '{}',
+            },
+          );
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            const msg = [j.error, j.detail].filter(Boolean).join(' — ') || r.statusText;
+            throw new Error(msg);
+          }
+          const ts = j.total_sent != null ? String(j.total_sent) : '?';
+          const rc = j.recipients != null ? String(j.recipients) : '?';
+          alert('Re-broadcast sent (' + (j.kind || '') + '). Push tokens: ' + ts + ', targets: ' + rc + '.');
+        } catch (e) {
+          alert('Re-broadcast failed: ' + (e && e.message ? e.message : String(e)));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prev;
+        }
+      }
+
+      async function acceptOrder(orderId, btn) {
+        if (!confirm('Accept this order now?')) return;
+        const prev = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Accepting…';
+        try {
+          const r = await fetch(API + '/orders/' + encodeURIComponent(orderId) + '/accept', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            const msg = [j.error, j.detail].filter(Boolean).join(' — ') || r.statusText;
+            throw new Error(msg);
+          }
+          await loadAlerts().catch(() => {});
+          await loadOrders().catch(() => {});
+        } catch (e) {
+          alert('Accept order failed: ' + (e && e.message ? e.message : String(e)));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prev;
+        }
+      }
+
+      async function markDelivered(orderId, btn) {
+        if (!confirm('Mark this picked-up order as delivered now?')) return;
+        const prev = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Delivering…';
+        try {
+          const r = await fetch(API + '/orders/' + encodeURIComponent(orderId) + '/deliver', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            const msg = [j.error, j.detail].filter(Boolean).join(' — ') || r.statusText;
+            throw new Error(msg);
+          }
+          await loadAlerts().catch(() => {});
+          await loadOrders().catch(() => {});
+        } catch (e) {
+          alert('Mark delivered failed: ' + (e && e.message ? e.message : String(e)));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prev;
+        }
+      }
+
+      async function markPickedUp(orderId, btn) {
+        if (!confirm('Mark this assigned order as picked up now?')) return;
+        const prev = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Picking…';
+        try {
+          const r = await fetch(API + '/orders/' + encodeURIComponent(orderId) + '/pickup', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            const msg = [j.error, j.detail].filter(Boolean).join(' — ') || r.statusText;
+            throw new Error(msg);
+          }
+          await loadAlerts().catch(() => {});
+          await loadOrders().catch(() => {});
+        } catch (e) {
+          alert('Mark picked-up failed: ' + (e && e.message ? e.message : String(e)));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prev;
+        }
+      }
+
+      async function assignOrderCourier(orderId, deliveryPersonId, sel) {
+        if (!deliveryPersonId) return;
+        const courier = availableOrderCouriers.find((c) => c.id === deliveryPersonId);
+        const label = courierOptionLabel(courier);
+        if (!confirm('Assign this order to ' + label + '?')) {
+          sel.value = '';
+          return;
+        }
+        sel.disabled = true;
+        try {
+          await api('/orders/' + encodeURIComponent(orderId) + '/assign', {
+            method: 'POST',
+            body: JSON.stringify({ delivery_person_id: deliveryPersonId }),
+          });
+          await loadAlerts().catch(() => {});
+          await loadOrders().catch(() => {});
+        } catch (e) {
+          alert('Manual assignment failed: ' + (e && e.message ? e.message : String(e)));
+          sel.disabled = false;
+          sel.value = '';
+        }
+      }
+
+      async function dropOrderAssignment(order, btn) {
+        if (!order?.delivery_person_id) return;
+        const label =
+          order.courier_display_name ||
+          order.courier_display_phone ||
+          order.delivery_person_id ||
+          'this delivery man';
+        if (!confirm('Remove ' + label + ' from this order?')) return;
+        const prev = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Dropping…';
+        try {
+          await api('/orders/' + encodeURIComponent(order.id) + '/unassign', {
+            method: 'POST',
+            body: '{}',
+          });
+          await loadAlerts().catch(() => {});
+          await loadOrders().catch(() => {});
+        } catch (e) {
+          alert('Drop assignment failed: ' + (e && e.message ? e.message : String(e)));
+          btn.disabled = false;
+          btn.textContent = prev;
+        }
+      }
+
+      function appendDropAssignmentButton(btnRow, order) {
+        if (!order?.delivery_person_id) return;
+        const st = String(order.status || '').toLowerCase();
+        if (['delivered', 'cancelled', 'collected'].includes(st)) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-drop-assignment';
+        btn.textContent = 'Drop assignment';
+        btn.title = 'Remove assigned delivery man from this order';
+        btn.addEventListener('click', () => dropOrderAssignment(order, btn));
+        btnRow.appendChild(btn);
+      }
+
+      function appendManualAssignSelect(td, order) {
+        const st = String(order?.status || '').toLowerCase();
+        const canAssign =
+          !order?.delivery_person_id && ['confirmed', 'preparing', 'ready'].includes(st);
+        if (!canAssign) {
+          td.innerHTML = order?.delivery_person_id
+            ? '<span class="meta">Assigned</span>'
+            : '<span class="meta">Accept first</span>';
+          return;
+        }
+        const sel = document.createElement('select');
+        sel.className = 'manual-assign-select';
+        sel.innerHTML = '<option value="">Assign delivery man…</option>';
+        for (const c of availableOrderCouriers) {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = courierOptionLabel(c);
+          sel.appendChild(opt);
+        }
+        if (!availableOrderCouriers.length) {
+          sel.disabled = true;
+          sel.innerHTML = '<option value="">No available delivery men</option>';
+        }
+        sel.addEventListener('change', () => assignOrderCourier(order.id, sel.value, sel));
+        td.appendChild(sel);
+      }
+
+
+      function orderCancellationInstantIso(o) {
+        return o.cancelled_at || o.updated_at || o.created_at || null;
+      }
+
+      const RESTAURANT_CANCEL_SOURCES = new Set([
+        'performance_dashboard',
+        'performance_dashboard_cancel_order',
+        'performance_dashboard_status_dropdown',
+        'table_orders_portal',
+      ]);
+      const CUSTOMER_CANCEL_SOURCES = new Set(['customer_app']);
+
+      function parseCancelReason(raw) {
+        if (raw == null || raw === '') return { kind: 'empty' };
+        const s = String(raw).trim();
+        if (!s) return { kind: 'empty' };
+        if (s === 'timeout_15m') return { kind: 'timeout' };
+        if (s.startsWith('{') || s.startsWith('[')) {
+          try {
+            const value = JSON.parse(s);
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+              return { kind: 'json', value };
+            }
+          } catch (_) {
+            /* fall through to raw */
+          }
+        }
+        return { kind: 'raw', value: s };
+      }
+
+      function cancelledByLabel(order) {
+        const parsed = parseCancelReason(order?.cancel_reason);
+        if (parsed.kind === 'timeout') return 'Timed out (15 min)';
+        if (parsed.kind === 'json') {
+          const src = String(parsed.value.source || '').trim().toLowerCase();
+          if (RESTAURANT_CANCEL_SOURCES.has(src)) return 'Restaurant';
+          if (CUSTOMER_CANCEL_SOURCES.has(src)) return 'Customer';
+        }
+        // Flutter cancels leave cancel_reason null; order_events.changed_by_role is authoritative.
+        const role = String(order?.cancelled_by_role || '').trim().toLowerCase();
+        if (role === 'restaurant_owner' || role === 'restaurant') return 'Restaurant';
+        if (role === 'customer') return 'Customer';
+        return 'Unknown';
+      }
+
+      function restaurantCancellationReason(order) {
+        if (cancelledByLabel(order) !== 'Restaurant') return '—';
+        const parsed = parseCancelReason(order?.cancel_reason);
+        if (parsed.kind === 'json') {
+          const v = parsed.value || {};
+          const body =
+            v.notification_body ||
+            v.body ||
+            v.reason ||
+            v.cancellation_reason ||
+            v.cancel_reason ||
+            '';
+          const text = String(body || '').trim();
+          if (text) return text;
+        }
+        const fromNotif = String(order?.cancel_notification_body || '').trim();
+        return fromNotif || '—';
+      }
+
+      function updateCancelledOrdersDateInputVisibility() {
+        const presetEl = $('cancelledOrdersDatePreset');
+        const dateInput = $('cancelledOrdersDate');
+        if (!presetEl || !dateInput) return;
+        dateInput.disabled = presetEl.value !== 'custom';
+      }
+
+      async function loadCancelledOrders() {
+        try {
+          const presetEl = $('cancelledOrdersDatePreset');
+          const dateInput = $('cancelledOrdersDate');
+          const preset = presetEl ? presetEl.value : 'today';
+          const chosenDate = dateInput ? dateInput.value : '';
+          const qs = new URLSearchParams();
+          if (preset === 'today') {
+            const today = sahlaTodayYmd();
+            qs.set('from_date', today);
+            qs.set('to_date', today);
+          } else if (preset === 'custom' && chosenDate) {
+            qs.set('from_date', chosenDate);
+            qs.set('to_date', chosenDate);
+          }
+          const q = qs.toString();
+          const data = await api('/cancelled-orders' + (q ? '?' + q : ''));
+          const rows = data.orders || [];
+          const cm = $('cancelledOrdersMeta');
+          if (cm) {
+            cm.textContent =
+              rows.length +
+              ' cancelled order(s). “Today” follows Africa/Algiers (UTC+1). Use “All” for all dates.';
+          }
+          const cb = $('cancelledOrdersBody');
+          if (!cb) return;
+          cb.innerHTML = '';
+          if (!rows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="13" class="meta">No cancelled orders for this filter.</td>';
+            cb.appendChild(tr);
+            return;
+          }
+          rows.forEach((o, i) => {
+            const tr = document.createElement('tr');
+            tr.className = 'row-warn';
+            const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
+            let assignedCell = '—';
+            if (o.courier_assigned_ago_label) {
+              assignedCell =
+                esc(o.courier_assigned_ago_label) +
+                (o.courier_assigned_time_exact === false
+                  ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                  : '');
+            }
+            tr.innerHTML =
+              '<td class="num">' +
+              (i + 1) +
+              '</td><td>' +
+              esc(o.order_number || o.id) +
+              '<span class="order-summary-inline">Items: ' +
+              esc(o.order_items_summary || 'No items') +
+              '</span>' +
+              '</td><td data-status-cell></td><td>' +
+              esc(rest || o.restaurant_id || '—') +
+              '</td><td>' +
+              esc(o.courier_display_name || '—') +
+              '</td><td>' +
+              esc(o.courier_display_phone || '—') +
+              '</td><td>' +
+              esc(o.customer_display_phone || '—') +
+              '</td><td class="num">' +
+              esc(fmtOrigDeliveryFf(o)) +
+              '</td><td>' +
+              assignedCell +
+              '</td><td class="num">' +
+              esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
+              '</td><td>' +
+              esc(cancelledByLabel(o)) +
+              '</td><td title="' +
+              esc(restaurantCancellationReason(o)) +
+              '">' +
+              esc(restaurantCancellationReason(o)) +
+              '</td><td title="' +
+              esc(
+                o.cancelled_at
+                  ? 'cancelled_at'
+                  : o.updated_at
+                    ? 'updated_at'
+                    : o.created_at
+                      ? 'created_at'
+                      : '',
+              ) +
+              '">' +
+              esc(fmtDate(orderCancellationInstantIso(o))) +
+              '</td>';
+            appendOrderStatusSelect(tr.querySelector('[data-status-cell]'), o);
+            cb.appendChild(tr);
+          });
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load cancelled orders';
+          const cm = $('cancelledOrdersMeta');
+          if (cm) cm.innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const cb = $('cancelledOrdersBody');
+          if (cb) {
+            cb.innerHTML = '<tr><td colspan="13" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load cancelled orders:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadCancelledOrders()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      async function loadOrders() {
+        const [ordersRes, parcelRes] = await Promise.allSettled([
+          api('/orders'),
+          api('/parcel-orders'),
+        ]);
+
+        const hiddenStatuses = new Set(['cancelled', 'delivered', 'collected']);
+        const tb = $('ordersBody');
+
+        if (ordersRes.status === 'fulfilled') {
+          const rows = ordersRes.value?.orders || [];
+          const newOrders = rows.filter((o) => {
+            const id = String(o.id || '');
+            const st = String(o.status || '').toLowerCase();
+            return !activeAlertOrderIds.has(id) && !hiddenStatuses.has(st);
+          });
+          $('ordersMeta').textContent =
+            newOrders.length +
+            ' new order(s).';
+          tb.innerHTML = '';
+          if (!newOrders.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="14" class="meta">No orders match the filters.</td>';
+            tb.appendChild(tr);
+          } else {
+            newOrders.forEach((o, i) => {
+            const tr = document.createElement('tr');
+            const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
+            let assignedCell = '—';
+            if (o.courier_assigned_ago_label) {
+              assignedCell =
+                esc(o.courier_assigned_ago_label) +
+                (o.courier_assigned_time_exact === false
+                  ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                  : '');
+            }
+            tr.innerHTML =
+              '<td class="num">' +
+              (i + 1) +
+              '</td><td>' +
+              esc(o.order_number || o.id) +
+              '<span class="order-summary-inline">Items: ' +
+              esc(o.order_items_summary || 'No items') +
+              '</span>' +
+              '</td><td data-status-cell></td><td>' +
+              esc(rest || o.restaurant_id || '—') +
+              '</td><td>' +
+              esc(o.courier_display_name || '—') +
+              '</td><td>' +
+              esc(o.courier_display_phone || '—') +
+              '</td><td>' +
+              esc(o.customer_display_phone || '—') +
+              '</td><td class="destination-cell">' +
+              destinationCellHtml(o) +
+              '</td><td class="num">' +
+              esc(fmtOrigDeliveryFf(o)) +
+              '</td><td>' +
+              assignedCell +
+              '</td><td data-manual-assign></td><td class="num">' +
+              esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
+              '</td><td>' +
+              esc(fmtDate(o.created_at)) +
+              '</td>';
+            appendOrderStatusSelect(tr.querySelector('[data-status-cell]'), o);
+            appendManualAssignSelect(tr.querySelector('[data-manual-assign]'), o);
+            const tdAct = document.createElement('td');
+            const stLc = String(o.status || '').toLowerCase();
+            const noCourier = !o.delivery_person_id;
+            const btnRow = document.createElement('span');
+            btnRow.className = 'btn-row';
+            const oid = o.id;
+            const canPickupAssigned =
+              !noCourier &&
+              (stLc === 'pending' || stLc === 'confirmed' || stLc === 'preparing' || stLc === 'ready');
+            if (canPickupAssigned) {
+              const pickupBtn = document.createElement('button');
+              pickupBtn.type = 'button';
+              pickupBtn.className = 'btn-pickup-order';
+              pickupBtn.textContent = 'Pick-up';
+              pickupBtn.title = 'Mark this assigned order as picked up';
+              pickupBtn.addEventListener('click', () => markPickedUp(oid, pickupBtn));
+              btnRow.appendChild(pickupBtn);
+            } else if (stLc === 'pending' || (stLc === 'preparing' && noCourier)) {
+              if (stLc === 'pending') {
+                const acceptBtn = document.createElement('button');
+                acceptBtn.type = 'button';
+                acceptBtn.className = 'btn-accept-order';
+                acceptBtn.textContent = 'Accept order';
+                acceptBtn.title = 'Confirm this pending order (same fallback flow)';
+                acceptBtn.addEventListener('click', () => acceptOrder(oid, acceptBtn));
+                btnRow.appendChild(acceptBtn);
+              }
+              const rbBtn = document.createElement('button');
+              rbBtn.type = 'button';
+              rbBtn.className = 'btn-rebroadcast';
+              rbBtn.textContent = 'Re-broadcast';
+              rbBtn.title =
+                stLc === 'pending'
+                  ? 'Notify restaurant owner and admin team (push)'
+                  : 'Notify all online couriers — order available (push)';
+              rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
+              btnRow.appendChild(rbBtn);
+            } else if (stLc === 'picked_up') {
+              const doneBtn = document.createElement('button');
+              doneBtn.type = 'button';
+              doneBtn.className = 'btn-delivered-order';
+              doneBtn.textContent = 'Delivered';
+              doneBtn.title = 'Mark this picked-up order as delivered';
+              doneBtn.addEventListener('click', () => markDelivered(oid, doneBtn));
+              btnRow.appendChild(doneBtn);
+            }
+            appendDropAssignmentButton(btnRow, o);
+            if (orderCanCancelFromDashboard(o)) {
+              const cancelBtn = document.createElement('button');
+              cancelBtn.type = 'button';
+              cancelBtn.className = 'btn-cancel-order';
+              cancelBtn.textContent = 'Cancel';
+              cancelBtn.title = 'Cancel order and notify customer (push)';
+              cancelBtn.addEventListener('click', () =>
+                openCancelOrderModal(oid, o.order_number || o.id),
+              );
+              btnRow.appendChild(cancelBtn);
+            }
+            tdAct.appendChild(btnRow);
+            tr.appendChild(tdAct);
+            tb.appendChild(tr);
+            });
+          }
+        } else {
+          const errMsg = ordersRes.reason?.message || 'Failed to load orders';
+          $('ordersMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          tb.innerHTML = '<tr><td colspan="14" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load orders:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadOrders()">Retry</button></td></tr>';
+        }
+
+        const pob = $('parcelOrdersBody');
+        if (parcelRes.status === 'fulfilled') {
+          const parcelRows = parcelRes.value?.orders || [];
+          const parcelActiveRows = parcelRows.filter((o) => {
+            const id = String(o.id || '');
+            const st = String(o.status || '').toLowerCase();
+            return !activeAlertOrderIds.has(id) && !hiddenStatuses.has(st);
+          });
+          $('parcelOrdersMeta').textContent = parcelActiveRows.length + ' parcel order(s).';
+          parcelActiveOrderCount = parcelActiveRows.length;
+          updateParcelAlertsBadge();
+          pob.innerHTML = '';
+          if (!parcelActiveRows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="10" class="meta">No parcel orders match the filters.</td>';
+            pob.appendChild(tr);
+          } else {
+            parcelActiveRows.forEach((o, i) => {
+              const tr = document.createElement('tr');
+              const sender = o.parcel_sender && (o.parcel_sender.name || o.parcel_sender.id);
+              tr.innerHTML =
+                '<td class="num">' +
+                (i + 1) +
+                '</td><td>' +
+                esc(o.order_number || o.id) +
+                '<span class="order-summary-inline">Items: ' +
+                esc(o.order_items_summary || 'No items') +
+                '</span>' +
+                '</td><td data-status-cell></td><td>' +
+                esc(sender || o.parcel_sender_id || '—') +
+                '</td><td>' +
+                esc(o.courier_display_name || '—') +
+                '</td><td>' +
+                esc(o.courier_display_phone || '—') +
+                '</td><td>' +
+                esc(o.customer_display_phone || '—') +
+                '</td><td class="num">' +
+                esc(fmtOrigDeliveryFf(o)) +
+                '</td><td class="num">' +
+                esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
+                '</td><td>' +
+                esc(fmtDate(o.created_at)) +
+                '</td>';
+              appendOrderStatusSelect(tr.querySelector('[data-status-cell]'), o);
+              pob.appendChild(tr);
+            });
+          }
+        } else {
+          const errMsg = parcelRes.reason?.message || 'Failed to load parcel orders';
+          $('parcelOrdersMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          pob.innerHTML = '<tr><td colspan="10" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load parcel orders:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadOrders()">Retry</button></td></tr>';
+        }
+
+        await loadCancelledOrders().catch((e) => {
+          console.error('loadCancelledOrders error', e);
+        });
+      }
+
+      async function loadTasks() {
+        try {
+          const qs = new URLSearchParams();
+          const st = $('taskStatus').value;
+          const dm = $('taskCourier').value;
+          if (st) qs.set('status', st);
+          if (dm) qs.set('delivery_man_id', dm);
+          const q = qs.toString();
+          const data = await api('/tasks' + (q ? '?' + q : ''));
+          const rows = data.tasks || [];
+          $('tasksMeta').textContent = rows.length + ' tasks (newest first). Auto-refresh every 15s.';
+          const tb = $('tasksBody');
+          tb.innerHTML = '';
+          if (!rows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="8" class="meta">No tasks found.</td>';
+            tb.appendChild(tr);
+            return;
+          }
+          rows.forEach((t, i) => {
+            const tr = document.createElement('tr');
+            const desc = (t.description || '').slice(0, 60) + ((t.description || '').length > 60 ? '…' : '');
+            let assignedCell = '—';
+            if (t.courier_assigned_ago_label) {
+              assignedCell = esc(t.courier_assigned_ago_label);
+              if (t.courier_assigned_time_exact === false) {
+                assignedCell +=
+                  ' <span class="meta" title="No assigned_at; using updated_at">(approx.)</span>';
+              }
+            }
+            tr.innerHTML =
+              '<td class="num">' +
+              (i + 1) +
+              '</td><td title="' +
+              esc(t.description) +
+              '">' +
+              esc(desc || '—') +
+              '</td><td><span class="status-pill">' +
+              esc(t.status) +
+              '</span></td><td>' +
+              esc(t.courier_display_name || t.delivery_man_name || '—') +
+              '</td><td>' +
+              esc(t.courier_display_phone || t.delivery_man_phone || '—') +
+              '</td><td>' +
+              assignedCell +
+              '</td><td>' +
+              esc(t.location_name || '—') +
+              '</td><td>' +
+              esc(fmtDate(t.created_at)) +
+              '</td>';
+            tb.appendChild(tr);
+          });
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load tasks';
+          $('tasksMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const tb = $('tasksBody');
+          if (tb) {
+            tb.innerHTML = '<tr><td colspan="8" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load tasks:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadTasks()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      function updateDeliveryHistoryDateInputVisibility() {
+        const preset = $('deliveryHistoryDatePreset').value;
+        const dateInput = $('deliveryHistoryDate');
+        dateInput.disabled = preset !== 'custom';
+      }
+
+      function needsCollectPayment(order) {
+        const method = String(order?.payment_method || '').toLowerCase();
+        const status = String(order?.payment_status || '').toLowerCase();
+        const cashLike = method.includes('cash') || method.includes('cod') || method.includes('collect');
+        const alreadyPaid = status === 'paid' || status === 'completed' || status === 'settled';
+        return cashLike && !alreadyPaid;
+      }
+
+      let deliveryHistoryRows = [];
+
+      function updateCollectAllButton() {
+        const btn = $('collectAllDeliveryHistory');
+        if (!btn) return;
+        const count = deliveryHistoryRows.filter(needsCollectPayment).length;
+        btn.disabled = count === 0;
+        btn.textContent = count > 0 ? 'Collect all (' + count + ')' : 'Collect all';
+      }
+
+      async function loadDeliveryPersonnel() {
+        try {
+          const data = await api('/delivery-personnel');
+          const personnel = data.personnel || [];
+          cachedDeliveryPersonnelRows = personnel;
+          const [pinnedUserIds, notesMap] = await Promise.all([
+            syncPinnedDeliveryMenFromServer(personnel),
+            syncDeliveryManNotesFromServer(),
+          ]);
+          renderDeliveryPersonnelTable(personnel, pinnedUserIds, notesMap);
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load delivery personnel';
+          const dm = $('deliveryMenMeta');
+          if (dm) dm.innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const tb = $('deliveryMenBody');
+          if (tb) {
+            tb.innerHTML = '<tr><td colspan="12" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load delivery personnel:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryPersonnel()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      function formatSahlaTax(amount) {
+        const n = Number(amount);
+        if (!Number.isFinite(n)) return '0 DA';
+        return Math.round(n).toLocaleString('en-US') + ' DA';
+      }
+
+      function filterDeliveryPersonnelRows(rows) {
+        const availableFilter = ($('deliveryMenAvailableFilter')?.value || 'all').trim();
+        const showBlocked = Boolean($('deliveryMenShowBlocked')?.checked);
+        return (rows || []).filter((row) => {
+          if (!showBlocked && row.is_blocked === true) return false;
+          if (availableFilter === 'yes' && row.is_available !== true) return false;
+          if (availableFilter === 'no' && row.is_available === true) return false;
+          return true;
+        });
+      }
+
+      function renderDeliveryPersonnelTable(personnel, pinnedUserIds, notesMap) {
+        const allRows = Array.isArray(personnel) ? personnel : [];
+        const filtered = filterDeliveryPersonnelRows(allRows);
+        const rows = sortDeliveryPersonnelRows(filtered, pinnedUserIds);
+        let availableCount = 0;
+        let nonAvailableCount = 0;
+        let blockedHiddenCount = 0;
+        for (const row of allRows) {
+          if (row.is_blocked === true) blockedHiddenCount += 1;
+          else if (row.is_available === true) availableCount += 1;
+          else nonAvailableCount += 1;
+        }
+        const pinnedCount = pinnedUserIds.filter((uid) =>
+          rows.some((r) => String(r.user_id) === uid),
+        ).length;
+        const showBlocked = Boolean($('deliveryMenShowBlocked')?.checked);
+        $('deliveryMenMeta').textContent =
+          rows.length +
+          ' shown / ' +
+          allRows.length +
+          ' total — available = ' +
+          availableCount +
+          ' / non-available = ' +
+          nonAvailableCount +
+          (blockedHiddenCount
+            ? ' / blocked = ' + blockedHiddenCount + (showBlocked ? ' (shown)' : ' (hidden)')
+            : '') +
+          (pinnedCount ? ' / pinned = ' + pinnedCount : '') +
+          '. Sahla tax is from delivery_personnel.sahla_tax. Block demotes the courier to customer.';
+        const tb = $('deliveryMenBody');
+        tb.innerHTML = '';
+        if (!rows.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td colspan="12" class="meta">No delivery personnel match this filter.</td>';
+          tb.appendChild(tr);
+          return;
+        }
+        rows.forEach((row, i) => {
+          const userId = String(row.user_id || '');
+          const isPinned = userId && pinnedUserIds.includes(userId);
+          const isBlocked = row.is_blocked === true;
+          const noteValue = userId && notesMap[userId] ? String(notesMap[userId]) : '';
+          const tr = document.createElement('tr');
+          if (isPinned) tr.classList.add('delivery-man-pinned');
+          if (isBlocked) tr.classList.add('delivery-man-blocked');
+          tr.innerHTML =
+            '<td><button type="button" class="pin-star-btn' +
+            (isPinned ? ' pinned' : '') +
+            '" data-pin-delivery-user-id="' +
+            esc(userId) +
+            '" title="' +
+            (isPinned ? 'Unpin from top' : 'Pin to top') +
+            '" aria-label="' +
+            (isPinned ? 'Unpin from top' : 'Pin to top') +
+            '">★</button></td><td class="num">' +
+            (i + 1) +
+            '</td><td>' +
+            esc(row.name || '—') +
+            (isBlocked ? ' <span class="status-pill">blocked</span>' : '') +
+            '</td><td>' +
+            esc(row.work_phone || '—') +
+            '</td><td>' +
+            deliveryStatusSelectCell(userId, 'is_available', row.is_available, isBlocked) +
+            '</td><td>' +
+            deliveryStatusSelectCell(userId, 'is_online', row.is_online, isBlocked) +
+            '</td><td>' +
+            boolCell(row.has_device_token) +
+            '</td><td>' +
+            devicePlatformCell(row) +
+            '</td><td class="num">' +
+            esc(row.delivered_orders_count != null ? String(row.delivered_orders_count) : '0') +
+            '</td><td class="num">' +
+            esc(formatSahlaTax(row.sahla_tax)) +
+            '</td><td class="delivery-man-notes-cell"><textarea class="delivery-man-notes-input" data-delivery-note-user-id="' +
+            esc(userId) +
+            '" rows="2" maxlength="2000" placeholder="Add note…">' +
+            esc(noteValue) +
+            '</textarea><span class="delivery-man-notes-status" data-delivery-note-status-for="' +
+            esc(userId) +
+            '"></span></td><td><div class="delivery-man-actions">' +
+            (isBlocked
+              ? '<button type="button" class="btn-unblock-courier" data-unblock-delivery-user-id="' +
+                esc(userId) +
+                '">Unblock</button>'
+              : '<button type="button" class="btn-mock-order" data-mock-order-user-id="' +
+                esc(userId) +
+                '" title="Create preparing mock order and push only this courier">Mock order</button>' +
+                '<button type="button" class="btn-block-courier" data-block-delivery-user-id="' +
+                esc(userId) +
+                '">Block</button>') +
+            '</div></td>';
+          tb.appendChild(tr);
+        });
+        tb.querySelectorAll('[data-pin-delivery-user-id]').forEach((btn) => {
+          btn.onclick = () => {
+            void togglePinnedDeliveryMan(btn.getAttribute('data-pin-delivery-user-id'))
+              .then(() => loadDeliveryPersonnel())
+              .catch(() => {});
+          };
+        });
+        tb.querySelectorAll('[data-delivery-status-user-id]').forEach((select) => {
+          select.onchange = () => {
+            void updateDeliveryManStatusFromDashboard(select)
+              .then(() => loadDeliveryPersonnel())
+              .catch((e) => {
+                alert(e.message || 'Status update failed');
+                void loadDeliveryPersonnel();
+              });
+          };
+        });
+        tb.querySelectorAll('[data-mock-order-user-id]').forEach((btn) => {
+          btn.onclick = () => {
+            void createMockOrderForDeliveryMan(btn.getAttribute('data-mock-order-user-id'), btn)
+              .catch((e) => alert(e.message || 'Mock order failed'));
+          };
+        });
+        tb.querySelectorAll('[data-block-delivery-user-id]').forEach((btn) => {
+          btn.onclick = () => {
+            void blockDeliveryManFromDashboard(btn.getAttribute('data-block-delivery-user-id'), btn)
+              .then(() => loadDeliveryPersonnel())
+              .catch((e) => alert(e.message || 'Block failed'));
+          };
+        });
+        tb.querySelectorAll('[data-unblock-delivery-user-id]').forEach((btn) => {
+          btn.onclick = () => {
+            void unblockDeliveryManFromDashboard(
+              btn.getAttribute('data-unblock-delivery-user-id'),
+              btn,
+            )
+              .then(() => loadDeliveryPersonnel())
+              .catch((e) => alert(e.message || 'Unblock failed'));
+          };
+        });
+        tb.querySelectorAll('[data-delivery-note-user-id]').forEach((textarea) => {
+          const userId = textarea.getAttribute('data-delivery-note-user-id');
+          const statusEl = tb.querySelector(
+            '[data-delivery-note-status-for="' + CSS.escape(userId) + '"]',
+          );
+          textarea.addEventListener('input', () => {
+            scheduleDeliveryManNoteSave(userId, textarea, statusEl);
+          });
+          textarea.addEventListener('blur', () => {
+            const pending = deliveryManNoteSaveTimers.get(userId);
+            if (pending) {
+              clearTimeout(pending);
+              deliveryManNoteSaveTimers.delete(userId);
+            }
+            void persistDeliveryManNote(userId, textarea.value)
+              .then((saved) => {
+                textarea.value = saved;
+                if (statusEl) {
+                  statusEl.textContent = saved ? 'Saved' : '';
+                  statusEl.classList.add('is-ok');
+                  statusEl.classList.remove('is-error');
+                }
+              })
+              .catch((e) => {
+                if (statusEl) {
+                  statusEl.textContent = e.message || 'Save failed';
+                  statusEl.classList.add('is-error');
+                  statusEl.classList.remove('is-ok');
+                }
+              });
+          });
+        });
+      }
+
+      async function updateDeliveryManStatusFromDashboard(selectEl) {
+        const userId = String(selectEl?.getAttribute('data-delivery-status-user-id') || '').trim();
+        const field = String(selectEl?.getAttribute('data-delivery-status-field') || '').trim();
+        if (!userId || (field !== 'is_available' && field !== 'is_online')) {
+          throw new Error('Invalid status control');
+        }
+        const next = selectEl.value === 'true';
+        selectEl.disabled = true;
+        selectEl.classList.add('is-saving');
+        try {
+          await api('/delivery-personnel/' + encodeURIComponent(userId) + '/status', {
+            method: 'PATCH',
+            body: JSON.stringify({ [field]: next }),
+          });
+        } finally {
+          selectEl.classList.remove('is-saving');
+          selectEl.disabled = false;
+        }
+      }
+
+      async function createMockOrderForDeliveryMan(userId, btn) {
+        const key = String(userId || '').trim();
+        if (!key) return;
+        if (
+          !confirm(
+            'Create a preparing mock order for this courier and push only them?\n\nThey can Accept → Pickup → Deliver. Courier must be Available + Online.',
+          )
+        ) {
+          return;
+        }
+        const prev = btn ? btn.textContent : '';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Creating…';
+        }
+        try {
+          const data = await api('/delivery-personnel/' + encodeURIComponent(key) + '/mock-order', {
+            method: 'POST',
+            body: '{}',
+          });
+          const orderNumber = data?.order?.order_number || '—';
+          const pushOk = data?.broadcast?.ok === true;
+          const sent = data?.broadcast?.total_sent ?? 0;
+          alert(
+            'Mock order ' +
+              orderNumber +
+              ' created.\nPush: ' +
+              (pushOk ? 'sent (' + sent + ')' : 'failed / no device') +
+              '\n\nAsk the courier to Accept it in Available orders.',
+          );
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || 'Mock order';
+          }
+        }
+      }
+
+      async function blockDeliveryManFromDashboard(userId, btn) {
+        const key = String(userId || '').trim();
+        if (!key) return;
+        const reason = window.prompt('Block reason (optional):', '') ?? null;
+        if (reason === null) return;
+        if (!confirm('Block this delivery man? They will be demoted to customer and forced offline.')) {
+          return;
+        }
+        const prev = btn ? btn.textContent : '';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Blocking…';
+        }
+        try {
+          await api('/delivery-personnel/' + encodeURIComponent(key) + '/block', {
+            method: 'POST',
+            body: JSON.stringify({ reason: String(reason || '').trim() || null }),
+          });
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || 'Block';
+          }
+        }
+      }
+
+      async function unblockDeliveryManFromDashboard(userId, btn) {
+        const key = String(userId || '').trim();
+        if (!key) return;
+        if (!confirm('Unblock this delivery man and restore the delivery_man role?')) return;
+        const prev = btn ? btn.textContent : '';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Unblocking…';
+        }
+        try {
+          await api('/delivery-personnel/' + encodeURIComponent(key) + '/unblock', {
+            method: 'POST',
+            body: '{}',
+          });
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || 'Unblock';
+          }
+        }
+      }
+
+      async function loadDeliveryHistory() {
+        try {
+          const preset = $('deliveryHistoryDatePreset').value;
+          const chosenDate = $('deliveryHistoryDate').value;
+          const qs = new URLSearchParams();
+          qs.set('status_in', 'delivered,collected');
+          if (preset === 'today') {
+            const today = sahlaTodayYmd();
+            qs.set('from_date', today);
+            qs.set('to_date', today);
+          } else if (preset === 'custom' && chosenDate) {
+            qs.set('from_date', chosenDate);
+            qs.set('to_date', chosenDate);
+          }
+          const data = await api('/orders?' + qs.toString());
+          const rows = data.orders || [];
+          deliveryHistoryRows = rows;
+          updateCollectAllButton();
+          $('deliveryHistoryMeta').textContent =
+            rows.length +
+            ' delivered order(s). “Today” follows Africa/Algiers (UTC+1). Use “All” for all dates.';
+          const tb = $('deliveryHistoryBody');
+          tb.innerHTML = '';
+          if (!rows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="8" class="meta">No delivered orders for this filter.</td>';
+            tb.appendChild(tr);
+            return;
+          }
+          rows.forEach((o, i) => {
+            const tr = document.createElement('tr');
+            const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
+            const collect = needsCollectPayment(o);
+            tr.innerHTML =
+              '<td class="num">' +
+              (i + 1) +
+              '</td><td>' +
+              esc(o.order_number || o.id) +
+              '</td><td>' +
+              esc(rest || o.restaurant_id || '—') +
+              '</td><td class="num">' +
+              esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
+              '</td><td>' +
+              esc(o.payment_method || '—') +
+              '</td><td><span class="status-pill">' +
+              esc(o.payment_status || 'unknown') +
+              '</span></td><td class="collect-cell">' +
+              (collect
+                ? '<strong style="color:#e53935">YES</strong> <button type="button" class="btn-collect-payment" data-collect-order-id="' +
+                  esc(o.id) +
+                  '">Collect</button>'
+                : 'No') +
+              '</td><td>' +
+              esc(fmtDate(o.updated_at || o.created_at)) +
+              '</td>';
+            tb.appendChild(tr);
+          });
+        } catch (e) {
+          const errMsg = e.message || 'Failed to load delivered history';
+          const dhm = $('deliveryHistoryMeta');
+          if (dhm) dhm.innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
+          const tb = $('deliveryHistoryBody');
+          if (tb) {
+            tb.innerHTML = '<tr><td colspan="8" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load delivered history:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryHistory()">Retry</button></td></tr>';
+          }
+        }
+      }
+
+      async function postCollectPayment(orderId) {
+        const r = await fetch(API + '/orders/' + encodeURIComponent(orderId) + '/collect', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          const msg = [j.error, j.detail].filter(Boolean).join(' — ') || r.statusText;
+          throw new Error(msg);
+        }
+        return j;
+      }
+
+      async function collectPayment(orderId, btn) {
+        if (
+          !confirm(
+            'Mark this cash-on-delivery order as paid? This only sets payment_status to paid and does not change order status or Sahla Pay balances.',
+          )
+        ) {
+          return;
+        }
+        const prev = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Collecting…';
+        try {
+          await postCollectPayment(orderId);
+          await loadDeliveryHistory().catch(() => {});
+        } catch (e) {
+          alert('Collect payment failed: ' + (e && e.message ? e.message : String(e)));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prev;
+        }
+      }
+
+      async function collectAllPayments() {
+        const pending = deliveryHistoryRows.filter(needsCollectPayment);
+        if (!pending.length) {
+          alert('No cash-on-delivery orders need collection for this filter.');
+          return;
+        }
+        if (
+          !confirm(
+            'Mark ' +
+              pending.length +
+              ' cash-on-delivery order(s) as paid? This only sets payment_status to paid and does not change order status or Sahla Pay balances.',
+          )
+        ) {
+          return;
+        }
+
+        const btn = $('collectAllDeliveryHistory');
+        const prev = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Collecting…';
+
+        let ok = 0;
+        const failed = [];
+        try {
+          for (const order of pending) {
+            try {
+              await postCollectPayment(order.id);
+              ok += 1;
+            } catch (e) {
+              failed.push({
+                label: order.order_number || order.id,
+                error: e && e.message ? e.message : String(e),
+              });
+            }
+          }
+          await loadDeliveryHistory().catch(() => {});
+          if (failed.length) {
+            alert(
+              'Collected ' +
+                ok +
+                ' order(s). Failed ' +
+                failed.length +
+                ':\n' +
+                failed.map((item) => item.label + ': ' + item.error).join('\n'),
+            );
+          }
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prev;
+          updateCollectAllButton();
+        }
+      }
+
+      $('unlockBtn').onclick = async () => {
+        $('gateErr').classList.add('hidden');
+        try {
+          await api('/auth', {
+            method: 'POST',
+            body: JSON.stringify({ password: $('pw').value }),
+          });
+          showApp();
+          await loadMeta();
+          await loadAlerts();
+          await loadOrders();
+          applyViewFromQuery();
+        } catch (e) {
+          $('gateErr').textContent = e.message || 'Unlock failed';
+          $('gateErr').classList.remove('hidden');
+        }
+      };
+
+      const cancelModalEl = $('cancelOrderModal');
+      if (cancelModalEl) {
+        cancelModalEl.addEventListener('click', (e) => {
+          if (e.target === cancelModalEl) closeCancelOrderModal();
+        });
+      }
+      const cancelModalDismiss = $('cancelModalDismiss');
+      if (cancelModalDismiss) cancelModalDismiss.onclick = () => closeCancelOrderModal();
+      const cancelModalConfirm = $('cancelModalConfirm');
+      if (cancelModalConfirm) cancelModalConfirm.onclick = () => void submitCancelOrderFromModal();
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && cancelModalEl && !cancelModalEl.classList.contains('hidden')) {
+          closeCancelOrderModal();
+        }
+      });
+
+      function selectTab(name, options) {
+        const tab = name || 'alerts';
+        const skipPersist = options && options.skipPersist === true;
+        if (!skipPersist) {
+          try {
+            localStorage.setItem(ACTIVE_TAB_KEY, tab);
+          } catch {
+            /* ignore */
+          }
+        }
+        document.querySelectorAll('.tab').forEach((b) => {
+          b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+        });
+        $('panel-tasks').classList.toggle('hidden', tab !== 'tasks');
+        $('panel-alerts').classList.toggle('hidden', tab !== 'alerts');
+        $('panel-parcel-alerts').classList.toggle('hidden', tab !== 'parcel-alerts');
+        $('panel-delivery-history').classList.toggle('hidden', tab !== 'delivery-history');
+        $('panel-delivery-men').classList.toggle('hidden', tab !== 'delivery-men');
+        $('panel-partner-requests').classList.toggle('hidden', tab !== 'partner-requests');
+        $('panel-restaurant-tables').classList.toggle('hidden', tab !== 'restaurant-tables');
+        $('panel-reviews').classList.toggle('hidden', tab !== 'reviews');
+        $('panel-delivery-reviews').classList.toggle('hidden', tab !== 'delivery-reviews');
+        $('panel-force-push').classList.toggle('hidden', tab !== 'force-push');
+        if (tab === 'tasks') loadTasks();
+        if (tab === 'alerts') {
+          loadAlerts().catch(() => {});
+          loadOrders().catch(() => {});
+        }
+        if (tab === 'parcel-alerts') {
+          loadAlerts().catch(() => {});
+          loadOrders().catch(() => {});
+        }
+        if (tab === 'delivery-men') loadDeliveryPersonnel().catch(() => {});
+        if (tab === 'delivery-history') loadDeliveryHistory().catch(() => {});
+        if (tab === 'partner-requests') loadPartnerRequests().catch(() => {});
+        if (tab === 'restaurant-tables') loadRestaurantTablesPanel().catch(() => {});
+        if (tab === 'reviews') loadReviews().catch(() => {});
+        if (tab === 'delivery-reviews') loadDeliveryReviews().catch(() => {});
+      }
+
+      document.querySelectorAll('.tab').forEach((btn) => {
+        btn.onclick = () => selectTab(btn.getAttribute('data-tab'));
+      });
+
+      $('refreshTasks').onclick = () => loadTasks();
+            $('refreshDeliveryMen').onclick = () => loadDeliveryPersonnel().catch(() => {});
+      $('deliveryMenAvailableFilter').onchange = () => {
+        if (!cachedDeliveryPersonnelRows.length) {
+          loadDeliveryPersonnel().catch(() => {});
+          return;
+        }
+        renderDeliveryPersonnelTable(
+          cachedDeliveryPersonnelRows,
+          cachedPinnedUserIds || [],
+          cachedDeliveryManNotes || {},
+        );
+      };
+      $('deliveryMenShowBlocked').onchange = () => {
+        if (!cachedDeliveryPersonnelRows.length) {
+          loadDeliveryPersonnel().catch(() => {});
+          return;
+        }
+        renderDeliveryPersonnelTable(
+          cachedDeliveryPersonnelRows,
+          cachedPinnedUserIds || [],
+          cachedDeliveryManNotes || {},
+        );
+      };
+      $('refreshDeliveryHistory').onclick = () => loadDeliveryHistory().catch(() => {});
+      $('refreshCancelledOrders').onclick = () => loadCancelledOrders().catch(() => {});
+      $('collectAllDeliveryHistory').onclick = () => collectAllPayments().catch((e) => {
+        alert('Collect all failed: ' + (e && e.message ? e.message : String(e)));
+      });
+      $('deliveryHistoryDatePreset').onchange = () => {
+        updateDeliveryHistoryDateInputVisibility();
+        loadDeliveryHistory().catch(() => {});
+      };
+      $('deliveryHistoryDate').onchange = () => loadDeliveryHistory().catch(() => {});
+      $('cancelledOrdersDatePreset').onchange = () => {
+        updateCancelledOrdersDateInputVisibility();
+        loadCancelledOrders().catch(() => {});
+      };
+      $('cancelledOrdersDate').onchange = () => loadCancelledOrders().catch(() => {});
+      $('taskStatus').onchange = () => loadTasks();
+      $('taskCourier').onchange = () => loadTasks();
+      const partnerReqTypeInput = $('partnerReqType');
+      if (partnerReqTypeInput) partnerReqTypeInput.onchange = () => loadPartnerRequests().catch(() => {});
+      $('dmReqStatus').onchange = () => loadDeliveryManRequests().catch(() => {});
+      $('restReqStatus').onchange = () => loadRestaurantRequests().catch(() => {});
+      $('parcelSenderReqStatus').onchange = () => loadParcelSenderRequests().catch(() => {});
+      $('refreshDeliveryReq').onclick = () => loadDeliveryManRequests().catch(() => {});
+      $('refreshRestaurantReq').onclick = () => loadRestaurantRequests().catch(() => {});
+      $('refreshRestaurantTables').onclick = () => loadRestaurantTablesPanel().catch(() => {});
+      $('tableRestSelect').onchange = () => {
+        syncTableOrderingFlagSelect();
+        loadRestaurantTablesList().catch(() => {});
+      };
+      $('saveTableOrderingFlag').onclick = async () => {
+        const id = $('tableRestSelect').value;
+        if (!id) return alert('Select a restaurant first');
+        const enabled = $('tableOrderingEnabled').value === 'true';
+        const portal_password = $('tablePortalPassword').value.trim();
+        try {
+          const body = { enabled };
+          if (enabled && portal_password) body.portal_password = portal_password;
+          const j = await api('/restaurants/' + encodeURIComponent(id) + '/table-ordering', {
+            method: 'PATCH',
+            body: JSON.stringify(body),
+          });
+          if (portal_password) $('tablePortalPassword').value = '';
+          await loadTableEligibleRestaurants();
+          await loadRestaurantTablesList();
+          let msg = enabled ? 'Table ordering enabled for this restaurant.' : 'Table ordering disabled.';
+          if (j.portal_url) msg += '\nStaff portal: ' + j.portal_url;
+          alert(msg);
+        } catch (e) {
+          alert('Save failed: ' + (e && e.message ? e.message : String(e)));
+        }
+      };
+      $('saveTablePortalPassword').onclick = async () => {
+        const id = $('tableRestSelect').value;
+        const password = $('tablePortalPassword').value.trim();
+        if (!id) return alert('Select a restaurant first');
+        if (password.length < 6) return alert('Password must be at least 6 characters');
+        try {
+          const j = await api('/restaurants/' + encodeURIComponent(id) + '/table-portal-password', {
+            method: 'POST',
+            body: JSON.stringify({ password }),
+          });
+          $('tablePortalPassword').value = '';
+          await loadRestaurantTablesList();
+          alert('Portal password saved.\nStaff URL: ' + (j.portal_url || ''));
+        } catch (e) {
+          alert('Password save failed: ' + (e && e.message ? e.message : String(e)));
+        }
+      };
+      $('regenerateTablePortalCode').onclick = async () => {
+        const id = $('tableRestSelect').value;
+        if (!id) return alert('Select a restaurant first');
+        if (!confirm('Regenerate portal code? Old staff portal links will stop working.')) return;
+        try {
+          const j = await api('/restaurants/' + encodeURIComponent(id) + '/regenerate-table-portal-code', {
+            method: 'POST',
+            body: '{}',
+          });
+          await loadRestaurantTablesList();
+          alert('New portal code: ' + (j.portal_code || '') + '\n' + (j.portal_url || ''));
+        } catch (e) {
+          alert('Regenerate failed: ' + (e && e.message ? e.message : String(e)));
+        }
+      };
+      $('addRestaurantTable').onclick = async () => {
+        const id = $('tableRestSelect').value;
+        const table_number = $('newTableNumber').value.trim();
+        const table_label = $('newTableLabel').value.trim();
+        if (!id) return alert('Select a restaurant first');
+        if (!table_number) return alert('Enter a table number');
+        try {
+          const j = await api('/restaurants/' + encodeURIComponent(id) + '/tables', {
+            method: 'POST',
+            body: JSON.stringify({ table_number, table_label: table_label || null }),
+          });
+          $('newTableNumber').value = '';
+          $('newTableLabel').value = '';
+          if (j.table && j.table.qr_url) {
+            $('lastTableQrMeta').innerHTML =
+              '<strong>Print this QR URL:</strong> <a href="' +
+              esc(j.table.qr_url) +
+              '" target="_blank" rel="noopener">' +
+              esc(j.table.qr_url) +
+              '</a>';
+          }
+          await loadRestaurantTablesList();
+        } catch (e) {
+          alert('Add table failed: ' + (e && e.message ? e.message : String(e)));
+        }
+      };
+      $('restaurantTablesBody').addEventListener('click', async (e) => {
+        const regen = e.target.closest('[data-regen-table]');
+        const revoke = e.target.closest('[data-revoke-table]');
+        if (regen) {
+          const tableId = regen.getAttribute('data-regen-table');
+          if (!confirm('Regenerate QR? Old codes and active sessions will stop working.')) return;
+          try {
+            const j = await api('/tables/' + encodeURIComponent(tableId) + '/regenerate-code', {
+              method: 'POST',
+              body: '{}',
+            });
+            if (j.qr_url) {
+              $('lastTableQrMeta').innerHTML =
+                '<strong>New QR URL:</strong> <a href="' +
+                esc(j.qr_url) +
+                '" target="_blank" rel="noopener">' +
+                esc(j.qr_url) +
+                '</a>';
+            }
+            await loadRestaurantTablesList();
+          } catch (err) {
+            alert('Regenerate failed: ' + (err && err.message ? err.message : String(err)));
+          }
+        }
+        if (revoke) {
+          const tableId = revoke.getAttribute('data-revoke-table');
+          if (!confirm('Revoke all active sessions for this table?')) return;
+          try {
+            await api('/tables/' + encodeURIComponent(tableId) + '/revoke-sessions', {
+              method: 'POST',
+              body: '{}',
+            });
+            alert('Sessions revoked.');
+          } catch (err) {
+            alert('Revoke failed: ' + (err && err.message ? err.message : String(err)));
+          }
+        }
+      });
+      $('refreshParcelSenderReq').onclick = () => loadParcelSenderRequests().catch(() => {});
+      $('refreshReviews').onclick = () => loadReviews().catch(() => {});
+      $('reviewRestaurant').onchange = () => loadReviews().catch(() => {});
+      $('refreshDeliveryReviews').onclick = () => loadDeliveryReviews().catch(() => {});
+      $('reviewDeliveryPerson').onchange = () => loadDeliveryReviews().catch(() => {});
+      $('forcePushSendAll').onchange = () => updateForcePushTargetFields();
+      $('forcePushSchedule').onchange = () => updateForcePushScheduleFields();
+      $('forcePushSend').onclick = () => void submitForcePushNotification();
+      $('availabilityReminderSend').onclick = () => void submitAvailabilityReminder();
+      document.querySelectorAll('[data-partner-type-card]').forEach((card) => {
+        card.onclick = () => setPartnerRequestType(card.getAttribute('data-partner-type-card'));
+      });
+
+      $('panel-partner-requests').addEventListener('click', (e) => {
+        const ap = e.target.closest('[data-dm-approve]');
+        if (ap) void approveDeliveryManRequest(ap.getAttribute('data-dm-approve'));
+        const rj = e.target.closest('[data-dm-reject]');
+        if (rj) void rejectDeliveryManRequest(rj.getAttribute('data-dm-reject'));
+        const restAp = e.target.closest('[data-rest-approve]');
+        if (restAp) void approveRestaurantRequest(restAp.getAttribute('data-rest-approve'));
+        const restRj = e.target.closest('[data-rest-reject]');
+        if (restRj) void rejectRestaurantRequest(restRj.getAttribute('data-rest-reject'));
+        const parcelAp = e.target.closest('[data-parcel-sender-approve]');
+        if (parcelAp) void approveParcelSenderRequest(parcelAp.getAttribute('data-parcel-sender-approve'));
+        const parcelRj = e.target.closest('[data-parcel-sender-reject]');
+        if (parcelRj) void rejectParcelSenderRequest(parcelRj.getAttribute('data-parcel-sender-reject'));
+      });
+      $('panel-delivery-history').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-collect-order-id]');
+        if (!btn) return;
+        const oid = btn.getAttribute('data-collect-order-id');
+        if (oid) void collectPayment(oid, btn);
+      });
+
+      /** Alerts + global badges (incl. request & review counts): ~real-time while dashboard is open. */
+      const REALTIME_POLL_MS = 3000;
+      setInterval(() => {
+        if ($('app').classList.contains('hidden')) return;
+        loadAlerts().catch(() => {});
+        const tab = document.querySelector('.tab.active')?.getAttribute('data-tab');
+        if (tab === 'reviews') loadReviews().catch(() => {});
+        if (tab === 'delivery-reviews') loadDeliveryReviews().catch(() => {});
+      }, REALTIME_POLL_MS);
+
+      /** Other tabs: lighter refresh interval. */
+      setInterval(() => {
+        if ($('app').classList.contains('hidden')) return;
+        const tab = document.querySelector('.tab.active')?.getAttribute('data-tab');
+        if (tab === 'alerts') loadOrders().catch(() => {});
+        if (tab === 'delivery-men') loadDeliveryPersonnel().catch(() => {});
+        if (tab === 'delivery-history') loadDeliveryHistory().catch(() => {});
+        if (tab === 'tasks') loadTasks().catch(() => {});
+        if (tab === 'partner-requests') loadPartnerRequests().catch(() => {});
+      }, 15000);
+
+      $('deliveryHistoryDate').value = sahlaTodayYmd();
+      $('cancelledOrdersDate').value = sahlaTodayYmd();
+      updateDeliveryHistoryDateInputVisibility();
+      updateCancelledOrdersDateInputVisibility();
+      updateForcePushTargetFields();
+      updateForcePushScheduleFields();
+      tryBootstrap();
+    </script>
+  </body>
+</html>

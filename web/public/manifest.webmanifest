@@ -1,0 +1,11 @@
+{
+  "name": "ساهلة — تتبع الطلب",
+  "short_name": "ساهلة",
+  "description": "تتبع طلبك من ساهلة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f97316",
+  "lang": "ar",
+  "dir": "rtl"
+}

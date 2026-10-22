@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>طلبات الطاولة — سهلة</title>
+    <style>
+      :root {
+        --bg: #f7f7f8;
+        --card: #fff;
+        --border: #e5e7eb;
+        --text: #111827;
+        --muted: #6b7280;
+        --accent: #fb8c00;
+        --ok: #16a34a;
+        --danger: #dc2626;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+      header {
+        padding: 14px 16px;
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 800;
+      }
+      .sub {
+        margin: 2px 0 0;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      .panel {
+        max-width: 520px;
+        margin: 48px auto;
+        padding: 24px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+      }
+      label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        font-size: 1rem;
+        background: #fff;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn-primary {
+        width: 100%;
+        margin-top: 14px;
+        padding: 13px;
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-ghost {
+        padding: 8px 12px;
+        background: #f3f4f6;
+        color: var(--text);
+        font-size: 0.82rem;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .orders {
+        padding: 12px 12px 80px;
+        max-width: 720px;
+        margin: 0 auto;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        background: #fff;
+        color: #5b21b6;
+        border: 1.5px solid #fff;
+        box-shadow: 0 0 0 1px #e5e7eb, 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+      .badge-time {
+        font-weight: 700;
+        color: #6b7280;
+        padding-left: 8px;
+        margin-right: 8px;
+        border-left: 1px solid #e5e7eb;
+      }
+      .status {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .items {
+        margin-top: 10px;
+        font-size: 0.86rem;
+        line-height: 1.5;
+        color: #374151;
+      }
+      .meta {
+        margin-top: 8px;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        color: #374151;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .actions button {
+        flex: 1 1 auto;
+        min-width: 110px;
+        padding: 10px 12px;
+        font-size: 0.82rem;
+      }
+      .btn-ok {
+        background: #111;
+        color: #fff;
+      }
+      .btn-danger {
+        background: #fee2e2;
+        color: var(--danger);
+      }
+      .empty {
+        text-align: center;
+        color: var(--muted);
+        padding: 48px 16px;
+      }
+      .err {
+        color: var(--danger);
+        font-size: 0.85rem;
+        margin-top: 10px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      #refreshBtn {
+        padding: 8px 12px;
+        background: #111;
+        color: #fff;
+        font-size: 0.82rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loginView" class="panel hidden">
+      <h2 style="margin: 0 0 6px">دخول طلبات الطاولة</h2>
+      <p id="loginRestaurant" class="sub" style="margin-bottom: 16px"></p>
+      <label for="password">كلمة المرور</label>
+      <input id="password" type="password" autocomplete="current-password" />
+      <button id="loginBtn" class="btn-primary" type="button">دخول</button>
+      <p id="loginError" class="err hidden"></p>
+    </div>
+
+    <div id="appView" class="hidden">
+      <header>
+        <div>
+          <h1 id="restaurantName">طلبات الطاولة</h1>
+          <p class="sub" id="portalCodeLabel"></p>
+        </div>
+        <div class="toolbar">
+          <button id="refreshBtn" type="button">تحديث</button>
+          <button id="logoutBtn" class="btn-ghost" type="button">خروج</button>
+        </div>
+      </header>
+      <div id="orders" class="orders"></div>
+    </div>
+
+    <script>
+      const STATUS_LABEL = {
+        pending: 'جديد',
+        confirmed: 'مؤكد',
+        preparing: 'قيد التحضير',
+        ready: 'جاهز',
+        delivered: 'مُقدَّم',
+        cancelled: 'ملغى',
+      };
+
+      const NEXT_ACTIONS = {
+        pending: [
+          { status: 'confirmed', label: 'تأكيد', className: 'btn-ok' },
+          { status: 'preparing', label: 'بدء التحضير', className: 'btn-ok' },
+          { status: 'cancelled', label: 'إلغاء', className: 'btn-danger' },
+        ],
+        confirmed: [
+          { status: 'preparing', label: 'بدء التحضير', className: 'btn-ok' },
+          { status: 'cancelled', label: 'إلغاء', className: 'btn-danger' },
+        ],
+        preparing: [
+          { status: 'ready', label: 'جاهز للتقديم', className: 'btn-ok' },
+          { status: 'cancelled', label: 'إلغاء', className: 'btn-danger' },
+        ],
+        ready: [
+          { status: 'delivered', label: 'تم التقديم', className: 'btn-ok' },
+          { status: 'cancelled', label: 'إلغاء', className: 'btn-danger' },
+        ],
+      };
+
+      function portalCodeFromPath() {
+        const parts = location.pathname.split('/').filter(Boolean);
+        const idx = parts.indexOf('table-orders');
+        if (idx >= 0 && parts[idx + 1]) return decodeURIComponent(parts[idx + 1]);
+        return parts[parts.length - 1] || '';
+      }
+
+      const code = portalCodeFromPath();
+      const loginView = document.getElementById('loginView');
+      const appView = document.getElementById('appView');
+      const loginError = document.getElementById('loginError');
+      const ordersEl = document.getElementById('orders');
+      let pollTimer = null;
+      let lastPendingCount = 0;
+
+      function api(path, options) {
+        return fetch('/api/table-portal/' + encodeURIComponent(code) + path, {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          ...options,
+        }).then(async (res) => {
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(json.error || 'request_failed');
+          return json;
+        });
+      }
+
+      function fmtDa(n) {
+        return Math.round(Number(n || 0)) + ' دج';
+      }
+
+      function fmtTime(iso) {
+        try {
+          return new Date(iso).toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' });
+        } catch {
+          return '';
+        }
+      }
+
+      function esc(text) {
+        return String(text || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function extractCustomerNotes(specialInstructions) {
+        const raw = String(specialInstructions || '').trim();
+        if (!raw) return '';
+
+        const lines = raw.split('\n');
+        const firstLine = lines[0].trim();
+
+        if (/^طلب طاولة \([^)]*\) — W-/.test(firstLine)) {
+          const inlineNote = firstLine
+            .replace(/^طلب طاولة \([^)]*\) — W-\S+\s*/, '')
+            .trim();
+          const rest = lines.slice(1).join('\n').trim();
+          return [inlineNote, rest].filter(Boolean).join('\n').trim();
+        }
+
+        if (/^طلب طاولة \([^)]*\)/.test(firstLine)) {
+          return lines.slice(1).join('\n').trim();
+        }
+
+        return raw;
+      }
+
+      function displayGuestNote(guestName, tableNumber, tableLabel) {
+        const name = String(guestName || '').trim();
+        if (!name) return '';
+
+        const tableNo = String(tableNumber || '').trim();
+        const label = String(tableLabel || '').trim();
+        const autoNames = new Set(['ضيف الطاولة']);
+        if (tableNo) {
+          autoNames.add('طاولة ' + tableNo);
+          if (label) autoNames.add('طاولة ' + tableNo + ' · ' + label);
+        }
+
+        return autoNames.has(name) ? '' : name;
+      }
+
+      function renderOrders(orders) {
+        if (!orders.length) {
+          ordersEl.innerHTML = '<p class="empty">لا توجد طلبات طاولة نشطة حالياً</p>';
+          return;
+        }
+        ordersEl.innerHTML = orders
+          .map((o) => {
+            const actions = (NEXT_ACTIONS[o.status] || [])
+              .map(
+                (a) =>
+                  '<button type="button" class="' +
+                  a.className +
+                  '" data-order="' +
+                  o.id +
+                  '" data-status="' +
+                  a.status +
+                  '">' +
+                  a.label +
+                  '</button>',
+              )
+              .join('');
+            const tableLabel = o.table_number
+              ? 'طاولة ' + o.table_number + (o.table_label ? ' · ' + o.table_label : '')
+              : 'طاولة';
+            const orderTime = fmtTime(o.created_at);
+            const customerNotes = extractCustomerNotes(o.special_instructions);
+            const guestNote = displayGuestNote(o.guest_name, o.table_number, o.table_label);
+            const description = customerNotes || guestNote;
+            const metaHtml = description
+              ? '<div class="meta">' + esc(description) + '</div>'
+              : '';
+            return (
+              '<article class="card" data-order-card="' +
+              o.id +
+              '">' +
+              '<div class="row">' +
+              '<div><span class="badge">' +
+              esc(tableLabel) +
+              '<span class="badge-time">' +
+              esc(orderTime) +
+              '</span>' +
+              '</span>' +
+              '<div style="margin-top:8px;font-weight:800">#' +
+              String(o.order_number || '').replace(/^ORD-/, '') +
+              '</div></div>' +
+              '<div style="text-align:left">' +
+              '<div class="status">' +
+              (STATUS_LABEL[o.status] || o.status) +
+              '</div>' +
+              '<div style="font-weight:800;margin-top:4px">' +
+              fmtDa(o.total_amount) +
+              '</div></div></div>' +
+              '<div class="items">' +
+              esc(o.order_items_summary || '—') +
+              '</div>' +
+              metaHtml +
+              '<div class="actions">' +
+              actions +
+              '</div></article>'
+            );
+          })
+          .join('');
+      }
+
+      async function loadOrders() {
+        const json = await api('/orders');
+        const orders = json.orders || [];
+        const pending = orders.filter((o) => o.status === 'pending').length;
+        if (pending > lastPendingCount) {
+          try {
+            const beep = new Audio(
+              'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE=' );
+            beep.play().catch(() => {});
+          } catch (_) {}
+        }
+        lastPendingCount = pending;
+        renderOrders(orders);
+      }
+
+      async function boot() {
+        if (!code) {
+          loginView.classList.remove('hidden');
+          document.getElementById('loginRestaurant').textContent = 'رمز المطعم غير موجود في الرابط';
+          return;
+        }
+
+        try {
+          const meta = await api('/meta');
+          document.getElementById('loginRestaurant').textContent = meta.restaurant?.name || code;
+          document.getElementById('restaurantName').textContent = meta.restaurant?.name || 'طلبات الطاولة';
+          document.getElementById('portalCodeLabel').textContent = 'رمز الدخول: ' + code;
+          if (meta.portal_password_configured === false) {
+            loginError.textContent = 'لم يتم تعيين كلمة مرور للمطعم بعد. اطلب من الإدارة ضبطها من لوحة Performance.';
+            loginError.classList.remove('hidden');
+          }
+        } catch {
+          loginView.classList.remove('hidden');
+          document.getElementById('loginRestaurant').textContent = 'المطعم غير موجود أو طلب الطاولة غير مفعّل';
+          return;
+        }
+
+        try {
+          await loadOrders();
+          loginView.classList.add('hidden');
+          appView.classList.remove('hidden');
+          if (pollTimer) clearInterval(pollTimer);
+          pollTimer = setInterval(() => loadOrders().catch(() => {}), 12000);
+        } catch {
+          loginView.classList.remove('hidden');
+        }
+      }
+
+      document.getElementById('loginBtn').onclick = async () => {
+        loginError.classList.add('hidden');
+        try {
+          await api('/auth', {
+            method: 'POST',
+            body: JSON.stringify({ password: document.getElementById('password').value }),
+          });
+          await boot();
+        } catch (e) {
+          const err = e && e.message ? String(e.message) : '';
+          if (err === 'portal_password_not_set') {
+            loginError.textContent = 'لم يتم تعيين كلمة مرور للمطعم بعد. اطلب من الإدارة ضبطها من لوحة Performance.';
+          } else {
+            loginError.textContent = 'كلمة المرور غير صحيحة';
+          }
+          loginError.classList.remove('hidden');
+        }
+      };
+
+      document.getElementById('logoutBtn').onclick = async () => {
+        try {
+          await api('/logout', { method: 'POST', body: '{}' });
+        } catch (_) {}
+        location.reload();
+      };
+
+      document.getElementById('refreshBtn').onclick = () => loadOrders().catch(() => {});
+
+      ordersEl.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-order]');
+        if (!btn) return;
+        const orderId = btn.getAttribute('data-order');
+        const status = btn.getAttribute('data-status');
+        btn.disabled = true;
+        try {
+          await api('/orders/' + encodeURIComponent(orderId) + '/status', {
+            method: 'POST',
+            body: JSON.stringify({ status }),
+          });
+          await loadOrders();
+        } catch (err) {
+          alert('تعذّر تحديث الحالة');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      boot();
+    </script>
+  </body>
+</html>

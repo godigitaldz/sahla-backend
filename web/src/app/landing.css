@@ -1,0 +1,440 @@
+.landing-page {
+  --ink: #1d1b18;
+  --muted: #69645c;
+  --paper: #f7f4ee;
+  --orange: #ed5e23;
+  background: var(--paper);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+.site-header {
+  align-items: center;
+  background: rgba(29, 27, 24, 0.96);
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  left: 0;
+  min-height: 76px;
+  padding: 0 5vw;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 2;
+}
+
+.wordmark {
+  color: inherit;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.wordmark span {
+  color: var(--orange);
+}
+
+.site-header nav {
+  align-items: center;
+  display: flex;
+  gap: 2rem;
+}
+
+.site-header nav a {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.site-header nav a:not(.header-action):hover,
+.footer-links a:hover,
+.text-action:hover,
+.inline-link:hover {
+  color: #ffb092;
+}
+
+.header-action {
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  padding: 0.62rem 0.9rem;
+}
+
+.hero {
+  align-items: end;
+  color: #fff;
+  display: flex;
+  min-height: 760px;
+  position: relative;
+}
+
+.hero-image,
+.food-photo img {
+  object-fit: cover;
+}
+
+.hero-image {
+  object-position: center;
+}
+
+.hero-scrim {
+  background: rgba(20, 17, 13, 0.54);
+  inset: 0;
+  position: absolute;
+}
+
+.hero-content {
+  max-width: 720px;
+  padding: 156px 5vw 126px;
+  position: relative;
+  z-index: 1;
+}
+
+.eyebrow {
+  color: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 0 0 1.2rem;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.intro h2,
+.food-gallery h2,
+.app-section h2 {
+  font-size: clamp(2.45rem, 5.8vw, 5.5rem);
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 0.98;
+  margin: 0;
+}
+
+.hero-copy {
+  font-size: clamp(1rem, 1.55vw, 1.2rem);
+  line-height: 1.65;
+  margin: 1.75rem 0 2.15rem;
+  max-width: 590px;
+}
+
+.hero-actions,
+.store-links {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.button,
+.store-link {
+  display: inline-flex;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.button-primary {
+  background: var(--orange);
+  color: #fff;
+  padding: 0.95rem 1.25rem;
+}
+
+.button-primary:hover {
+  background: #ce4918;
+}
+
+.text-action {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.8rem 0.25rem;
+  text-decoration: none;
+}
+
+.text-action span,
+.inline-link span {
+  display: inline-block;
+  margin-left: 0.35rem;
+}
+
+.hero-scroll {
+  align-items: center;
+  bottom: 2rem;
+  color: #fff;
+  display: flex;
+  font-size: 0.72rem;
+  font-weight: 700;
+  gap: 0.6rem;
+  position: absolute;
+  right: 5vw;
+  text-decoration: none;
+  z-index: 1;
+}
+
+.hero-scroll > span:last-child {
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  display: block;
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.intro,
+.food-gallery,
+.app-section {
+  padding: clamp(5rem, 10vw, 9rem) 5vw;
+}
+
+.intro {
+  background: var(--paper);
+}
+
+.section-heading {
+  max-width: 780px;
+}
+
+.section-heading .eyebrow,
+.gallery-intro .eyebrow,
+.app-section .eyebrow {
+  color: var(--orange);
+}
+
+.steps {
+  border-top: 1px solid #d7d0c4;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: clamp(3.5rem, 7vw, 6.5rem);
+}
+
+.step {
+  border-right: 1px solid #d7d0c4;
+  padding: 1.5rem 2rem 0 0;
+}
+
+.step + .step {
+  padding-left: 2rem;
+}
+
+.step:last-child {
+  border-right: 0;
+}
+
+.step-number {
+  color: var(--orange);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.step h3 {
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 3.7rem 0 0.8rem;
+}
+
+.step p,
+.gallery-intro > p:not(.eyebrow),
+.app-content > p {
+  color: var(--muted);
+  line-height: 1.65;
+  margin: 0;
+  max-width: 25rem;
+}
+
+.food-gallery {
+  align-items: end;
+  background: #1d1b18;
+  color: #fff;
+  display: grid;
+  gap: 4rem;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+}
+
+.gallery-intro {
+  padding-bottom: 0.5rem;
+}
+
+.gallery-intro > p:not(.eyebrow) {
+  color: #d9d2c7;
+  margin-top: 1.5rem;
+}
+
+.inline-link {
+  color: #fff;
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-top: 2.25rem;
+  text-decoration: none;
+}
+
+.gallery-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: 1fr 0.86fr;
+  grid-template-rows: 1fr 1fr;
+  height: clamp(410px, 44vw, 650px);
+}
+
+.food-photo {
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.food-photo-1 {
+  grid-row: span 2;
+}
+
+.food-photo-2 img {
+  object-position: center 60%;
+}
+
+.app-section {
+  background: #e85e27;
+  color: #fff;
+  display: grid;
+  gap: 4rem;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.7fr);
+}
+
+.app-section .eyebrow {
+  color: #32170c;
+}
+
+.app-content > p {
+  color: #fff1e9;
+  margin-bottom: 2rem;
+}
+
+.store-link {
+  background: #1d1b18;
+  color: #fff;
+  flex-direction: column;
+  line-height: 1.1;
+  min-width: 142px;
+  padding: 0.7rem 0.9rem;
+}
+
+.store-link:hover {
+  background: #3c3833;
+}
+
+.store-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+
+.store-name {
+  font-size: 1rem;
+  margin-top: 0.16rem;
+}
+
+.site-footer {
+  align-items: center;
+  background: #1d1b18;
+  color: #fff;
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+  padding: 2.25rem 5vw;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.footer-links a,
+.site-footer p {
+  color: #c9c0b4;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0;
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .site-header {
+    min-height: 66px;
+    padding: 0 1.25rem;
+  }
+
+  .site-header nav a:not(.header-action) {
+    display: none;
+  }
+
+  .site-header nav {
+    gap: 0;
+  }
+
+  .header-action {
+    font-size: 0.78rem;
+  }
+
+  .hero {
+    min-height: 680px;
+  }
+
+  .hero-content {
+    padding: 135px 1.25rem 110px;
+  }
+
+  .hero-scroll {
+    bottom: 1.65rem;
+    right: 1.25rem;
+  }
+
+  .hero-scroll > span:first-child {
+    display: none;
+  }
+
+  .intro,
+  .food-gallery,
+  .app-section {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .steps,
+  .food-gallery,
+  .app-section {
+    grid-template-columns: 1fr;
+  }
+
+  .steps {
+    margin-top: 3rem;
+  }
+
+  .step,
+  .step + .step,
+  .step:last-child {
+    border-bottom: 1px solid #d7d0c4;
+    border-right: 0;
+    padding: 1.4rem 0 1.8rem;
+  }
+
+  .step h3 {
+    margin-top: 2.4rem;
+  }
+
+  .food-gallery,
+  .app-section {
+    gap: 3rem;
+  }
+
+  .gallery-grid {
+    height: 600px;
+  }
+
+  .app-section h2 {
+    max-width: 10ch;
+  }
+
+  .site-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1.4rem;
+    padding: 2rem 1.25rem;
+  }
+}
