@@ -1742,104 +1742,119 @@ router.put('/delivery-personnel-notes', requirePerformanceAuth, async (req, res)
 
 router.post('/force-push-notification', requirePerformanceAuth, async (req, res) => {
   try {
-    const { send_all_devices, user_id, device_token, title, body, force_activate_inactive_tokens } = req.body;
+    const {
+      send_all_devices,
+      user_id,
+      device_token,
+      title,
+      body,
+      force_activate_inactive_tokens,
+      schedule_send,
+      scheduled_for,
+      use_campaign,
+    } = req.body;
+
     if (!title || !body) {
       return res.status(400).json({ success: false, error: 'title and body are required' });
     }
 
-    let targetUserIds = [];
+    const isCampaign = Boolean(send_all_devices || schedule_send || scheduled_for || use_campaign);
 
-    if (user_id) {
-      targetUserIds = [String(user_id).trim()];
-    } else if (device_token) {
-      const { data: tokRow, error: tokErr } = await supabaseAdmin
-        .from('user_device_tokens')
-        .select('user_id')
-        .eq('token', String(device_token).trim())
-        .maybeSingle();
-      if (tokErr) throw tokErr;
-      if (!tokRow?.user_id) {
-        return res.status(404).json({ success: false, error: 'Device token not found in database' });
+    // Marketing campaigns, scheduled sends, and broadcasts MUST use schedule-push-campaign
+    // to protect the database from bulk push load spikes and to guarantee scheduled delivery.
+    if (isCampaign) {
+      const campaignBody = {
+        title: String(title).trim(),
+        body: String(body).trim(),
+        send_all_devices: Boolean(send_all_devices),
+        user_id: user_id ? String(user_id).trim() : undefined,
+        device_token: device_token ? String(device_token).trim() : undefined,
+        force_activate_inactive_tokens: Boolean(force_activate_inactive_tokens),
+        scheduled_for: scheduled_for ? String(scheduled_for).trim() : undefined,
+        enqueue_now: !schedule_send,
+        data: {
+          source: 'performance_dashboard_forced_push',
+          type: 'promotion',
+          timestamp: new Date().toISOString(),
+        },
+      };
+
+      const invokeRes = await supabaseAdmin.functions.invoke('schedule-push-campaign', {
+        body: campaignBody,
+      });
+
+      if (invokeRes.error) {
+        let errorDetail = invokeRes.error.message || 'Push schedule failed';
+        if (invokeRes.error.context && typeof invokeRes.error.context.text === 'function') {
+          try {
+            const txt = await invokeRes.error.context.text();
+            const parsed = JSON.parse(txt);
+            errorDetail = parsed.error || parsed.message || txt;
+          } catch (_) {}
+        }
+        return res.status(500).json({ success: false, error: errorDetail });
       }
-      targetUserIds = [String(tokRow.user_id).trim()];
-    } else if (send_all_devices) {
-      let allRows = [];
-      let page = 0;
-      while (true) {
-        let q = supabaseAdmin
+
+      const payload = invokeRes.data || {};
+      return res.json({
+        success: payload.success !== false,
+        campaign_id: payload.campaign_id,
+        scheduled_for: payload.scheduled_for,
+        delivery_mode: payload.delivery_mode,
+        status: payload.status,
+        warning: payload.warning,
+        total_users: payload.total_users ?? payload.recipients?.users ?? 0,
+        summary: {
+          total_sent: 0,
+          total_failed: 0,
+          target_users: payload.total_users ?? payload.recipients?.users ?? 0,
+        },
+        message: payload.message,
+      });
+    }
+
+    // Direct targeted push for a single user/device token
+    if (device_token) {
+      let targetUserId = user_id;
+      if (!targetUserId) {
+        const { data: tokRow } = await supabaseAdmin
           .from('user_device_tokens')
           .select('user_id')
-          .range(page * 1000, (page + 1) * 1000 - 1);
-        if (!force_activate_inactive_tokens) {
-          q = q.eq('is_active', true);
-        }
-        const { data, error } = await q;
-        if (error) throw error;
-        if (!data || !data.length) break;
-        allRows.push(...data);
-        if (data.length < 1000) break;
-        page++;
+          .eq('token', String(device_token).trim())
+          .maybeSingle();
+        targetUserId = tokRow?.user_id;
       }
-      targetUserIds = [...new Set(allRows.map((r) => String(r.user_id || '').trim()).filter(Boolean))];
-    } else {
-      return res.status(400).json({ success: false, error: 'user_id, device_token, or send_all_devices is required' });
-    }
-
-    if (!targetUserIds.length) {
+      if (!targetUserId) {
+        return res.status(404).json({ success: false, error: 'Device token not found in database' });
+      }
+      const sent = await supabasePushGateway.sendPush({
+        userIds: [targetUserId],
+        title,
+        body,
+        data: { source: 'force_push_admin' },
+      });
       return res.json({
-        success: true,
-        skipped: true,
-        total_sent: 0,
-        summary: { total_sent: 0, total_failed: 0, reason: 'no_target_devices_found' },
+        success: sent.success,
+        total_sent: sent.total_sent ?? (sent.success ? 1 : 0),
+        summary: { total_sent: sent.total_sent ?? (sent.success ? 1 : 0), total_failed: sent.success ? 0 : 1 },
       });
     }
 
-    let totalSent = 0;
-    let totalFailed = 0;
-    const errors = [];
-    // Edge function enforces user_ids.length <= 50
-    const BATCH_SIZE = 45;
-
-    for (let i = 0; i < targetUserIds.length; i += BATCH_SIZE) {
-      const batch = targetUserIds.slice(i, i + BATCH_SIZE);
-      try {
-        const sent = await supabasePushGateway.sendPush({
-          userIds: batch,
-          title,
-          body,
-          data: { source: 'force_push_admin' },
-        });
-        const batchSent = Number(sent?.total_sent ?? sent?.raw?.total_sent ?? sent?.raw?.summary?.total_sent ?? 0);
-        totalSent += batchSent;
-        const failedInBatch = Math.max(0, batch.length - batchSent);
-        totalFailed += failedInBatch;
-        if (sent && !sent.success && sent.error) {
-          errors.push(sent.error);
-        }
-      } catch (batchErr) {
-        totalFailed += batch.length;
-        errors.push(batchErr.message || String(batchErr));
-      }
-    }
-
-    if (totalSent === 0 && totalFailed > 0 && errors.length && errors.every((e) => !e.includes('No active FCM tokens'))) {
-      return res.status(500).json({
-        success: false,
-        error: errors[0] || 'Push delivery failed for all target devices',
-        summary: { total_sent: 0, total_failed: totalFailed, target_users: targetUserIds.length, errors: errors.slice(0, 3) },
+    if (user_id) {
+      const sent = await supabasePushGateway.sendPush({
+        userIds: [String(user_id).trim()],
+        title,
+        body,
+        data: { source: 'force_push_admin' },
+      });
+      return res.json({
+        success: sent.success,
+        total_sent: sent.total_sent ?? (sent.success ? 1 : 0),
+        summary: { total_sent: sent.total_sent ?? (sent.success ? 1 : 0), total_failed: sent.success ? 0 : 1 },
       });
     }
 
-    return res.json({
-      success: true,
-      total_sent: totalSent,
-      summary: {
-        total_sent: totalSent,
-        total_failed: totalFailed,
-        target_users: targetUserIds.length,
-        errors: errors.slice(0, 3),
-      },
-    });
+    return res.status(400).json({ success: false, error: 'user_id, device_token, or send_all_devices is required' });
   } catch (e) {
     console.error('performance /force-push-notification', e);
     let errorMsg = e.message || 'Push failed';
