@@ -63,10 +63,6 @@ export async function runWebOrderPushOutboxDrainerOnce({ logger = console } = {}
             force_activate_inactive_tokens: true,
           },
         });
-            data: row.data || {},
-            force_activate_inactive_tokens: true,
-          },
-        });
 
         const status = (!invokeRes.error && invokeRes.data?.success === true) ? 'sent' : 'failed';
         await supabaseAdmin
