@@ -24,7 +24,19 @@ function fullRequestUrl(req) {
 }
 
 router.post('/events/order-lifecycle', express.raw({ type: 'application/json' }), async (req, res) => {
-  const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
+  let rawBody = '';
+  if (Buffer.isBuffer(req.rawBody)) {
+    rawBody = req.rawBody.toString('utf8');
+  } else if (Buffer.isBuffer(req.body)) {
+    rawBody = req.body.toString('utf8');
+  } else if (typeof req.rawBody === 'string') {
+    rawBody = req.rawBody;
+  } else if (typeof req.body === 'string') {
+    rawBody = req.body;
+  } else if (req.body && typeof req.body === 'object') {
+    rawBody = JSON.stringify(req.body);
+  }
+
   const signature = req.headers['upstash-signature'];
   const traceId = createTraceId(req.headers['x-trace-id']);
   const log = traceLogger(console, traceId);
@@ -44,7 +56,9 @@ router.post('/events/order-lifecycle', express.raw({ type: 'application/json' })
   }
 
   try {
-    const payload = JSON.parse(rawBody);
+    const payload = typeof req.body === 'object' && !Buffer.isBuffer(req.body) && req.body !== null
+      ? req.body
+      : JSON.parse(rawBody || '{}');
     const orderId = String(payload?.order_id || '').trim();
     const eventType = String(payload?.event_type || '').trim();
     const jobKey = orderId && eventType ? `order:${orderId}:${eventType}` : null;
@@ -61,7 +75,9 @@ router.post('/events/order-lifecycle', express.raw({ type: 'application/json' })
     return res.json({ success: true, trace_id: traceId, result });
   } catch (e) {
     try {
-      const payload = JSON.parse(rawBody);
+      const payload = typeof req.body === 'object' && !Buffer.isBuffer(req.body) && req.body !== null
+        ? req.body
+        : JSON.parse(rawBody || '{}');
       const orderId = String(payload?.order_id || '').trim();
       const eventType = String(payload?.event_type || '').trim();
       const jobKey = orderId && eventType ? `order:${orderId}:${eventType}` : null;
@@ -202,26 +218,30 @@ async function runCronTick(req, res) {
   const bearer = String(req.headers.authorization || '')
     .replace(/^Bearer\s+/i, '')
     .trim();
+  const querySecret = typeof req.query?.secret === 'string' ? req.query.secret.trim() : '';
   const secret = String(process.env.CRON_SECRET || '').trim();
-  if (!secret || bearer !== secret) {
+  if (!secret || (bearer !== secret && querySecret !== secret)) {
     return res.status(401).json({ success: false, error: 'Unauthorized' });
   }
 
   const traceId = createTraceId(req.headers['x-trace-id']);
   const log = traceLogger(console, traceId);
 
-  const acquired = await acquireWindowLock({
-    key: 'pending-orders-poll',
-    ttlMs: 60_000,
-    logger: log,
-  });
-  if (!acquired) {
-    return res.json({
-      success: true,
-      trace_id: traceId,
-      skipped: true,
-      reason: 'window_locked',
+  const force = req.query?.force === 'true' || req.query?.force === '1';
+  if (!force) {
+    const acquired = await acquireWindowLock({
+      key: 'pending-orders-poll',
+      ttlMs: 50_000,
+      logger: log,
     });
+    if (!acquired) {
+      return res.json({
+        success: true,
+        trace_id: traceId,
+        skipped: true,
+        reason: 'window_locked',
+      });
+    }
   }
 
   const tickStartedAt = Date.now();

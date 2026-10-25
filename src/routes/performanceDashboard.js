@@ -4,6 +4,7 @@ import { Router } from 'express';
 import { supabaseAdmin } from '../config/supabase.js';
 import { runPendingOrdersPollOnce } from '../services/pendingOrdersPoller.js';
 import { runPickupDelayAdminAlertsOnce } from '../services/pickupDelayAdminAlertsPoller.js';
+import { runPreparingUnassignedRebroadcastOnce } from '../services/preparingUnassignedRebroadcastPoller.js';
 import { supabasePushGateway } from '../modules/notifications/supabasePushGateway.js';
 import {
   getRestaurantOpsUserIds,
@@ -2176,7 +2177,8 @@ router.get('/alerts', requirePerformanceAuth, async (req, res) => {
           try {
             const pending = await runPendingOrdersPollOnce({ logger: console });
             const pickup = await runPickupDelayAdminAlertsOnce({ logger: console });
-            console.info?.('[performance/alerts] background escalation poll', { pending, pickup });
+            const preparingRebroadcast = await runPreparingUnassignedRebroadcastOnce({ logger: console }).catch(() => {});
+            console.info?.('[performance/alerts] background escalation poll', { pending, pickup, preparingRebroadcast });
           } catch (err) {
             console.error('[performance/alerts] background escalation poll failed', err);
           }

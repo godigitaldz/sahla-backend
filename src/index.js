@@ -16,6 +16,7 @@ import promoCodesRouter from './routes/promoCodes.js';
 import restaurantsRouter from './routes/restaurants.js';
 import performanceDashboardRouter from './routes/performanceDashboard.js';
 import publicConfigRouter from './routes/publicConfig.js';
+import lifecycleWebhookRoutes from './internal/lifecycleWebhook.routes.js';
 import {
   runPendingOrdersPollOnce,
   startPendingOrdersPoller,
@@ -39,7 +40,12 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  },
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use('/api', limiter);
@@ -132,65 +138,12 @@ app.use('/api/cuisines', cuisinesRouter);
 app.use('/api/images', imagesRouter);
 
 /**
- * Pending-order escalation + pickup-delay admin alerts (single HTTP tick).
- * Primary on Vercel: scheduled GET (GitHub Actions in this repo, or any external cron) every 1–2 min with Bearer CRON_SECRET.
- * Vercel Cron here is once/day on Hobby (vercel.json); Pro allows per-minute crons. Vercel injects Authorization: Bearer CRON_SECRET for cron.
- * Local: curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3001/api/internal/pending-orders-poll
+ * Internal routes:
+ * - Lifecycle QStash webhooks (POST /api/internal/events/order-lifecycle)
+ * - Scheduled cron ticks (GET/POST /api/internal/pending-orders-poll)
+ * - Order lifecycle reconcile & triggers (POST /api/internal/orders/lifecycle-sync)
  */
-app.get('/api/internal/pending-orders-poll', async (req, res) => {
-  const pollerEnabled = !['0', 'false', 'no', 'off'].includes(
-    String(process.env.ENABLE_PENDING_ORDERS_POLLER ?? 'true').trim().toLowerCase(),
-  );
-  const pickupEnabled = !['0', 'false', 'no', 'off'].includes(
-    String(process.env.ENABLE_PICKUP_DELAY_ADMIN_ALERTS ?? 'true').trim().toLowerCase(),
-  );
-
-  if (!pollerEnabled && !pickupEnabled) {
-    return res.status(503).json({
-      success: false,
-      error: 'all_cron_tasks_disabled',
-    });
-  }
-
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return res.status(503).json({
-      success: false,
-      error: 'CRON_SECRET not configured',
-    });
-  }
-
-  const auth = req.get('authorization') || '';
-  const bearer = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-  const querySecret = typeof req.query.secret === 'string' ? req.query.secret : '';
-  if (bearer !== secret && querySecret !== secret) {
-    return res.status(401).json({ success: false, error: 'Unauthorized' });
-  }
-
-  try {
-    const pending_orders = pollerEnabled
-      ? await runPendingOrdersPollOnce({ logger: console })
-      : { skipped: true };
-    const pickup_delay_alerts = pickupEnabled
-      ? await runPickupDelayAdminAlertsOnce({ logger: console })
-      : { skipped: true };
-
-    const pendingErr = pending_orders?.error;
-    const pickupErr = pickup_delay_alerts?.error;
-    const ok = !pendingErr && !pickupErr;
-
-    return res.status(ok ? 200 : 500).json({
-      success: ok,
-      pending_orders,
-      pickup_delay_alerts,
-    });
-  } catch (e) {
-    return res.status(500).json({
-      success: false,
-      error: e?.message ?? String(e),
-    });
-  }
-});
+app.use('/api/internal', lifecycleWebhookRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

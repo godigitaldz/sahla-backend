@@ -1,19 +1,23 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { getActiveAdminUserIds } from './adminRecipients.js';
+import { getRestaurantOpsUserIds } from '../modules/notifications/orderRebroadcastRecipients.js';
 import { runPickupDelayAdminAlertsOnce } from './pickupDelayAdminAlertsPoller.js';
+import { runPreparingUnassignedRebroadcastOnce } from './preparingUnassignedRebroadcastPoller.js';
 
 const DEFAULT_INTERVAL_MS = 60_000;
 const FIRST_ADMIN_THRESHOLD_MS = 2 * 60_000;
 const SECOND_ADMIN_THRESHOLD_MS = 5 * 60_000;
+const RESTAURANT_10M_THRESHOLD_MS = 10 * 60_000;
+const RESTAURANT_12M_THRESHOLD_MS = 12 * 60_000;
 const DELIVERY_DELAY_THRESHOLD_MS = 15 * 60_000;
-const AUTO_CANCEL_THRESHOLD_MS = 10 * 60_000;
+export const AUTO_CANCEL_THRESHOLD_MS = 15 * 60_000;
 const MAX_ORDERS_PER_RUN = 80;
 const LOOKBACK_LOG_HOURS = 48;
 const ADMIN_FIRST_ALERT_TYPE = 'admin_order_pending_2m';
 const ADMIN_SECOND_ALERT_TYPE = 'admin_order_pending_5m';
 const ADMIN_DELIVERY_ALERT_TYPE = 'admin_delivery_picked_up_15m';
 const CUSTOMER_ESCALATION_ALERT_TYPE = 'customer_order_pending_5m';
-const CUSTOMER_AUTO_CANCEL_ALERT_TYPE = 'order_auto_cancelled_10m';
+export const CUSTOMER_AUTO_CANCEL_ALERT_TYPE = 'order_auto_cancelled_15m';
 
 function parseEnabled(value) {
   if (value == null) return true;
@@ -37,6 +41,7 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
     sent_second_admin: 0,
     sent_delivery_delayed: 0,
     sent_customer: 0,
+    sent_restaurant_rebroadcasts: 0,
     auto_cancelled: 0,
   };
 
@@ -44,7 +49,7 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
     const thresholdIso = safeIsoDate(FIRST_ADMIN_THRESHOLD_MS);
     const { data: dueOrders, error: ordersError } = await supabaseAdmin
       .from('orders')
-      .select('id, customer_id, order_number, created_at')
+      .select('id, customer_id, restaurant_id, order_number, created_at')
       .eq('status', 'pending')
       .lte('created_at', thresholdIso)
       .order('created_at', { ascending: true })
@@ -133,7 +138,10 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
     );
     const sentAutoCancelOrderIds = new Set(
       (sentLogs ?? [])
-        .filter((row) => String(row?.data?.type ?? '') === CUSTOMER_AUTO_CANCEL_ALERT_TYPE)
+        .filter((row) => {
+          const type = String(row?.data?.type ?? '');
+          return type === CUSTOMER_AUTO_CANCEL_ALERT_TYPE || type === 'order_auto_cancelled_10m';
+        })
         .map((row) => row?.data?.order_id)
         .filter((value) => typeof value === 'string'),
     );
@@ -143,15 +151,53 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
         .map((row) => row?.data?.order_id)
         .filter((value) => typeof value === 'string'),
     );
+    const sentRestaurant2mOrderIds = new Set(
+      (sentLogs ?? [])
+        .filter((row) => {
+          const flow = String(row?.data?.flow ?? '');
+          return flow === 'pending_restaurant_rebroadcast_2m' || flow === 'lifecycle_pending_2m_restaurant_rebroadcast';
+        })
+        .map((row) => row?.data?.order_id)
+        .filter((value) => typeof value === 'string'),
+    );
+    const sentRestaurant5mOrderIds = new Set(
+      (sentLogs ?? [])
+        .filter((row) => {
+          const flow = String(row?.data?.flow ?? '');
+          return flow === 'pending_restaurant_rebroadcast_5m' || flow === 'lifecycle_pending_5m_restaurant_rebroadcast';
+        })
+        .map((row) => row?.data?.order_id)
+        .filter((value) => typeof value === 'string'),
+    );
+    const sentRestaurant10mOrderIds = new Set(
+      (sentLogs ?? [])
+        .filter((row) => {
+          const flow = String(row?.data?.flow ?? '');
+          return flow === 'pending_restaurant_rebroadcast_10m' || flow === 'lifecycle_pending_10m_restaurant_rebroadcast';
+        })
+        .map((row) => row?.data?.order_id)
+        .filter((value) => typeof value === 'string'),
+    );
+    const sentRestaurant12mOrderIds = new Set(
+      (sentLogs ?? [])
+        .filter((row) => {
+          const flow = String(row?.data?.flow ?? '');
+          return flow === 'pending_restaurant_rebroadcast_12m' || flow === 'lifecycle_pending_12m_restaurant_rebroadcast';
+        })
+        .map((row) => row?.data?.order_id)
+        .filter((value) => typeof value === 'string'),
+    );
 
     let sentFirstStageCount = 0;
     let sentSecondStageCount = 0;
     let sentCustomerStageCount = 0;
+    let sentRestaurantRebroadcastCount = 0;
     let autoCancelledCount = 0;
     let sentDeliveryDelayedCount = 0;
 
     for (const order of (dueOrders ?? [])) {
       const customerId = String(order.customer_id ?? '');
+      const restaurantId = String(order.restaurant_id ?? '').trim();
       const orderId = String(order.id ?? '');
       const orderNumber = String(order.order_number ?? '');
       const createdAt = Date.parse(String(order.created_at ?? ''));
@@ -160,7 +206,53 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
       const orderAgeMs = Date.now() - createdAt;
       const isFirstStageDue = orderAgeMs >= FIRST_ADMIN_THRESHOLD_MS;
       const isSecondStageDue = orderAgeMs >= SECOND_ADMIN_THRESHOLD_MS;
+      const isRestaurant10mDue = orderAgeMs >= RESTAURANT_10M_THRESHOLD_MS;
+      const isRestaurant12mDue = orderAgeMs >= RESTAURANT_12M_THRESHOLD_MS;
       const isAutoCancelDue = orderAgeMs >= AUTO_CANCEL_THRESHOLD_MS;
+
+      // Helper for restaurant rebroadcasts
+      const sendRestaurantRebroadcast = async (stage, dedupeSet) => {
+        if (!restaurantId || dedupeSet.has(orderId)) return;
+        try {
+          const restOps = await getRestaurantOpsUserIds(restaurantId, logger);
+          if (restOps.length === 0) return;
+          const rbInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
+            body: {
+              user_ids: restOps,
+              title: 'طلب جديد بانتظار التأكيد',
+              body: `الطلب #${orderNumber} ما زال بانتظار التأكيد.`,
+              data: {
+                type: 'new_order',
+                flow: `pending_restaurant_rebroadcast_${stage}`,
+                order_id: orderId,
+                order_number: orderNumber,
+                restaurant_id: restaurantId,
+                source: 'backend_pending_orders_poller',
+              },
+              force_activate_inactive_tokens: true,
+            },
+          });
+          if (!rbInvoke.error && rbInvoke.data?.success === true) {
+            sentRestaurantRebroadcastCount += 1;
+            dedupeSet.add(orderId);
+          }
+        } catch (e) {
+          logger.warn?.(`[pending-orders-poller] restaurant ${stage} rebroadcast failed for order=${orderId}:`, e?.message);
+        }
+      };
+
+      if (isFirstStageDue) {
+        await sendRestaurantRebroadcast('2m', sentRestaurant2mOrderIds);
+      }
+      if (isSecondStageDue) {
+        await sendRestaurantRebroadcast('5m', sentRestaurant5mOrderIds);
+      }
+      if (isRestaurant10mDue) {
+        await sendRestaurantRebroadcast('10m', sentRestaurant10mOrderIds);
+      }
+      if (isRestaurant12mDue) {
+        await sendRestaurantRebroadcast('12m', sentRestaurant12mOrderIds);
+      }
 
       if (isFirstStageDue && !sentFirstStageOrderIds.has(orderId) && adminIds.length > 0) {
         const adminFirstInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
@@ -259,11 +351,14 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
       }
 
       if (isAutoCancelDue && customerId && !sentAutoCancelOrderIds.has(orderId)) {
+        const nowIso = new Date().toISOString();
         const { data: cancelledRows, error: cancelError } = await supabaseAdmin
           .from('orders')
           .update({
             status: 'cancelled',
-            updated_at: new Date().toISOString(),
+            cancel_reason: 'timeout_15m',
+            cancelled_at: nowIso,
+            updated_at: nowIso,
           })
           .eq('id', orderId)
           .eq('status', 'pending')
@@ -284,13 +379,14 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
         const autoCancelInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
           body: {
             user_ids: [customerId],
-            title: 'Order Cancelled',
-            body: 'Order cancelled due to stock unavailability.',
+            title: 'طلبك تم إلغاؤه.',
+            body: 'تم إلغاء طلبكم نتيجة لنفاذ الكمية، نرجو منكم التفهم.',
             data: {
               type: CUSTOMER_AUTO_CANCEL_ALERT_TYPE,
               order_id: orderId,
               order_number: orderNumber,
               source: 'backend_pending_orders_poller',
+              force_arabic_template: true,
             },
             force_activate_inactive_tokens: true,
           },
@@ -354,10 +450,11 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
     stats.sent_second_admin = sentSecondStageCount;
     stats.sent_delivery_delayed = sentDeliveryDelayedCount;
     stats.sent_customer = sentCustomerStageCount;
+    stats.sent_restaurant_rebroadcasts = sentRestaurantRebroadcastCount;
     stats.auto_cancelled = autoCancelledCount;
 
     logger.info?.(
-      `[pending-orders-poller] v2_escalation pending_due=${stats.pending_due} delivery_due=${stats.delivery_due} admins=${stats.admins} sent_first_admin=${sentFirstStageCount} sent_second_admin=${sentSecondStageCount} sent_delivery_delayed=${sentDeliveryDelayedCount} sent_customer=${sentCustomerStageCount} auto_cancelled=${autoCancelledCount}`,
+      `[pending-orders-poller] v2_escalation pending_due=${stats.pending_due} delivery_due=${stats.delivery_due} admins=${stats.admins} sent_first_admin=${sentFirstStageCount} sent_second_admin=${sentSecondStageCount} sent_delivery_delayed=${sentDeliveryDelayedCount} sent_customer=${sentCustomerStageCount} sent_restaurant_rebroadcasts=${sentRestaurantRebroadcastCount} auto_cancelled=${autoCancelledCount}`,
     );
 
     return stats;
@@ -399,6 +496,7 @@ export function startPendingOrdersPoller({ logger = console } = {}) {
 
     try {
       await runPendingOrdersPollOnce({ logger });
+      await runPreparingUnassignedRebroadcastOnce({ logger }).catch(() => {});
       await runPickupDelayAdminAlertsOnce({ logger });
     } catch (error) {
       logger.error?.('[pending-orders-poller] unexpected error:', error);
