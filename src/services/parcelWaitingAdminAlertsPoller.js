@@ -37,7 +37,7 @@ export async function runParcelWaitingAdminAlertsOnce({ logger = console } = {})
       .from('orders')
       .select('id, order_number, created_at, parcel_sender_id, fulfillment_type')
       .eq('status', 'pending')
-      .or('fulfillment_type.eq.parcel,not.parcel_sender_id.is.null')
+      .or('fulfillment_type.eq.parcel,parcel_sender_id.not.is.null')
       .lte('created_at', thresholdIso)
       .limit(50);
 

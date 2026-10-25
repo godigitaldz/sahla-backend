@@ -26,7 +26,7 @@ export async function runWebOrderPushOutboxDrainerOnce({ logger = console } = {}
   try {
     const { data: outboxRows, error: fetchErr } = await supabaseAdmin
       .from('web_order_push_outbox')
-      .select('id, user_id, title, body, data')
+      .select('id, order_id, event, status, payload_json')
       .eq('status', 'pending')
       .limit(25);
 
@@ -43,11 +43,26 @@ export async function runWebOrderPushOutboxDrainerOnce({ logger = console } = {}
 
     for (const row of outboxRows) {
       try {
+        const payload = typeof row.payload_json === 'object' && row.payload_json !== null
+          ? row.payload_json
+          : JSON.parse(row.payload_json || '{}');
+        const userIds = Array.isArray(payload.user_ids)
+          ? payload.user_ids
+          : (payload.user_id ? [payload.user_id] : []);
+
+        if (userIds.length === 0) {
+          continue;
+        }
+
         const invokeRes = await supabaseAdmin.functions.invoke('send-push-notification', {
           body: {
-            user_ids: [row.user_id],
-            title: row.title,
-            body: row.body,
+            user_ids: userIds,
+            title: payload.title || 'Order Update',
+            body: payload.body || '',
+            data: payload.data || {},
+            force_activate_inactive_tokens: true,
+          },
+        });
             data: row.data || {},
             force_activate_inactive_tokens: true,
           },
