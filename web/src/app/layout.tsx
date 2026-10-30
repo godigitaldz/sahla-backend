@@ -9,20 +9,20 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: 'ساهلة — اطلب أونلاين',
-  description: 'اطلب من مطاعم ساهلة عبر الويب',
+  title: 'ساهلة — خلي في بلاصتك.. حنا نجيو لعندك!',
+  description: 'ساهلة — تطبيق توصيل الطعام الجزائري الأول. خلي في بلاصتك.. حنا نجيو لعندك!',
   manifest: '/manifest.webmanifest',
   openGraph: {
-    title: 'ساهلة — اطلب أونلاين',
-    description: 'اطلب من مطاعم ساهلة عبر الويب',
-    siteName: 'ساهلة',
+    title: 'ساهلة — خلي في بلاصتك.. حنا نجيو لعندك!',
+    description: 'ساهلة — تطبيق توصيل الطعام الجزائري الأول. خلي في بلاصتك.. حنا نجيو لعندك!',
+    siteName: 'ساهلة (Sahla Delivery)',
     locale: 'ar_DZ',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ساهلة — اطلب أونلاين',
-    description: 'اطلب من مطاعم ساهلة عبر الويب',
+    title: 'ساهلة — خلي في بلاصتك.. حنا نجيو لعندك!',
+    description: 'ساهلة — تطبيق توصيل الطعام الجزائري الأول. خلي في بلاصتك.. حنا نجيو لعندك!',
   },
 };
 
