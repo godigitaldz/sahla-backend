@@ -4,7 +4,7 @@
 
 class Localization {
     constructor() {
-        this.currentLang = localStorage.getItem('sahla-lang') || 'en';
+        this.currentLang = localStorage.getItem('sahla-lang') || 'ar';
         this.translations = translations;
         this.init();
     }

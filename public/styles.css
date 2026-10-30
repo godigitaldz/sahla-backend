@@ -4,18 +4,20 @@
 
 :root {
   /* Brand Colors */
-  --primary: #fb8c00;
-  --primary-dark: #e65100;
-  --primary-light: #ffc107;
-  --orange-600: #ea580c;
-  --primary-gradient: linear-gradient(135deg, #fb8c00 0%, #ffc107 100%);
+  --primary: #FFC700;
+  --primary-dark: #064E3B;
+  --primary-light: #FFF9E6;
+  --orange-600: #064E3B;
+  --sahla-green: #064E3B;
+  --sahla-yellow: #FFC700;
+  --primary-gradient: linear-gradient(135deg, #FFC700 0%, #FFD43B 100%);
 
   /* Neutral Colors */
-  --background: #ffffff;
-  --surface: #f5f5f5;
-  --text-primary: #000000;
-  --text-secondary: #666666;
-  --text-light: #999999;
+  --background: #FDFBF7;
+  --surface: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-light: #9CA3AF;
 
   /* Spacing */
   --spacing-xs: 0.5rem;
@@ -27,7 +29,7 @@
 
   /* Typography */
   --font-family:
-    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    "Cairo", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
