@@ -30,8 +30,6 @@ const CONTENT = {
       chipQuality: '💵 دفع سهل نقداً عند الاستلام',
       downloadAppStore: 'App Store',
       downloadGooglePlay: 'Google Play',
-      badgeTitle: 'تم التوصيل الآن بنجاح!',
-      badgeSub: 'وجبة مشويات ساخنة • في 24 دقيقة',
     },
     services: {
       eyebrow: 'ساهلة فود (Sahla Food)',
@@ -52,19 +50,6 @@ const CONTENT = {
       c3Desc:
         'مشاوي مشكلة ساخنة، طواجن جزائرية عريقة، وأطباق شعبية غنية بالنكهات والبهارات الأصلية التي تحبها.',
       c3Action: 'تذوق المشاوي والأطباق',
-    },
-    showcase: {
-      eyebrow: 'أي وقت.. أي مكان',
-      title: 'تجربة طلب طعام مصممة لراحتك التامة',
-      lead: 'صممنا تطبيق ساهلة ليكون الأسهل والأسرع، ليمنحك تجربة خالية من التعقيد من أول ضغطة حتى استلام الوجبة.',
-      f1Title: 'قوائم طعام كاملة بالصور والأسعار الحقيقية',
-      f1Desc: 'اكتشف قوائم المطاعم بالصور الواضحة والأسعار الرسمية بدون أي رسوم خفية.',
-      f2Title: 'تخصيص كامل لوجبتك وملاحظاتك',
-      f2Desc: 'اختر الإضافات، الأحجام، والملاحظات الخاصة التي تفضلها في كل وجبة لتصلك كما تحب تماماً.',
-      f3Title: 'خريطة تتبع ذكية بنظام GPS مباشر',
-      f3Desc: 'راقب تحركات عامل التوصيل على الخريطة دقيقة بدقيقة من وقت خروجه من المطعم حتى وقوفه أمام بابك.',
-      f4Title: 'دفع سهل عند الاستلام (كاش)',
-      f4Desc: 'ادفع بأمان وراحة بال نقداً عند وصول طلبك واستلامك له باليد.',
     },
     whySahla: {
       eyebrow: 'لماذا يفضلنا المئات؟',
@@ -137,8 +122,6 @@ const CONTENT = {
       chipQuality: '💵 Espèces à la livraison',
       downloadAppStore: 'App Store',
       downloadGooglePlay: 'Google Play',
-      badgeTitle: 'Commande livrée avec succès !',
-      badgeSub: 'Grillades chaudes • en 24 minutes',
     },
     services: {
       eyebrow: 'Sahla Food',
@@ -159,19 +142,6 @@ const CONTENT = {
       c3Desc:
         'Tajines savoureux, grillades au feu de bois et spécialités locales riches en épices et traditions.',
       c3Action: 'Goûter les grillades',
-    },
-    showcase: {
-      eyebrow: 'N’importe où, n’importe quand',
-      title: 'Une expérience conçue pour votre sérénité',
-      lead: 'Sahla vous offre l’expérience de commande la plus fluide et rapide d’Algérie.',
-      f1Title: 'Menus clairs avec photos et prix nets',
-      f1Desc: 'Consultez les cartes détaillées des restaurants sans frais cachés.',
-      f2Title: 'Personnalisation totale de vos plats',
-      f2Desc: 'Ajoutez vos sauces, suppléments et consignes de préparation.',
-      f3Title: 'Suivi direct par GPS en temps réel',
-      f3Desc: 'Observez la progression du livreur jusqu’à votre porte.',
-      f4Title: 'Paiement sécurisé en espèces à la livraison',
-      f4Desc: 'Réglez en toute confiance à la réception de votre repas.',
     },
     whySahla: {
       eyebrow: 'Pourquoi des centaines nous font confiance ?',
@@ -244,8 +214,6 @@ const CONTENT = {
       chipQuality: '💵 Cash on delivery accepted',
       downloadAppStore: 'App Store',
       downloadGooglePlay: 'Google Play',
-      badgeTitle: 'Order Delivered Successfully!',
-      badgeSub: 'Hot grilled skewers • in 24 mins',
     },
     services: {
       eyebrow: 'Sahla Food',
@@ -266,19 +234,6 @@ const CONTENT = {
       c3Desc:
         'Sizzling mixed grills, traditional slow-cooked tajines, and savory heritage dishes packed with flavor.',
       c3Action: 'Taste Traditional Dishes',
-    },
-    showcase: {
-      eyebrow: 'Any Time.. Any Place',
-      title: 'An Experience Crafted for Your Utmost Comfort',
-      lead: 'We built Sahla to be fast, intuitive, and hassle-free from your first tap until the meal arrives.',
-      f1Title: 'Clear menus with photos and transparent prices',
-      f1Desc: 'Explore complete restaurant menus with accurate pricing and exclusive promotions with zero hidden fees.',
-      f2Title: 'Full meal customization & order notes',
-      f2Desc: 'Add toppings, pick sides, and leave specific kitchen instructions for the chef.',
-      f3Title: 'Smart live GPS map tracking',
-      f3Desc: 'Follow your delivery courier on the map from kitchen pickup right to your doorstep.',
-      f4Title: 'Convenient Cash on Delivery',
-      f4Desc: 'Pay safely in cash when your order is delivered into your hands.',
     },
     whySahla: {
       eyebrow: 'Why Hundreds Choose Us',
@@ -420,12 +375,12 @@ export default function HomePage() {
       </header>
 
       {/* ----------------------------------------
-          HERO SECTION (MAIN WEB ENTRY)
+          HERO SECTION (FOCUSED & POWERFUL)
           ---------------------------------------- */}
       <section className="hero-section">
         <div className="hero-glow-blob" />
-        <div className="hero-container">
-          <div className="hero-content">
+        <div className="hero-container hero-container-single">
+          <div className="hero-content hero-content-center">
             <div className="hero-pill-badge">
               <span className="hero-pill-indicator" />
               <span>{t.hero.badge}</span>
@@ -479,29 +434,6 @@ export default function HomePage() {
                   <span className="store-btn-name">Google Play</span>
                 </div>
               </a>
-            </div>
-          </div>
-
-          {/* Hero Visual Card with Real Authentic Brand Courier Image */}
-          <div className="hero-visual-card">
-            <div className="hero-main-photo-wrapper">
-              <Image
-                src="/brand/hero_courier.png"
-                alt="Sahla Delivery courier delivering fresh hot food"
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 480px"
-                className="hero-main-photo"
-              />
-
-              {/* Floating Live Badge cleanly integrated INSIDE the photo card bottom */}
-              <div className="hero-floating-badge">
-                <div className="floating-badge-icon">🛵</div>
-                <div className="floating-badge-text">
-                  <span className="floating-badge-title">{t.hero.badgeTitle}</span>
-                  <span className="floating-badge-sub">{t.hero.badgeSub}</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -558,76 +490,6 @@ export default function HomePage() {
               <span>{t.services.c3Action}</span>
               <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
             </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------------------------------
-          BRAND SHOWCASE SECTION ("أي وقت.. أي مكان")
-          ---------------------------------------- */}
-      <section className="brand-showcase-section">
-        <div className="showcase-container">
-          <div className="showcase-visuals">
-            <div className="showcase-img-primary">
-              <Image
-                src="/brand/app_mockup.jpg"
-                alt="Sahla App Experience - Any time, any place"
-                fill
-                sizes="(max-width: 768px) 90vw, 480px"
-                className="showcase-img"
-              />
-            </div>
-            <div className="showcase-img-secondary">
-              <Image
-                src="/brand/coverage_map.jpg"
-                alt="Sahla Live Delivery Coverage"
-                fill
-                sizes="(max-width: 768px) 60vw, 320px"
-                className="showcase-img"
-              />
-            </div>
-          </div>
-
-          <div className="showcase-content">
-            <span className="section-eyebrow" style={{ width: 'fit-content' }}>
-              {t.showcase.eyebrow}
-            </span>
-            <h2 className="section-main-title">{t.showcase.title}</h2>
-            <p className="section-lead">{t.showcase.lead}</p>
-
-            <div className="feature-check-list">
-              <div className="feature-check-item">
-                <div className="feature-check-icon">✓</div>
-                <div className="feature-check-text">
-                  <h4>{t.showcase.f1Title}</h4>
-                  <p>{t.showcase.f1Desc}</p>
-                </div>
-              </div>
-
-              <div className="feature-check-item">
-                <div className="feature-check-icon">✓</div>
-                <div className="feature-check-text">
-                  <h4>{t.showcase.f2Title}</h4>
-                  <p>{t.showcase.f2Desc}</p>
-                </div>
-              </div>
-
-              <div className="feature-check-item">
-                <div className="feature-check-icon">✓</div>
-                <div className="feature-check-text">
-                  <h4>{t.showcase.f3Title}</h4>
-                  <p>{t.showcase.f3Desc}</p>
-                </div>
-              </div>
-
-              <div className="feature-check-item">
-                <div className="feature-check-icon">✓</div>
-                <div className="feature-check-text">
-                  <h4>{t.showcase.f4Title}</h4>
-                  <p>{t.showcase.f4Desc}</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
