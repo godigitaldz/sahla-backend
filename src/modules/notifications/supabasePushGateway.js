@@ -20,43 +20,52 @@ export class SupabasePushGateway {
     if (!ids.length) return { success: false, total_sent: 0, reason: 'no_recipients' };
 
     const token = pushAuthToken();
-    const response = await fetch(pushFunctionUrl(), {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        apikey: token,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        user_ids: ids,
-        title,
-        body,
-        data: data || {},
-        force_activate_inactive_tokens: true,
-      }),
-    });
+    const CHUNK_SIZE = 45;
+    let totalSent = 0;
+    let lastPayload = null;
+    let lastError = null;
+    let anySuccess = false;
 
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) {
-      return {
-        success: false,
-        total_sent: 0,
-        raw: payload,
-        error: payload?.error || `push_http_${response.status}`,
-        status: response.status,
-      };
+    for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+      const chunk = ids.slice(i, i + CHUNK_SIZE);
+      try {
+        const response = await fetch(pushFunctionUrl(), {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: token,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_ids: chunk,
+            title,
+            body,
+            data: data || {},
+            force_activate_inactive_tokens: true,
+          }),
+        });
+
+        const payload = await response.json().catch(() => null);
+        lastPayload = payload;
+
+        if (response.ok && payload?.success === true) {
+          anySuccess = true;
+          totalSent += pushTotalSent({ raw: payload, total_sent: payload?.summary?.total_sent });
+        } else {
+          lastError = payload?.error || `push_http_${response.status}`;
+        }
+      } catch (err) {
+        lastError = err?.message || 'push_network_error';
+      }
     }
 
     const result = {
-      success: payload?.success === true,
-      total_sent: pushTotalSent({ raw: payload, total_sent: payload?.summary?.total_sent }),
-      raw: payload,
-      error: null,
-      status: response.status,
+      success: anySuccess,
+      total_sent: totalSent,
+      raw: lastPayload,
+      error: anySuccess ? null : lastError,
+      status: anySuccess ? 200 : 500,
     };
-    if (!pushSendSucceeded(result)) {
-      result.error = payload?.error ?? payload?.message ?? null;
-    }
     return result;
   }
 }

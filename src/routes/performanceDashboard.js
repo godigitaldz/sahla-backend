@@ -385,7 +385,7 @@ router.get('/meta', requirePerformanceAuth, async (req, res) => {
   try {
     const [rRest, rPer, cDm, cR, cPs, reviewer, newReviewsGlobal, newReviewsDelivery] = await Promise.all([
       supabaseAdmin.from('restaurants').select('id,name').order('name'),
-      supabaseAdmin.from('delivery_personnel').select('id,user_id,delivery_name,work_phone'),
+      supabaseAdmin.from('delivery_personnel').select('id,user_id,delivery_name,work_phone,is_available,is_online'),
       supabaseAdmin
         .from('delivery_man_requests')
         .select('id', { count: 'exact', head: true })
@@ -425,21 +425,36 @@ router.get('/meta', requirePerformanceAuth, async (req, res) => {
       couriers = profs || [];
     }
 
-    const deliveryPersonnelOptions = personnel.map((dp) => {
+    const allDeliveryPersonnel = personnel.map((dp) => {
       const prof = couriers.find((c) => c.id === dp.user_id);
+      const isOnline = dp.is_online === true;
+      const isAvailable = dp.is_available === true || String(dp.is_available).toLowerCase() === 'true';
+      const statusBadge = isOnline && isAvailable ? ' (متاح)' : (!isOnline ? ' (غير متصل)' : ' (مشغول)');
+      const baseName = dp.delivery_name || prof?.name || dp.id;
       return {
         id: dp.id,
         user_id: dp.user_id,
-        name: dp.delivery_name || prof?.name || dp.id,
+        name: `${baseName}${statusBadge}`,
+        raw_name: baseName,
         phone: dp.work_phone || prof?.phone || null,
+        is_available: isAvailable,
+        is_online: isOnline,
       };
+    });
+
+    const sortedCouriers = [...allDeliveryPersonnel].sort((a, b) => {
+      const aScore = (a.is_online ? 2 : 0) + (a.is_available ? 1 : 0);
+      const bScore = (b.is_online ? 2 : 0) + (b.is_available ? 1 : 0);
+      if (aScore !== bScore) return bScore - aScore;
+      return (a.raw_name || '').localeCompare(b.raw_name || '');
     });
 
     return res.json({
       success: true,
       restaurants,
       couriers,
-      delivery_personnel_options: deliveryPersonnelOptions,
+      delivery_personnel_options: allDeliveryPersonnel,
+      available_order_couriers: sortedCouriers,
       pending_delivery_man_requests: pendingDeliveryManRequests,
       pending_restaurant_requests: pendingRestaurantRequests,
       pending_parcel_sender_requests: pendingParcelSenderRequests,
@@ -1059,11 +1074,37 @@ const handleOrderStatusUpdate = async (req, res) => {
     if (status === 'delivered') updates.delivered_at = now;
     if (status === 'cancelled') updates.cancelled_at = now;
 
-    const { error } = await supabaseAdmin
+    const { data: updatedOrder, error } = await supabaseAdmin
       .from('orders')
       .update(updates)
-      .eq('id', id);
+      .eq('id', id)
+      .select('id, order_number, status, delivery_person_id, fulfillment_type')
+      .maybeSingle();
     if (error) throw error;
+
+    if (
+      ['preparing', 'ready'].includes(status) &&
+      !updatedOrder?.delivery_person_id &&
+      String(updatedOrder?.fulfillment_type || 'delivery').toLowerCase() === 'delivery'
+    ) {
+      getOnlineAvailableCourierUserIds()
+        .then(async (recipients) => {
+          if (recipients.length > 0) {
+            const orderNum = updatedOrder.order_number || updatedOrder.id;
+            await supabasePushGateway.sendPush({
+              userIds: recipients,
+              title: 'طلب متاح للتوصيل',
+              body: `الطلب #${orderNum} جاهز أو قيد التحضير وبانتظار مندوب توصيل.`,
+              data: {
+                type: 'courier_order_available',
+                order_id: id,
+                order_number: orderNum,
+              },
+            });
+          }
+        })
+        .catch((e) => console.warn('Couriers broadcast on status change error:', e?.message));
+    }
 
     return res.json({ success: true });
   } catch (e) {

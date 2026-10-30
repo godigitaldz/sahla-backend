@@ -2478,9 +2478,9 @@
 
       async function loadMeta() {
         const m = await api('/meta');
-        availableOrderCouriers = Array.isArray(m.available_order_couriers)
+        availableOrderCouriers = Array.isArray(m.available_order_couriers) && m.available_order_couriers.length > 0
           ? m.available_order_couriers
-          : [];
+          : (Array.isArray(m.delivery_personnel_options) ? m.delivery_personnel_options : []);
         const cs = $('taskCourier');
         cs.innerHTML = '<option value="">All couriers</option>';
         for (const c of m.couriers || []) {
