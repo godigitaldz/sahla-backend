@@ -13,52 +13,52 @@ type Language = 'ar' | 'fr' | 'en';
 const CONTENT = {
   ar: {
     nav: {
-      services: 'خدماتنا',
+      services: 'أصناف الطعام',
       whySahla: 'علاش ساهلة؟',
       howItWorks: 'كيف تطلب',
       partners: 'انضم إلينا',
       download: 'حمّل التطبيق',
     },
     hero: {
-      badge: 'تطبيق التوصيل الأول في مدينتك',
+      badge: 'تطبيق توصيل الطعام الأول في مدينتك',
       title1: 'خليك مكانك...',
       titleHighlight: 'حنا نجيو لعندك!',
       subtitle:
-        'أي وقت... أي مكان. كل ما تشتهي من أشهى المأكولات والمقاضي يوصلك سخون وسريع حتى لباب دارك مع ساهلة.',
+        'أي وقت... أي مكان. كل ما تشتهيه من أشهى وجباتك وأطباقك المفضلة يوصلك سخون وسريع حتى لباب دارك مع ساهلة.',
       chipSpeed: '⚡ توصيل في أقل من 30 دقيقة',
       chipTracking: '📍 تتبع مسار طلبك لحظة بلحظة',
       chipQuality: '🍱 حقائب حرارية تحفظ حرارة الوجبة',
-      downloadAppStore: 'تحميل من App Store',
-      downloadGooglePlay: 'تحميل من Google Play',
+      downloadAppStore: 'App Store',
+      downloadGooglePlay: 'Google Play',
       badgeTitle: 'تم التوصيل الآن بنجاح!',
       badgeSub: 'وجبة مشويات ساخنة • في 24 دقيقة',
     },
     services: {
-      eyebrow: 'منظومة ساهلة المتكاملة',
-      title: 'كل ما تحتاجه في تطبيق واحد',
-      lead: 'سواء كنت جيعان وتستنى في وجبة شهية، محتاج مقاضي للدار، أو باغي ترسل طرد مستعجل، ساهلة هنا في خدمتك.',
-      foodTitle: 'ساهلة فود (Food)',
-      foodTag: '+150 مطعم ومحل',
-      foodDesc:
-        'أشهى الأطباق من أرقى المطاعم ومحلات الأكل السريع في مدينتك. برغر، بيتزا، طواجن وشعبيات توصلك بحرارتها وجودتها.',
-      foodAction: 'استكشف المطاعم',
-      marketTitle: 'ساهلة ماركت (Market)',
-      marketTag: 'مقاضي وسوبرماركت',
-      marketDesc:
-        'خضار وفواكه طازجة، مقاضي البيت اليومية، حلويات ومشروبات توصلك في دقائق بلا ما تخرج من دارك وتضيع وقتك.',
-      marketAction: 'تسوق الآن',
-      ifriliTitle: 'ساهلة إفريلي (Ifrili)',
-      ifriliTag: 'مشاوير وطرود خاصة',
-      ifriliDesc:
-        'خدمتك الشخصية للمشاوير الخاصة: اشريلي، جيبلي، ولا وصّل أماناتك وطرودك لأي عنوان في مدينتك بكل أمان وثقة.',
-      ifriliAction: 'اطلب إفريلي',
+      eyebrow: 'ساهلة فود (Sahla Food)',
+      title: 'كل ما تشتهيه من أفضل مطاعم مدينتك',
+      lead: 'سواء كنت جيعان وتستنى في برغر مقرمش، بيتزا سخونة، أو طبق تقليدي أصيل، ساهلة فود توصلك كل أطباقك المفضلة لباب دارك.',
+      c1Title: 'البرغر والوجبات السريعة',
+      c1Tag: 'الأكثر طلباً',
+      c1Desc:
+        'ساندويتشات برغر شهية، تاكوس، شاورما، وبطاطا مقرمشة من أشهر المطاعم المعتمدة والأعلى تقييماً في منطقتك.',
+      c1Action: 'استكشف الوجبات السريعة',
+      c2Title: 'البيتزا والمأكولات الإيطالية',
+      c2Tag: 'ساخنة ومقرمشة',
+      c2Desc:
+        'تشكيلة واسعة من البيتزا الإيطالية بالجبن الذائب والصلصات الخاصة، تُعد فور طلبك وتصلك بحرارتها.',
+      c2Action: 'اطلب بيتزا الآن',
+      c3Title: 'الأطباق التقليدية والمشاوي',
+      c3Tag: 'نكهة أصيلة',
+      c3Desc:
+        'مشاوي مشكلة ساخنة، طواجن جزائرية عريقة، وأطباق شعبية غنية بالنكهات والبهارات الأصلية التي تحبها.',
+      c3Action: 'تذوق المشاوي والأطباق',
     },
     showcase: {
       eyebrow: 'أي وقت.. أي مكان',
-      title: 'تجربة طلب مصممة لراحتك التامة',
+      title: 'تجربة طلب طعام مصممة لراحتك التامة',
       lead: 'صممنا تطبيق ساهلة ليكون الأسهل والأسرع، ليمنحك تجربة خالية من التعقيد من أول ضغطة حتى استلام الوجبة.',
-      f1Title: 'تصفح مرن وقوائم واضحة بالصور',
-      f1Desc: 'اكتشف قوائم الطعام الكاملة مع الأسعار الحقيقية والعروض الحصرية بدون أي رسوم خفية.',
+      f1Title: 'قوائم طعام كاملة بالصور والأسعار الحقيقية',
+      f1Desc: 'اكتشف قوائم المطاعم بالصور الواضحة والأسعار الرسمية بدون أي رسوم خفية.',
       f2Title: 'تخصيص كامل لوجبتك وملاحظاتك',
       f2Desc: 'اختر الإضافات، الأحجام، والملاحظات الخاصة التي تفضلها في كل وجبة لتصلك كما تحب تماماً.',
       f3Title: 'خريطة تتبع ذكية بنظام GPS مباشر',
@@ -89,15 +89,15 @@ const CONTENT = {
       step3Desc: 'تابع مسار الكابتن على الخريطة واستلم طلبك عند باب دارك بكل سهولة.',
     },
     partners: {
-      restaurantPill: 'لأصحاب المطاعم والمتاجر',
-      restaurantTitle: 'ضاعف مبيعاتك وانضم لشبكة شركاء ساهلة',
+      restaurantPill: 'لأصحاب المطاعم',
+      restaurantTitle: 'ضاعف مبيعات مطعمك وانضم لشبكة ساهلة فود',
       restaurantDesc:
         'اربط مطعمك بآلاف الزبائن في مدينتك، حسّن مبيعاتك اليومية واستفد من أسطول توصيل محترف دون أي أعباء تشغيلية إضافية.',
       restaurantBtn: 'سجل مطعمك الآن',
       driverPill: 'للكباتن وعمال التوصيل',
-      driverTitle: 'انضم لأسطول ساهلة وحقق دخلاً يومياً ممتازاً',
+      driverTitle: 'انضم لأسطول كباتن ساهلة وحقق دخلاً يومياً ممتازاً',
       driverDesc:
-        'كن سيد نفسك مع أوقات عمل حرة ومرنة. اربح مع كل طلب توصله واستفد من دعم مستمر ومكافآت على مدار الشهر.',
+        'كن سيد نفسك مع أوقات عمل حرة ومرنة. اربح مع كل وجبة توصلها واستفد من دعم مستمر ومكافآت على مدار الشهر.',
       driverBtn: 'انضم ككابتن توصيل',
     },
     download: {
@@ -106,68 +106,68 @@ const CONTENT = {
       scanText: 'امسح الكود بكاميرا هاتفك للتحميل المباشر',
     },
     footer: {
-      desc: 'ساهلة — تطبيق التوصيل الجزائري الرائد للمأكولات، المقاضي والطرود. خليك مكانك.. حنا نجيو لعندك!',
+      desc: 'ساهلة — تطبيق توصيل الطعام الجزائري الرائد. خليك مكانك.. حنا نجيو لعندك!',
       company: 'الشركة',
-      services: 'الخدمات',
+      services: 'المأكولات',
       legal: 'الشروط والسياسات',
       privacy: 'سياسة الخصوصية',
       terms: 'شروط الخدمة',
       deleteAccount: 'حذف الحساب',
-      foodDelivery: 'توصيل المأكولات',
-      groceryDelivery: 'توصيل المقاضي',
-      ifriliService: 'خدمة إفريلي للطرود',
+      foodDelivery: 'ساهلة فود (Sahla Food)',
+      fastFood: 'وجبات سريعة وبرغر',
+      traditionalFood: 'أطباق تقليدية ومشاوي',
       contact: 'اتصل بنا',
       copyright: '© 2026 ساهلة (Sahla Delivery). جميع الحقوق محفوظة.',
     },
   },
   fr: {
     nav: {
-      services: 'Services',
+      services: 'Plats & Menus',
       whySahla: 'Pourquoi Sahla ?',
       howItWorks: 'Comment ça marche',
       partners: 'Partenaires',
-      download: "Télécharger l'app",
+      download: "L'application",
     },
     hero: {
-      badge: 'Votre application de livraison préférée',
+      badge: 'Livraison de repas n°1 dans votre ville',
       title1: 'Restez chez vous...',
       titleHighlight: 'On vient chez vous !',
       subtitle:
-        'À tout moment, partout. Tous vos plats favoris et vos courses livrés chauds et rapides jusqu’à votre porte.',
+        'À tout moment, partout. Tous vos plats et repas favoris livrés chauds et rapides jusqu’à votre porte avec Sahla.',
       chipSpeed: '⚡ Livraison en moins de 30 min',
       chipTracking: '📍 Suivi GPS en temps réel',
       chipQuality: '🍱 Sacs thermiques isothermes',
-      downloadAppStore: 'Sur App Store',
-      downloadGooglePlay: 'Sur Google Play',
+      downloadAppStore: 'App Store',
+      downloadGooglePlay: 'Google Play',
       badgeTitle: 'Commande livrée avec succès !',
       badgeSub: 'Grillades chaudes • en 24 minutes',
     },
     services: {
-      eyebrow: 'L’écosystème Sahla',
-      title: 'Tout ce dont vous avez besoin dans une seule app',
-      lead: 'Envie d’un repas savoureux, besoin de courses urgentes ou d’expédier un colis ? Sahla s’occupe de tout.',
-      foodTitle: 'Sahla Food',
-      foodTag: '+150 restaurants',
-      foodDesc:
-        'Vos plats préférés des meilleurs restaurants de votre ville. Burgers, pizzas, plats traditionnels livrés chauds.',
-      foodAction: 'Explorer les restos',
-      marketTitle: 'Sahla Market',
-      marketTag: 'Courses & Épicerie',
-      marketDesc:
-        'Fruits, légumes frais, produits du quotidien et supermarché livrés à domicile sans perdre de temps.',
-      marketAction: 'Faire ses courses',
-      ifriliTitle: 'Sahla Ifrili',
-      ifriliTag: 'Courses & Colis express',
-      ifriliDesc:
-        'Votre assistant personnel pour vos courses privées et livraison de colis en toute sécurité.',
-      ifriliAction: 'Commander Ifrili',
+      eyebrow: 'Sahla Food',
+      title: 'Tous vos plats préférés des meilleurs restaurants',
+      lead: 'Envie d’un bon burger croustillant, d’une pizza au fromage fondant ou d’un plat traditionnel réconfortant ? Sahla Food vous livre tout à domicile.',
+      c1Title: 'Burgers & Fast Food',
+      c1Tag: 'Les plus demandés',
+      c1Desc:
+        'Burgers gourmets, tacos, shawarma et frites dorées des restaurants les plus réputés de votre secteur.',
+      c1Action: 'Découvrir le fast-food',
+      c2Title: 'Pizzas & Saveurs Italiennes',
+      c2Tag: 'Chaudes & croustillantes',
+      c2Desc:
+        'Large choix de pizzas cuites à la commande avec garnitures généreuses et livraison express.',
+      c2Action: 'Commander une pizza',
+      c3Title: 'Plats Traditionnels & Grillades',
+      c3Tag: 'Recettes authentiques',
+      c3Desc:
+        'Tajines savoureux, grillades au feu de bois et spécialités locales riches en épices et traditions.',
+      c3Action: 'Goûter les grillades',
     },
     showcase: {
       eyebrow: 'N’importe où, n’importe quand',
       title: 'Une expérience conçue pour votre sérénité',
       lead: 'Sahla vous offre l’expérience de commande la plus fluide et rapide d’Algérie.',
       f1Title: 'Menus clairs avec photos et prix nets',
-      f1Desc: 'Consultez les cartes détaillées sans frais cachés.',
+      f1Desc: 'Consultez les cartes détaillées des restaurants sans frais cachés.',
       f2Title: 'Personnalisation totale de vos plats',
       f2Desc: 'Ajoutez vos sauces, suppléments et consignes de préparation.',
       f3Title: 'Suivi direct par GPS en temps réel',
@@ -199,7 +199,7 @@ const CONTENT = {
     },
     partners: {
       restaurantPill: 'Pour les restaurateurs',
-      restaurantTitle: 'Boostez vos ventes avec le réseau Sahla',
+      restaurantTitle: 'Boostez vos ventes avec le réseau Sahla Food',
       restaurantDesc:
         'Touchez des milliers de nouveaux clients et confiez vos livraisons à une flotte professionnelle clé en main.',
       restaurantBtn: 'Devenir partenaire',
@@ -215,68 +215,68 @@ const CONTENT = {
       scanText: 'Scannez le QR code avec votre téléphone pour installer l’app',
     },
     footer: {
-      desc: 'Sahla — L’application algérienne de référence pour la livraison de repas, courses et colis.',
+      desc: 'Sahla — L’application algérienne de référence pour la livraison de repas à domicile.',
       company: 'Entreprise',
-      services: 'Services',
+      services: 'Menu',
       legal: 'Légal',
       privacy: 'Politique de confidentialité',
       terms: 'Conditions d’utilisation',
       deleteAccount: 'Supprimer mon compte',
-      foodDelivery: 'Livraison de repas',
-      groceryDelivery: 'Livraison de courses',
-      ifriliService: 'Service colis Ifrili',
+      foodDelivery: 'Sahla Food',
+      fastFood: 'Fast Food & Burgers',
+      traditionalFood: 'Plats traditionnels & Grillades',
       contact: 'Contactez-nous',
       copyright: '© 2026 Sahla Delivery. Tous droits réservés.',
     },
   },
   en: {
     nav: {
-      services: 'Services',
+      services: 'Food & Menus',
       whySahla: 'Why Sahla?',
       howItWorks: 'How It Works',
       partners: 'Partners',
-      download: 'Download App',
+      download: 'Get the App',
     },
     hero: {
-      badge: '#1 Delivery App in Your City',
+      badge: '#1 Food Delivery App in Your City',
       title1: 'Stay where you are...',
       titleHighlight: 'We deliver to you!',
       subtitle:
-        'Any time, any place. Your favorite meals, groceries, and parcels delivered piping hot and fast to your doorstep.',
+        'Any time, any place. Your favorite meals and dishes delivered piping hot and fast to your doorstep with Sahla.',
       chipSpeed: '⚡ Under 30-min fast delivery',
       chipTracking: '📍 Live GPS order tracking',
       chipQuality: '🍱 Heat-insulated thermal bags',
-      downloadAppStore: 'Download on App Store',
-      downloadGooglePlay: 'Get it on Google Play',
+      downloadAppStore: 'App Store',
+      downloadGooglePlay: 'Google Play',
       badgeTitle: 'Order Delivered Successfully!',
       badgeSub: 'Hot grilled skewers • in 24 mins',
     },
     services: {
-      eyebrow: 'Integrated Sahla Ecosystem',
-      title: 'Everything You Need in One Single App',
-      lead: 'Whether you crave a delicious hot meal, need daily household groceries, or want to send an urgent parcel, Sahla is at your service.',
-      foodTitle: 'Sahla Food',
-      foodTag: '150+ Restaurants',
-      foodDesc:
-        'Delicious meals from the best local restaurants and burger joints delivered warm and fresh.',
-      foodAction: 'Explore Food',
-      marketTitle: 'Sahla Market',
-      marketTag: 'Groceries & Essentials',
-      marketDesc:
-        'Fresh fruits, veggies, supermarket essentials, and daily groceries delivered in minutes.',
-      marketAction: 'Shop Groceries',
-      ifriliTitle: 'Sahla Ifrili',
-      ifriliTag: 'Custom Errands & Parcels',
-      ifriliDesc:
-        'Your personal courier errand service: send packages, pick up forgotten items, or run custom tasks.',
-      ifriliAction: 'Order Ifrili',
+      eyebrow: 'Sahla Food',
+      title: 'All Your Food Cravings from the Best Restaurants',
+      lead: 'Whether you crave a juicy gourmet burger, a steaming cheesy pizza, or authentic grilled specialties, Sahla Food brings it warm and fresh to your door.',
+      c1Title: 'Burgers & Fast Food',
+      c1Tag: 'Most Popular',
+      c1Desc:
+        'Mouthwatering burgers, tacos, shawarma, and crispy fries from the most loved spots in your area.',
+      c1Action: 'Explore Burgers & Fast Food',
+      c2Title: 'Pizza & Italian Delights',
+      c2Tag: 'Hot & Crispy',
+      c2Desc:
+        'Crispy crust pizzas baked fresh upon ordering, loaded with premium toppings and melted cheese.',
+      c2Action: 'Order Pizza Now',
+      c3Title: 'Traditional Dishes & Grills',
+      c3Tag: 'Authentic Flavor',
+      c3Desc:
+        'Sizzling mixed grills, traditional slow-cooked tajines, and savory heritage dishes packed with flavor.',
+      c3Action: 'Taste Traditional Dishes',
     },
     showcase: {
       eyebrow: 'Any Time.. Any Place',
       title: 'An Experience Crafted for Your Utmost Comfort',
       lead: 'We built Sahla to be fast, intuitive, and hassle-free from your first tap until the meal arrives.',
       f1Title: 'Clear menus with photos and transparent prices',
-      f1Desc: 'Explore complete menus with accurate pricing and exclusive promotions with zero hidden fees.',
+      f1Desc: 'Explore complete restaurant menus with accurate pricing and exclusive promotions with zero hidden fees.',
       f2Title: 'Full meal customization & order notes',
       f2Desc: 'Add toppings, pick sides, and leave specific kitchen instructions for the chef.',
       f3Title: 'Smart live GPS map tracking',
@@ -308,7 +308,7 @@ const CONTENT = {
     },
     partners: {
       restaurantPill: 'For Restaurant Owners',
-      restaurantTitle: 'Scale Your Restaurant with Sahla',
+      restaurantTitle: 'Scale Your Restaurant with Sahla Food',
       restaurantDesc:
         'Connect with thousands of local diners, grow revenue, and rely on an automated delivery fleet.',
       restaurantBtn: 'Partner With Us',
@@ -320,20 +320,20 @@ const CONTENT = {
     },
     download: {
       title: 'Ready to order? Get the Sahla app now!',
-      desc: 'Join thousands enjoying the easiest and fastest delivery in Algeria. Available free for iOS and Android.',
+      desc: 'Join thousands enjoying the easiest and fastest food delivery in Algeria. Available free for iOS and Android.',
       scanText: 'Scan this QR code with your phone camera to download directly',
     },
     footer: {
-      desc: 'Sahla — Algeria’s leading food, grocery, and on-demand delivery app. Stay where you are, we come to you!',
+      desc: 'Sahla — Algeria’s leading food delivery app. Stay where you are, we come to you!',
       company: 'Company',
-      services: 'Services',
+      services: 'Food Services',
       legal: 'Legal',
       privacy: 'Privacy Policy',
       terms: 'Terms of Service',
       deleteAccount: 'Delete Account',
-      foodDelivery: 'Food Delivery',
-      groceryDelivery: 'Grocery Delivery',
-      ifriliService: 'Ifrili Parcel Service',
+      foodDelivery: 'Sahla Food',
+      fastFood: 'Fast Food & Burgers',
+      traditionalFood: 'Traditional & Grills',
       contact: 'Contact Us',
       copyright: '© 2026 Sahla Delivery. All rights reserved.',
     },
@@ -361,21 +361,23 @@ export default function HomePage() {
   return (
     <main className="landing-page" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* ----------------------------------------
-          HEADER / NAVBAR
+          POLISHED HEADER / NAVBAR
           ---------------------------------------- */}
       <header className="site-header">
         <div className="header-container">
+          {/* Logo with proper proportions */}
           <Link href="/" className="brand-logo-link" aria-label="Sahla Home">
             <Image
               src="/logo.webp"
               alt="Sahla Delivery"
-              width={140}
-              height={44}
+              width={130}
+              height={40}
               priority
               className="header-logo-img"
             />
           </Link>
 
+          {/* Desktop Navigation */}
           <nav className="header-nav" aria-label="Main Navigation">
             <a href="#services">{t.nav.services}</a>
             <a href="#why-sahla">{t.nav.whySahla}</a>
@@ -383,47 +385,39 @@ export default function HomePage() {
             <a href="#partners">{t.nav.partners}</a>
           </nav>
 
+          {/* Header Actions */}
           <div className="header-actions">
-            {/* Language Switcher */}
-            <div className="lang-switcher-group" style={{ display: 'flex', gap: '4px' }}>
+            {/* Sleek Segmented Language Pill */}
+            <div className="lang-segmented-control" role="group" aria-label="Language Selector">
               <button
                 type="button"
-                className={`lang-switch-btn ${lang === 'ar' ? 'active' : ''}`}
+                className={`lang-segment-btn ${lang === 'ar' ? 'active' : ''}`}
                 onClick={() => handleLanguageChange('ar')}
-                style={{
-                  background: lang === 'ar' ? 'var(--sahla-yellow)' : '#FFF',
-                  fontWeight: lang === 'ar' ? 800 : 600,
-                }}
+                aria-pressed={lang === 'ar'}
               >
                 عربي
               </button>
               <button
                 type="button"
-                className={`lang-switch-btn ${lang === 'fr' ? 'active' : ''}`}
+                className={`lang-segment-btn ${lang === 'fr' ? 'active' : ''}`}
                 onClick={() => handleLanguageChange('fr')}
-                style={{
-                  background: lang === 'fr' ? 'var(--sahla-yellow)' : '#FFF',
-                  fontWeight: lang === 'fr' ? 800 : 600,
-                }}
+                aria-pressed={lang === 'fr'}
               >
                 FR
               </button>
               <button
                 type="button"
-                className={`lang-switch-btn ${lang === 'en' ? 'active' : ''}`}
+                className={`lang-segment-btn ${lang === 'en' ? 'active' : ''}`}
                 onClick={() => handleLanguageChange('en')}
-                style={{
-                  background: lang === 'en' ? 'var(--sahla-yellow)' : '#FFF',
-                  fontWeight: lang === 'en' ? 800 : 600,
-                }}
+                aria-pressed={lang === 'en'}
               >
                 EN
               </button>
             </div>
 
-            <a href="#download-app" className="header-cta-btn">
+            <a href="#download-app" className="header-cta-btn" aria-label={t.nav.download}>
               <span>{t.nav.download}</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M19 12l-7 7-7-7" />
               </svg>
             </a>
@@ -456,6 +450,7 @@ export default function HomePage() {
               <span className="trust-chip">{t.hero.chipQuality}</span>
             </div>
 
+            {/* Guaranteed Same-Row Store Buttons on Mobile & Desktop */}
             <div className="hero-download-group" id="download-app">
               {/* App Store Button */}
               <a
@@ -469,7 +464,7 @@ export default function HomePage() {
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.67-.82 1.13-1.96 1.01-3.1-.98.04-2.17.65-2.87 1.47-.62.72-1.16 1.88-1.01 2.99 1.1.09 2.2-.54 2.87-1.36z" />
                 </svg>
                 <div className="store-btn-meta">
-                  <span className="store-btn-label">Available on</span>
+                  <span className="store-btn-label">Download on</span>
                   <span className="store-btn-name">App Store</span>
                 </div>
               </a>
@@ -506,7 +501,7 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Floating Live Badge */}
+            {/* Floating Live Badge cleanly docked over photo bottom */}
             <div className="hero-floating-badge">
               <div className="floating-badge-icon">🛵</div>
               <div className="floating-badge-text">
@@ -519,7 +514,7 @@ export default function HomePage() {
       </section>
 
       {/* ----------------------------------------
-          SERVICES SECTION (Food, Market, Ifrili)
+          SAHLA FOOD SECTION (Food Only)
           ---------------------------------------- */}
       <section className="services-section" id="services">
         <div className="section-head-center">
@@ -529,62 +524,44 @@ export default function HomePage() {
         </div>
 
         <div className="services-grid">
-          {/* Sahla Food */}
+          {/* Category 1: Burgers & Fast Food */}
           <div className="service-card">
-            <div className="service-icon-box">
-              <Image
-                src="/services/sahla_food.png"
-                alt="Sahla Food"
-                width={52}
-                height={52}
-                className="service-icon-img"
-              />
+            <div className="service-icon-box" aria-hidden="true">
+              🍔
             </div>
-            <span className="service-tag">{t.services.foodTag}</span>
-            <h3 className="service-name">{t.services.foodTitle}</h3>
-            <p className="service-desc">{t.services.foodDesc}</p>
+            <span className="service-tag">{t.services.c1Tag}</span>
+            <h3 className="service-name">{t.services.c1Title}</h3>
+            <p className="service-desc">{t.services.c1Desc}</p>
             <a href="#download-app" className="service-action-link">
-              <span>{t.services.foodAction}</span>
+              <span>{t.services.c1Action}</span>
               <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
             </a>
           </div>
 
-          {/* Sahla Market */}
+          {/* Category 2: Pizza & Italian */}
           <div className="service-card">
-            <div className="service-icon-box">
-              <Image
-                src="/services/sahla_market.png"
-                alt="Sahla Market"
-                width={52}
-                height={52}
-                className="service-icon-img"
-              />
+            <div className="service-icon-box" aria-hidden="true">
+              🍕
             </div>
-            <span className="service-tag">{t.services.marketTag}</span>
-            <h3 className="service-name">{t.services.marketTitle}</h3>
-            <p className="service-desc">{t.services.marketDesc}</p>
+            <span className="service-tag">{t.services.c2Tag}</span>
+            <h3 className="service-name">{t.services.c2Title}</h3>
+            <p className="service-desc">{t.services.c2Desc}</p>
             <a href="#download-app" className="service-action-link">
-              <span>{t.services.marketAction}</span>
+              <span>{t.services.c2Action}</span>
               <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
             </a>
           </div>
 
-          {/* Sahla Ifrili */}
+          {/* Category 3: Traditional & Grills */}
           <div className="service-card">
-            <div className="service-icon-box">
-              <Image
-                src="/services/sahla_ifrili.png"
-                alt="Sahla Ifrili"
-                width={52}
-                height={52}
-                className="service-icon-img"
-              />
+            <div className="service-icon-box" aria-hidden="true">
+              🥩
             </div>
-            <span className="service-tag">{t.services.ifriliTag}</span>
-            <h3 className="service-name">{t.services.ifriliTitle}</h3>
-            <p className="service-desc">{t.services.ifriliDesc}</p>
+            <span className="service-tag">{t.services.c3Tag}</span>
+            <h3 className="service-name">{t.services.c3Title}</h3>
+            <p className="service-desc">{t.services.c3Desc}</p>
             <a href="#download-app" className="service-action-link">
-              <span>{t.services.ifriliAction}</span>
+              <span>{t.services.c3Action}</span>
               <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
             </a>
           </div>
@@ -865,8 +842,8 @@ export default function HomePage() {
             <Image
               src="/logo.webp"
               alt="Sahla Delivery"
-              width={150}
-              height={48}
+              width={140}
+              height={44}
               className="footer-logo-img"
             />
             <p>{t.footer.desc}</p>
@@ -876,8 +853,8 @@ export default function HomePage() {
             <h4>{t.footer.services}</h4>
             <ul className="footer-links-list">
               <li><a href="#services">{t.footer.foodDelivery}</a></li>
-              <li><a href="#services">{t.footer.groceryDelivery}</a></li>
-              <li><a href="#services">{t.footer.ifriliService}</a></li>
+              <li><a href="#services">{t.footer.fastFood}</a></li>
+              <li><a href="#services">{t.footer.traditionalFood}</a></li>
             </ul>
           </div>
 

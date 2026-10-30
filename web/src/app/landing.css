@@ -31,7 +31,7 @@
 }
 
 /* ----------------------------------------
-   STICKY HEADER
+   POLISHED STICKY HEADER
    ---------------------------------------- */
 .site-header {
   position: sticky;
@@ -39,39 +39,36 @@
   left: 0;
   right: 0;
   z-index: 50;
-  background: rgba(253, 251, 247, 0.94);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(232, 227, 215, 0.85);
+  background: rgba(253, 251, 247, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(232, 227, 215, 0.9);
   transition: all 0.25s ease;
 }
 
 .header-container {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 0.9rem 1.5rem;
+  padding: 0.85rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .brand-logo-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
   text-decoration: none;
-  transition: transform 0.2s ease;
-}
-
-.brand-logo-link:hover {
-  transform: scale(1.02);
+  flex-shrink: 0;
 }
 
 .header-logo-img {
-  height: 44px;
+  height: 42px;
   width: auto;
   object-fit: contain;
+  display: block;
 }
 
 .header-nav {
@@ -83,7 +80,7 @@
 .header-nav a {
   color: var(--sahla-dark);
   font-size: 0.98rem;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   position: relative;
   transition: color 0.2s ease;
@@ -97,14 +94,15 @@
 .header-nav a::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: -2px;
   right: 0;
   left: 0;
-  height: 2px;
+  height: 2.5px;
   background: var(--sahla-yellow);
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.25s ease;
+  border-radius: 2px;
 }
 
 .header-nav a:hover::after {
@@ -114,29 +112,43 @@
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
+  flex-shrink: 0;
 }
 
-.lang-switch-btn {
+/* Polished Segmented Language Capsule */
+.lang-segmented-control {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
   background: #FFFFFF;
   border: 1px solid var(--sahla-border);
-  padding: 0.45rem 0.85rem;
   border-radius: 9999px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--sahla-dark);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
-.lang-switch-btn:hover {
-  background: var(--sahla-yellow-soft);
-  border-color: var(--sahla-yellow);
-  color: var(--sahla-green);
+.lang-segment-btn {
+  border: none;
+  background: transparent;
+  color: var(--sahla-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.32rem 0.7rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1;
+}
+
+.lang-segment-btn:hover {
+  color: var(--sahla-dark);
+}
+
+.lang-segment-btn.active {
+  background: var(--sahla-yellow);
+  color: var(--sahla-dark);
+  font-weight: 800;
+  box-shadow: 0 1px 4px rgba(255, 199, 0, 0.35);
 }
 
 .header-cta-btn {
@@ -145,19 +157,20 @@
   gap: 0.5rem;
   background: var(--sahla-green);
   color: #FFFFFF !important;
-  font-weight: 700;
-  font-size: 0.95rem;
-  padding: 0.65rem 1.25rem;
+  font-weight: 800;
+  font-size: 0.92rem;
+  padding: 0.6rem 1.15rem;
   border-radius: 9999px;
   text-decoration: none;
-  box-shadow: 0 4px 14px rgba(6, 78, 59, 0.25);
+  box-shadow: 0 3px 12px rgba(6, 78, 59, 0.22);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
 }
 
 .header-cta-btn:hover {
   background: var(--sahla-green-light);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(6, 78, 59, 0.35);
+  box-shadow: 0 6px 18px rgba(6, 78, 59, 0.32);
 }
 
 /* ----------------------------------------
@@ -196,7 +209,7 @@
 .hero-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.4rem;
 }
 
 .hero-pill-badge {
@@ -205,7 +218,7 @@
   gap: 0.6rem;
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(255, 199, 0, 0.6);
-  padding: 0.45rem 1rem;
+  padding: 0.42rem 1rem;
   border-radius: 9999px;
   font-size: 0.9rem;
   font-weight: 700;
@@ -230,7 +243,7 @@
 }
 
 .hero-title {
-  font-size: clamp(2.4rem, 4.6vw, 4.2rem);
+  font-size: clamp(2.3rem, 4.4vw, 4rem);
   font-weight: 900;
   line-height: 1.2;
   color: var(--sahla-dark);
@@ -257,7 +270,7 @@
 }
 
 .hero-subtitle {
-  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
   line-height: 1.7;
   color: #374151;
   max-width: 580px;
@@ -268,8 +281,8 @@
 .hero-trust-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
 }
 
 .trust-chip {
@@ -280,53 +293,61 @@
   border: 1px solid rgba(232, 227, 215, 0.9);
   padding: 0.35rem 0.85rem;
   border-radius: 9999px;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: #374151;
 }
 
+/* ----------------------------------------
+   SAME-ROW APP STORE & GOOGLE PLAY BUTTONS
+   ---------------------------------------- */
 .hero-download-group {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 0.75rem;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  max-width: 440px !important;
+  margin-top: 0.85rem;
 }
 
 .store-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.85rem;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.55rem !important;
   background: var(--sahla-dark);
   color: #FFFFFF !important;
   text-decoration: none;
-  padding: 0.75rem 1.4rem;
+  padding: 0.7rem 0.85rem !important;
   border-radius: 14px;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 16px rgba(17, 24, 39, 0.2);
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .store-btn:hover {
   background: #000000;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.3);
+  box-shadow: 0 8px 22px rgba(17, 24, 39, 0.28);
 }
 
 .store-btn.store-btn-google {
   background: var(--sahla-green);
   border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 16px rgba(6, 78, 59, 0.25);
+  box-shadow: 0 4px 14px rgba(6, 78, 59, 0.22);
 }
 
 .store-btn.store-btn-google:hover {
   background: var(--sahla-green-light);
-  box-shadow: 0 8px 24px rgba(6, 78, 59, 0.35);
+  box-shadow: 0 8px 22px rgba(6, 78, 59, 0.32);
 }
 
 .store-btn-icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
 }
 
@@ -334,19 +355,26 @@
   display: flex;
   flex-direction: column;
   line-height: 1.15;
+  min-width: 0;
 }
 
 .store-btn-label {
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
   opacity: 0.85;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .store-btn-name {
-  font-size: 1.05rem;
+  font-size: 0.94rem;
   font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Hero Visual Art */
@@ -375,31 +403,28 @@
   display: block;
 }
 
-/* Floating Live Badge */
+/* Floating Live Badge - Clean Docking */
 .hero-floating-badge {
   position: absolute;
-  bottom: 24px;
-  right: -24px;
+  bottom: 20px;
+  right: 20px;
+  left: 20px;
+  max-width: 320px;
+  margin: 0 auto;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
-  padding: 0.9rem 1.15rem;
-  border-radius: 18px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 199, 0, 0.4);
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 199, 0, 0.5);
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  max-width: 320px;
-  animation: float-badge 4s ease-in-out infinite;
-}
-
-@keyframes float-badge {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  gap: 0.75rem;
+  z-index: 10;
 }
 
 .floating-badge-icon {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   background: var(--sahla-yellow);
   color: var(--sahla-dark);
@@ -413,7 +438,7 @@
 .floating-badge-text {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
 }
 
 .floating-badge-title {
@@ -428,7 +453,7 @@
 }
 
 /* ----------------------------------------
-   SERVICES SECTION (Food, Market, Ifrili)
+   SAHLA FOOD DEDICATED SECTION
    ---------------------------------------- */
 .services-section {
   padding: 6rem 1.5rem;
@@ -492,7 +517,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 1.25rem;
+  gap: 1.15rem;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
@@ -522,22 +547,16 @@
 }
 
 .service-icon-box {
-  width: 72px;
-  height: 72px;
+  width: 68px;
+  height: 68px;
   border-radius: 18px;
   background: #FFFFFF;
   border: 1px solid var(--sahla-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  font-size: 2.2rem;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
-}
-
-.service-icon-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 .service-tag {
@@ -550,7 +569,7 @@
 }
 
 .service-name {
-  font-size: 1.45rem;
+  font-size: 1.4rem;
   font-weight: 900;
   color: var(--sahla-dark);
   margin: 0;
@@ -796,7 +815,7 @@
 }
 
 /* ----------------------------------------
-   PARTNERS & DRIVERS BANNER
+   PARTNERS SECTION
    ---------------------------------------- */
 .partners-section {
   padding: 5rem 1.5rem;
@@ -1055,9 +1074,9 @@
   }
 
   .hero-visual-card {
-    order: -1;
+    order: 2;
     max-width: 440px;
-    margin: 0 auto;
+    margin: 1rem auto 0;
   }
 
   .services-grid {
@@ -1098,18 +1117,118 @@
 }
 
 @media (max-width: 768px) {
+  .site-header {
+    padding: 0;
+  }
+
+  .header-container {
+    padding: 0.65rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .header-logo-img {
+    height: 36px;
+  }
+
   .header-nav {
     display: none;
   }
 
-  .hero-section {
-    padding: 2rem 1.25rem 4rem;
+  .header-actions {
+    gap: 0.5rem;
   }
 
+  /* Compact Segmented Control on Mobile */
+  .lang-segmented-control {
+    padding: 2px;
+  }
+
+  .lang-segment-btn {
+    font-size: 0.76rem;
+    padding: 0.28rem 0.55rem;
+  }
+
+  /* Compact Header CTA on Mobile */
+  .header-cta-btn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  .header-cta-btn span {
+    display: none;
+  }
+
+  .header-cta-btn::after {
+    content: 'تحميل';
+  }
+
+  .landing-page[dir="ltr"] .header-cta-btn::after {
+    content: 'App';
+  }
+
+  .hero-section {
+    padding: 2rem 1rem 3.5rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 7.8vw, 2.6rem);
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  /* Strict Single Row on Mobile with Equal Split */
+  .hero-download-group {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+
+  .store-btn {
+    padding: 0.6rem 0.45rem !important;
+    border-radius: 12px !important;
+    gap: 0.45rem !important;
+  }
+
+  .store-btn-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .store-btn-label {
+    font-size: 0.58rem !important;
+  }
+
+  .store-btn-name {
+    font-size: 0.82rem !important;
+  }
+
+  /* Floating Live Badge - Clean Docking on Mobile */
   .hero-floating-badge {
-    right: 0;
-    bottom: -16px;
-    max-width: 290px;
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    left: 14px;
+    max-width: calc(100% - 28px);
+    padding: 0.65rem 0.85rem;
+    border-radius: 14px;
+  }
+
+  .floating-badge-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.15rem;
+  }
+
+  .floating-badge-title {
+    font-size: 0.82rem;
+  }
+
+  .floating-badge-sub {
+    font-size: 0.7rem;
   }
 
   .why-grid {
