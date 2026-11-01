@@ -232,6 +232,44 @@ async function attachOrderItemsSummary(orders) {
   }));
 }
 
+async function attachOrderCancellationRoles(orders) {
+  const list = Array.isArray(orders) ? orders : [];
+  const ids = [...new Set(list.map((o) => String(o?.id || '').trim()).filter(Boolean))];
+  if (!ids.length) return list;
+
+  const roleByOrder = new Map();
+  const chunk = 100;
+  for (let i = 0; i < ids.length; i += chunk) {
+    const slice = ids.slice(i, i + chunk);
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('order_events')
+        .select('order_id, changed_by_role, created_at')
+        .in('order_id', slice)
+        .eq('new_status', 'cancelled')
+        .order('created_at', { ascending: false });
+      if (!error && data) {
+        for (const ev of data) {
+          const oid = String(ev.order_id || '').trim();
+          if (oid && !roleByOrder.has(oid)) {
+            roleByOrder.set(oid, ev.changed_by_role);
+          }
+        }
+      }
+    } catch (roleErr) {
+      console.warn('attachOrderCancellationRoles failed chunk', roleErr);
+    }
+  }
+
+  return list.map((o) => {
+    const oid = String(o?.id || '').trim();
+    return {
+      ...o,
+      cancelled_by_role: roleByOrder.get(oid) || null,
+    };
+  });
+}
+
 const DEFAULT_PERFORMANCE_ADMIN_PHONE = '+213799790530';
 
 function performanceAdminPhone() {
@@ -1049,7 +1087,8 @@ router.get('/cancelled-orders', requirePerformanceAuth, async (req, res) => {
     const { data, error } = await q;
     if (error) throw error;
     const enriched = (data || []).map(enrichOrderCourier);
-    const orders = await attachOrderItemsSummary(enriched);
+    const withItems = await attachOrderItemsSummary(enriched);
+    const orders = await attachOrderCancellationRoles(withItems);
     return res.json({ success: true, orders });
   } catch (e) {
     console.error('performance /cancelled-orders', e);
