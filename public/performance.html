@@ -3707,8 +3707,10 @@
       }
 
       function restaurantCancellationReason(order) {
-        if (cancelledByLabel(order) !== 'Restaurant') return '—';
         const parsed = parseCancelReason(order?.cancel_reason);
+        if (parsed.kind === 'raw') {
+          return parsed.value;
+        }
         if (parsed.kind === 'json') {
           const v = parsed.value || {};
           const body =
@@ -3721,8 +3723,17 @@
           const text = String(body || '').trim();
           if (text) return text;
         }
+        if (parsed.kind === 'timeout') {
+          return 'Timed out after 15 min without acceptance';
+        }
         const fromNotif = String(order?.cancel_notification_body || '').trim();
-        return fromNotif || '—';
+        if (fromNotif) return fromNotif;
+
+        const by = cancelledByLabel(order);
+        if (by === 'Restaurant') return 'Rejected by restaurant';
+        if (by === 'Customer') return 'Cancelled by customer';
+        if (by === 'Timed out (15 min)') return 'Timed out after 15 min without acceptance';
+        return '—';
       }
 
       function updateCancelledOrdersDateInputVisibility() {
