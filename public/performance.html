@@ -3703,6 +3703,7 @@
         const role = String(order?.cancelled_by_role || '').trim().toLowerCase();
         if (role === 'restaurant_owner' || role === 'restaurant') return 'Restaurant';
         if (role === 'customer') return 'Customer';
+        if (role === 'system' || role === 'admin') return 'Admin';
         return 'Unknown';
       }
 
