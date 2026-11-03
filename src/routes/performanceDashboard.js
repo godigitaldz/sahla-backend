@@ -1951,6 +1951,673 @@ router.post('/force-push-notification', requirePerformanceAuth, async (req, res)
 });
 
 /* ========================================================================= */
+/* Manual Order Creation Endpoints                                          */
+/* ========================================================================= */
+
+function calculateHaversineDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Number((R * c).toFixed(2));
+}
+
+function estimateSegmentedDeliveryFee(distKm) {
+  if (!distKm || distKm <= 0) return 150;
+  if (distKm <= 1.5) return 150;
+  if (distKm <= 2.0) return 180;
+  if (distKm <= 3.5) return 200;
+  if (distKm <= 4.0) return 250;
+  if (distKm <= 5.0) return 280;
+  if (distKm <= 7.0) return 320;
+  if (distKm <= 8.0) return 350;
+  if (distKm <= 9.0) return 380;
+  if (distKm <= 10.0) return 400;
+  return Math.round(400 + (distKm - 10) * 35);
+}
+
+router.get('/manual-order/restaurants', requirePerformanceAuth, async (req, res) => {
+  try {
+    const { data: restaurants, error } = await supabaseAdmin
+      .from('restaurants')
+      .select('id, name, name_ar, phone, address_line1, city, state, latitude, longitude, logo_url, is_open, is_verified')
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    return res.json({ success: true, restaurants: restaurants || [] });
+  } catch (e) {
+    console.error('performance /manual-order/restaurants GET', e);
+    return res.status(500).json({ success: false, error: e.message || 'Failed to fetch restaurants' });
+  }
+});
+
+router.get('/manual-order/menu-items', requirePerformanceAuth, async (req, res) => {
+  try {
+    const restaurantId = req.query.restaurant_id;
+    if (!restaurantId) {
+      return res.status(400).json({ success: false, error: 'restaurant_id query param is required' });
+    }
+
+    const { data: items, error } = await supabaseAdmin
+      .from('menu_items')
+      .select('id, restaurant_id, name, name_ar, description, description_ar, price, category, is_available, pricing_options, variants, supplements, tax_free')
+      .eq('restaurant_id', restaurantId)
+      .eq('is_available', true)
+      .neq('name', '__MANUAL_PHONE_ORDER__')
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    return res.json({ success: true, items: items || [] });
+  } catch (e) {
+    console.error('performance /manual-order/menu-items GET', e);
+    return res.status(500).json({ success: false, error: e.message || 'Failed to fetch menu items' });
+  }
+});
+
+router.get('/manual-order/customer-lookup', requirePerformanceAuth, async (req, res) => {
+  try {
+    const rawPhone = String(req.query.phone || '').trim();
+    if (!rawPhone || rawPhone.length < 8) {
+      return res.json({ success: true, found: false });
+    }
+
+    const digitsOnly = rawPhone.replace(/\D/g, '');
+    const clean0 = digitsOnly.startsWith('213') ? '0' + digitsOnly.slice(3) : digitsOnly;
+    const last8 = digitsOnly.slice(-8);
+
+    // Search in user_profiles by last 8 digits
+    const { data: profiles, error: profileErr } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id, name, full_name, phone')
+      .ilike('phone', `%${last8}%`)
+      .limit(1);
+
+    if (!profileErr && profiles && profiles.length > 0) {
+      const p = profiles[0];
+      const customerName = p.name || p.full_name || '';
+
+      // Check last order for delivery address
+      let lastAddress = null;
+      try {
+        const { data: lastOrder } = await supabaseAdmin
+          .from('orders')
+          .select('delivery_address')
+          .eq('customer_id', p.id)
+          .not('delivery_address', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (lastOrder?.delivery_address) {
+          lastAddress = lastOrder.delivery_address;
+        }
+      } catch (_) {}
+
+      return res.json({
+        success: true,
+        found: true,
+        source: 'user_profile',
+        customer: {
+          id: p.id,
+          name: customerName,
+          phone: p.phone || rawPhone,
+          address: lastAddress,
+        },
+      });
+    }
+
+    // Secondary check: recent orders with this guest phone
+    const { data: recentOrders } = await supabaseAdmin
+      .from('orders')
+      .select('guest_name, delivery_address')
+      .ilike('guest_phone', `%${last8}%`)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (recentOrders && recentOrders.length > 0) {
+      const r = recentOrders[0];
+      return res.json({
+        success: true,
+        found: true,
+        source: 'recent_order',
+        customer: {
+          id: null,
+          name: r.guest_name || '',
+          phone: rawPhone,
+          address: r.delivery_address || null,
+        },
+      });
+    }
+
+    return res.json({ success: true, found: false });
+  } catch (e) {
+    console.error('performance /manual-order/customer-lookup GET', e);
+    return res.status(500).json({ success: false, error: e.message || 'Customer lookup failed' });
+  }
+});
+
+router.post('/manual-order/validate-promo', requirePerformanceAuth, async (req, res) => {
+  try {
+    const { code, restaurant_id, subtotal, delivery_fee } = req.body;
+    const promoCodeStr = String(code || '').trim().toUpperCase();
+    if (!promoCodeStr) {
+      return res.status(400).json({ success: false, error: 'Promo code is required' });
+    }
+
+    const { data: promo, error: promoErr } = await supabaseAdmin
+      .from('promo_codes')
+      .select('*')
+      .ilike('code', promoCodeStr)
+      .maybeSingle();
+
+    if (promoErr) throw promoErr;
+    if (!promo) {
+      return res.json({ valid: false, message: 'كود الخصم غير موجود' });
+    }
+
+    if (promo.status && promo.status !== 'active') {
+      return res.json({ valid: false, message: 'كود الخصم غير نشط' });
+    }
+    if (promo.is_active === false) {
+      return res.json({ valid: false, message: 'كود الخصم غير مفعل' });
+    }
+
+    const now = new Date();
+    if (promo.start_date && new Date(promo.start_date) > now) {
+      return res.json({ valid: false, message: 'كود الخصم لم يبدأ بعد' });
+    }
+    if (promo.end_date && new Date(promo.end_date) < now) {
+      return res.json({ valid: false, message: 'كود الخصم منتهي الصلاحية' });
+    }
+
+    if (promo.restaurant_id && restaurant_id && promo.restaurant_id !== restaurant_id) {
+      return res.json({ valid: false, message: 'كود الخصم غير صالح لهذا المطعم' });
+    }
+
+    const sub = Math.max(0, parseFloat(subtotal) || 0);
+    const delFee = Math.max(0, parseFloat(delivery_fee) || 0);
+    const minOrder = Math.max(0, parseFloat(promo.minimum_order_amount) || 0);
+    if (minOrder > 0 && sub < minOrder) {
+      return res.json({
+        valid: false,
+        message: `الحد الأدنى للطلب لتفعيل هذا الكود هو ${minOrder} دج`,
+      });
+    }
+
+    let discount = 0;
+    const promoType = String(promo.type || '').toLowerCase();
+    const promoVal = Math.max(0, parseFloat(promo.value) || 0);
+    const appliesTo = String(promo.applies_to || 'subtotal').toLowerCase();
+
+    const targetAmount = appliesTo.includes('delivery') ? delFee : sub;
+
+    if (promoType === 'percentage') {
+      discount = (targetAmount * promoVal) / 100;
+    } else if (promoType === 'fixedamount' || promoType === 'fixed_amount') {
+      discount = promoVal;
+    } else if (promoType === 'freedelivery' || promoType === 'free_delivery') {
+      discount = delFee;
+    } else {
+      discount = promoVal;
+    }
+
+    const maxDiscount = Math.max(0, parseFloat(promo.maximum_discount_amount) || 0);
+    if (maxDiscount > 0 && discount > maxDiscount) {
+      discount = maxDiscount;
+    }
+
+    discount = Math.min(discount, targetAmount);
+    discount = Math.round(discount * 100) / 100;
+
+    return res.json({
+      valid: true,
+      promo: {
+        id: promo.id,
+        code: promo.code,
+        name: promo.name || promo.code,
+        type: promo.type,
+        value: promo.value,
+        applies_to: promo.applies_to,
+        discount_amount: discount,
+      },
+    });
+  } catch (e) {
+    console.error('performance /manual-order/validate-promo POST', e);
+    return res.status(500).json({ success: false, error: e.message || 'Promo validation failed' });
+  }
+});
+
+router.post('/manual-order/estimate-delivery-fee', requirePerformanceAuth, async (req, res) => {
+  try {
+    const { restaurant_lat, restaurant_lng, customer_lat, customer_lng } = req.body;
+    const rLat = parseFloat(restaurant_lat);
+    const rLng = parseFloat(restaurant_lng);
+    const cLat = parseFloat(customer_lat);
+    const cLng = parseFloat(customer_lng);
+
+    if (!Number.isFinite(rLat) || !Number.isFinite(rLng) || !Number.isFinite(cLat) || !Number.isFinite(cLng)) {
+      return res.json({ success: true, distance_km: null, estimated_fee: 150 });
+    }
+
+    const distanceKm = calculateHaversineDistanceKm(rLat, rLng, cLat, cLng);
+    const estimatedFee = estimateSegmentedDeliveryFee(distanceKm);
+
+    return res.json({
+      success: true,
+      distance_km: distanceKm,
+      estimated_fee: estimatedFee,
+    });
+  } catch (e) {
+    console.error('performance /manual-order/estimate-delivery-fee POST', e);
+    return res.status(500).json({ success: false, error: e.message || 'Fee estimation failed' });
+  }
+});
+
+router.post('/manual-order/create', requirePerformanceAuth, async (req, res) => {
+  try {
+    const {
+      restaurant_id,
+      execution_mode, // 'send_to_restaurant' | 'direct_broadcast'
+      customer_phone,
+      customer_name,
+      delivery_address,
+      items,
+      subtotal: rawSubtotal,
+      delivery_fee: rawDeliveryFee,
+      service_fee: rawServiceFee,
+      promo_code,
+      promo_id,
+      discount_amount: rawDiscountAmount,
+      special_instructions,
+      payment_method,
+    } = req.body;
+
+    if (!restaurant_id) {
+      return res.status(400).json({ success: false, error: 'restaurant_id is required' });
+    }
+    if (!['send_to_restaurant', 'direct_broadcast'].includes(execution_mode)) {
+      return res.status(400).json({
+        success: false,
+        error: "execution_mode must be either 'send_to_restaurant' or 'direct_broadcast'",
+      });
+    }
+    if (!customer_phone || !String(customer_phone).trim()) {
+      return res.status(400).json({ success: false, error: 'Customer phone is required' });
+    }
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, error: 'At least one item is required' });
+    }
+
+    // Fetch restaurant
+    const { data: restaurant, error: restErr } = await supabaseAdmin
+      .from('restaurants')
+      .select('id, name, name_ar, owner_id, latitude, longitude, phone, address_line1, is_open')
+      .eq('id', restaurant_id)
+      .maybeSingle();
+
+    if (restErr || !restaurant) {
+      return res.status(404).json({ success: false, error: 'Restaurant not found' });
+    }
+
+    // Resolve customer ID
+    const phoneTrimmed = String(customer_phone).trim();
+    const digitsOnly = phoneTrimmed.replace(/\D/g, '');
+    const clean0 = digitsOnly.startsWith('213') ? '0' + digitsOnly.slice(3) : digitsOnly;
+    const cleanPlus213 = '+' + (digitsOnly.startsWith('0') ? '213' + digitsOnly.slice(1) : digitsOnly);
+
+    let customerId = null;
+    const { data: matchedProfiles } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id, name')
+      .or(`phone.eq.${clean0},phone.eq.${cleanPlus213}`)
+      .limit(1);
+
+    if (matchedProfiles && matchedProfiles.length > 0) {
+      customerId = matchedProfiles[0].id;
+    } else {
+      // System config fallback ID
+      const { data: cfgRow } = await supabaseAdmin
+        .from('system_config')
+        .select('config_value')
+        .eq('config_key', 'manual_order_fallback_customer_id')
+        .maybeSingle();
+
+      const fallbackId = cfgRow?.config_value ? String(cfgRow.config_value).trim() : null;
+      if (fallbackId) {
+        const { data: fbProf } = await supabaseAdmin
+          .from('user_profiles')
+          .select('id')
+          .eq('id', fallbackId)
+          .maybeSingle();
+        if (fbProf) customerId = fbProf.id;
+      }
+
+      if (!customerId && restaurant.owner_id) {
+        const { data: ownerProf } = await supabaseAdmin
+          .from('user_profiles')
+          .select('id')
+          .eq('id', restaurant.owner_id)
+          .maybeSingle();
+        if (ownerProf) customerId = ownerProf.id;
+      }
+
+      if (!customerId) {
+        customerId = '68b1a9f1-084c-4c2d-bb6e-4f12987d3ab4';
+      }
+    }
+
+    // Ensure placeholder menu item exists for restaurant (in case items have custom lines)
+    let fallbackMenuItemId = null;
+    const { data: existingPlaceholder } = await supabaseAdmin
+      .from('menu_items')
+      .select('id')
+      .eq('restaurant_id', restaurant_id)
+      .eq('name', '__MANUAL_PHONE_ORDER__')
+      .maybeSingle();
+
+    if (existingPlaceholder) {
+      fallbackMenuItemId = existingPlaceholder.id;
+    } else {
+      const { data: createdPlaceholder } = await supabaseAdmin
+        .from('menu_items')
+        .insert({
+          restaurant_id,
+          name: '__MANUAL_PHONE_ORDER__',
+          description: 'Internal placeholder for manual phone orders',
+          price: 0,
+          category: 'Other',
+          is_available: false,
+          is_featured: false,
+          preparation_time: 0,
+        })
+        .select('id')
+        .maybeSingle();
+      if (createdPlaceholder) {
+        fallbackMenuItemId = createdPlaceholder.id;
+      }
+    }
+
+    // Coordinates enforcement for delivery_address (required by DB constraints)
+    const lat = Number.isFinite(parseFloat(delivery_address?.latitude))
+      ? parseFloat(delivery_address.latitude)
+      : Number.isFinite(parseFloat(restaurant.latitude))
+        ? parseFloat(restaurant.latitude)
+        : 34.8516;
+    const lng = Number.isFinite(parseFloat(delivery_address?.longitude))
+      ? parseFloat(delivery_address.longitude)
+      : Number.isFinite(parseFloat(restaurant.longitude))
+        ? parseFloat(restaurant.longitude)
+        : 5.7281;
+
+    const safeDeliveryAddress = {
+      source: delivery_address?.source || 'manual_entry',
+      fullAddress: String(delivery_address?.fullAddress || delivery_address?.street || 'Selected Location').trim(),
+      street: String(delivery_address?.street || delivery_address?.fullAddress || '').trim(),
+      city: String(delivery_address?.city || 'Biskra').trim(),
+      latitude: lat,
+      longitude: lng,
+      recipient_name: customer_name ? String(customer_name).trim() : null,
+      recipient_phone: phoneTrimmed,
+      instructions: delivery_address?.instructions || null,
+    };
+
+    // Calculate item totals & financial figures
+    let computedSubtotal = 0;
+    const processedOrderItems = [];
+
+    for (const it of items) {
+      const qty = Math.max(1, parseInt(it.quantity, 10) || 1);
+      const unitPrice = Math.max(0, parseFloat(it.unit_price) || 0);
+      const totalPrice = Math.round(unitPrice * qty * 100) / 100;
+      computedSubtotal += totalPrice;
+
+      const menuItemId = it.menu_item_id || fallbackMenuItemId;
+      const itemName = String(it.name || '').trim();
+      const itemNotes = String(it.special_instructions || '').trim();
+
+      let finalInstructions = itemNotes;
+      if (!it.menu_item_id && itemName) {
+        finalInstructions = finalInstructions ? `${itemName} (${finalInstructions})` : itemName;
+      }
+
+      processedOrderItems.push({
+        menu_item_id: menuItemId,
+        quantity: qty,
+        unit_price: unitPrice,
+        price: unitPrice,
+        total_price: totalPrice,
+        special_instructions: finalInstructions || null,
+        customizations: it.customizations || null,
+      });
+    }
+
+    const subtotal = Math.round(computedSubtotal * 100) / 100;
+    const deliveryFee = Math.max(0, Math.round((parseFloat(rawDeliveryFee) || 0) * 100) / 100);
+    const serviceFee = Math.max(0, Math.round((parseFloat(rawServiceFee) || 0) * 100) / 100);
+    const discountAmount = Math.max(0, Math.round((parseFloat(rawDiscountAmount) || 0) * 100) / 100);
+
+    const totalAmount = Math.max(0, Math.round((subtotal + deliveryFee + serviceFee - discountAmount) * 100) / 100);
+
+    // Floor to nearest 10 DA for cash payment
+    const cashPayableAmount = Math.floor(totalAmount / 10) * 10;
+    const cashRoundingAdjustment = Math.round((cashPayableAmount - totalAmount) * 100) / 100;
+
+    // Delivery settlement calculations
+    const deliveryTax = Math.min(Math.round(deliveryFee * 0.15 * 100) / 100, 100);
+    const netDeliveryAmount = Math.round((deliveryFee - deliveryTax) * 100) / 100;
+    const net = Math.round((totalAmount - deliveryFee - serviceFee) * 100) / 100;
+
+    // Generate unique order number
+    const nowUtc = new Date();
+    const mm = String(nowUtc.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(nowUtc.getUTCDate()).padStart(2, '0');
+    const hh = String(nowUtc.getUTCHours()).padStart(2, '0');
+    const min = String(nowUtc.getUTCMinutes()).padStart(2, '0');
+    const ss = String(nowUtc.getUTCSeconds()).padStart(2, '0');
+    const rnd = String(Math.floor(Math.random() * 900) + 100);
+    const orderNumber = `ORD-${mm}${dd}${hh}${min}${ss}${rnd}`;
+
+    // Order status determination
+    const initialStatus = execution_mode === 'direct_broadcast' ? 'preparing' : 'pending';
+    const nowIso = new Date().toISOString();
+
+    let combinedNotes = special_instructions ? String(special_instructions).trim() : '';
+    if (combinedNotes) {
+      combinedNotes += ` | Phone: ${phoneTrimmed}`;
+    } else {
+      combinedNotes = `Phone order: ${phoneTrimmed}`;
+    }
+    if (customer_name) {
+      combinedNotes += ` (${String(customer_name).trim()})`;
+    }
+
+    const orderRow = {
+      restaurant_id,
+      customer_id: customerId,
+      order_number: orderNumber,
+      status: initialStatus,
+      payment_status: 'pending',
+      payment_method: payment_method || 'cash_on_delivery',
+      fulfillment_type: 'delivery',
+      subtotal,
+      original_delivery_fee: deliveryFee,
+      delivery_fee: deliveryFee,
+      delivery_tax: deliveryTax,
+      net_delivery_amount: netDeliveryAmount,
+      tax_amount: 0,
+      service_fee: serviceFee,
+      discount_amount: discountAmount,
+      total_amount: totalAmount,
+      cash_rounding_adjustment: cashRoundingAdjustment,
+      cash_payable_amount: cashPayableAmount,
+      net,
+      is_special_delivery: false,
+      delivery_address: safeDeliveryAddress,
+      special_instructions: combinedNotes,
+      manual_phone_order: true,
+      guest_phone: phoneTrimmed,
+      guest_name: customer_name ? String(customer_name).trim() : null,
+      applied_promo_code: promo_code ? String(promo_code).trim() : null,
+      applied_promo_code_id: promo_id || null,
+      source: 'performance_dashboard_manual',
+      preparing_started_at: initialStatus === 'preparing' ? nowIso : null,
+      broadcast_at: initialStatus === 'preparing' ? nowIso : null,
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+
+    // Insert order
+    const { data: newOrder, error: orderInsertErr } = await supabaseAdmin
+      .from('orders')
+      .insert(orderRow)
+      .select('*')
+      .single();
+
+    if (orderInsertErr) {
+      console.error('Failed to insert manual order:', orderInsertErr);
+      if (orderInsertErr.message === 'restaurant_closed' || orderInsertErr.message === 'restaurant_on_break') {
+        return res.status(400).json({
+          success: false,
+          error:
+            'المطعم مغلق حالياً في جدول ساعات العمل (خارج أوقات الدوام). يرجى التأكد من حالة فتح المطعم أو تطبيق تحديث قاعدة البيانات الخاص بالسماح بالطلبات اليدوية.',
+        });
+      }
+      throw orderInsertErr;
+    }
+
+    // Insert order items
+    const itemsToInsert = processedOrderItems.map((it) => ({
+      ...it,
+      order_id: newOrder.id,
+      created_at: nowIso,
+    }));
+
+    const { error: itemsInsertErr } = await supabaseAdmin
+      .from('order_items')
+      .insert(itemsToInsert);
+
+    if (itemsInsertErr) {
+      console.warn('Failed to insert order items:', itemsInsertErr);
+    }
+
+    // Insert order event
+    try {
+      await supabaseAdmin.from('order_events').insert({
+        order_id: newOrder.id,
+        order_number: orderNumber,
+        event_type: 'created',
+        new_status: initialStatus,
+        changed_by_role: 'admin',
+        customer_id: customerId,
+        restaurant_id: restaurant_id,
+        source: 'performance_dashboard_manual_order',
+        payload_json: {
+          execution_mode,
+          created_by: 'admin',
+          customer_phone: phoneTrimmed,
+          customer_name: customer_name || null,
+          items_count: processedOrderItems.length,
+          total_amount: totalAmount,
+        },
+      });
+    } catch (evErr) {
+      console.warn('Failed to insert order event:', evErr);
+    }
+
+    // Notifications dispatch based on execution_mode
+    const notificationSummary = {
+      restaurant_notified: false,
+      couriers_notified: false,
+      courier_count: 0,
+    };
+
+    const restaurantDisplayName = restaurant.name_ar || restaurant.name || 'المطعم';
+
+    if (execution_mode === 'send_to_restaurant') {
+      const restOpsUserIds = await getRestaurantOpsUserIds(restaurant_id);
+      if (restOpsUserIds.length > 0) {
+        try {
+          await supabasePushGateway.sendPush({
+            userIds: restOpsUserIds,
+            title: `طلب جديد بانتظار التأكيد #${orderNumber}`,
+            body: `طلب يدوي جديد بقيمة ${totalAmount} دج ينتظر تأكيدك.`,
+            data: {
+              type: 'new_order',
+              order_id: newOrder.id,
+              order_number: orderNumber,
+              click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            },
+          });
+          notificationSummary.restaurant_notified = true;
+        } catch (pushErr) {
+          console.warn('Failed to push to restaurant ops:', pushErr);
+        }
+      }
+    } else if (execution_mode === 'direct_broadcast') {
+      // 1. Broadcast to available couriers
+      const courierUserIds = await getOnlineAvailableCourierUserIds();
+      notificationSummary.courier_count = courierUserIds.length;
+      if (courierUserIds.length > 0) {
+        try {
+          await supabasePushGateway.sendPush({
+            userIds: courierUserIds,
+            title: 'طلب متاح للتوصيل',
+            body: `طلب جديد من ${restaurantDisplayName} متاح الآن للتوصيل (${totalAmount} دج).`,
+            data: {
+              type: 'courier_order_available',
+              order_id: newOrder.id,
+              order_number: orderNumber,
+              click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            },
+          });
+          notificationSummary.couriers_notified = true;
+        } catch (pushErr) {
+          console.warn('Failed to push broadcast to couriers:', pushErr);
+        }
+      }
+
+      // 2. Also notify restaurant ops
+      const restOpsUserIds = await getRestaurantOpsUserIds(restaurant_id);
+      if (restOpsUserIds.length > 0) {
+        try {
+          await supabasePushGateway.sendPush({
+            userIds: restOpsUserIds,
+            title: `طلب جديد مباشر قيد التحضير #${orderNumber}`,
+            body: `تم إرسال الطلب #${orderNumber} لمندوبي التوصيل وهو الآن قيد التحضير.`,
+            data: {
+              type: 'order_status_update',
+              order_id: newOrder.id,
+              status: 'preparing',
+              click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            },
+          });
+          notificationSummary.restaurant_notified = true;
+        } catch (pushErr) {
+          console.warn('Failed to push notice to restaurant ops:', pushErr);
+        }
+      }
+    }
+
+    return res.json({
+      success: true,
+      order: newOrder,
+      order_number: orderNumber,
+      status: initialStatus,
+      execution_mode,
+      notifications: notificationSummary,
+    });
+  } catch (e) {
+    console.error('performance /manual-order/create POST', e);
+    return res.status(500).json({ success: false, error: e.message || 'Order creation failed' });
+  }
+});
+
+/* ========================================================================= */
 /* Restaurant Tables Configuration                                           */
 /* ========================================================================= */
 

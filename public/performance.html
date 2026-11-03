@@ -877,6 +877,334 @@
         color: #c62828;
         font-weight: 600;
       }
+
+      /* Manual Order Creation Modal & Trigger */
+      .manual-order-nav-btn {
+        background: linear-gradient(135deg, #e65100, #ff9800) !important;
+        color: #fff !important;
+        font-weight: 700 !important;
+        border: none !important;
+        box-shadow: 0 2px 8px rgba(230, 81, 0, 0.3);
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .manual-order-nav-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(230, 81, 0, 0.45);
+      }
+      .mo-modal-dialog {
+        width: min(940px, calc(100vw - 32px)) !important;
+        max-width: 940px !important;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        padding: 0 !important;
+        overflow: hidden;
+      }
+      .mo-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--card);
+      }
+      .mo-header h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .mo-close-btn {
+        background: transparent;
+        border: none;
+        font-size: 1.3rem;
+        cursor: pointer;
+        color: var(--text);
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+      .mo-close-btn:hover {
+        background: rgba(0, 0, 0, 0.06);
+      }
+      .mo-body {
+        padding: 18px 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .mo-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      @media (max-width: 768px) {
+        .mo-grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .mo-card {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+      }
+      .mo-card-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .mo-field {
+        margin-bottom: 10px;
+      }
+      .mo-field:last-child {
+        margin-bottom: 0;
+      }
+      .mo-field label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: var(--text);
+      }
+      .mo-field input,
+      .mo-field select,
+      .mo-field textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-size: 0.9rem;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+      .mo-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-top: 6px;
+      }
+      .mo-chip.open { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+      .mo-chip.closed { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+      .mo-chip.info { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+      .mo-chip.promo { background: #fff8e1; color: #e65100; border: 1px solid #ffe082; }
+
+      .mo-item-picker-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+        align-items: center;
+      }
+      .mo-item-config-box {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        margin-top: 10px;
+      }
+      .mo-options-group {
+        margin-bottom: 10px;
+      }
+      .mo-options-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: #64748b;
+      }
+      .mo-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .mo-pill-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        cursor: pointer;
+        font-size: 0.82rem;
+        transition: all 0.15s ease;
+      }
+      .mo-pill-label:hover {
+        border-color: #ff9800;
+      }
+      .mo-pill-label.active {
+        border-color: #e65100;
+        background: #fff3e0;
+        color: #e65100;
+        font-weight: 700;
+      }
+      .mo-supplements-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 6px;
+      }
+      .mo-supp-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 0.82rem;
+        cursor: pointer;
+      }
+      .mo-cart-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        margin-top: 8px;
+      }
+      .mo-cart-table th {
+        background: var(--bg);
+        padding: 8px 10px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+      }
+      .mo-cart-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      .mo-qty-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .mo-btn-qty {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--card);
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .mo-btn-qty:hover {
+        background: #f0f0f0;
+      }
+      .mo-btn-del {
+        background: transparent;
+        border: none;
+        color: #e53935;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 4px 6px;
+        border-radius: 6px;
+      }
+      .mo-btn-del:hover {
+        background: #ffebee;
+      }
+      .mo-summary-box {
+        background: #111827;
+        color: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        text-align: center;
+      }
+      .mo-summary-item .label {
+        font-size: 0.72rem;
+        color: #9ca3af;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        letter-spacing: 0.04em;
+      }
+      .mo-summary-item .value {
+        font-size: 1.05rem;
+        font-weight: 700;
+      }
+      .mo-summary-item.total .value {
+        color: #ff9800;
+        font-size: 1.25rem;
+      }
+      .mo-summary-item.cash .value {
+        color: #4caf50;
+        font-size: 1.25rem;
+      }
+      .mo-actions-footer {
+        padding: 14px 20px;
+        border-top: 1px solid var(--border);
+        background: var(--card);
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+      }
+      .btn-mo-cancel {
+        padding: 10px 18px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .btn-mo-cancel:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+      .btn-mo-send-restaurant {
+        padding: 10px 18px;
+        background: linear-gradient(135deg, #1976d2, #1565c0);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-mo-send-restaurant:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(25, 118, 210, 0.4);
+      }
+      .btn-mo-broadcast-couriers {
+        padding: 10px 18px;
+        background: linear-gradient(135deg, #2e7d32, #1b5e20);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-mo-broadcast-couriers:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(46, 125, 50, 0.4);
+      }
+      .btn-mo-send-restaurant:disabled,
+      .btn-mo-broadcast-couriers:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
@@ -920,6 +1248,9 @@
           </button>
           <button type="button" class="tab" data-tab="restaurant-tables">Restaurant tables</button>
           <button type="button" class="tab" data-tab="tasks">Tasks</button>
+          <button type="button" class="tab manual-order-nav-btn" id="openManualOrderModalBtn" title="Create manual order on behalf of customer">
+            ➕ Manual Order
+          </button>
           <button type="button" class="tab force-tab" data-tab="force-push" id="forcePushTabBtn">
             Forced Push Notification
           </button>
@@ -1568,6 +1899,273 @@
         <div class="modal-actions">
           <button type="button" class="btn-ghost" id="cancelModalDismiss">Close</button>
           <button type="button" class="btn-modal-danger" id="cancelModalConfirm">Cancel order &amp; send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual Order Creation Modal -->
+    <div id="manualOrderModal" class="modal-overlay hidden" role="dialog" aria-labelledby="moModalTitle" aria-modal="true">
+      <div class="modal-dialog mo-modal-dialog">
+        <div class="mo-header">
+          <h3 id="moModalTitle">📋 Create Manual Order (طلب يدوي)</h3>
+          <button type="button" class="mo-close-btn" id="moCloseBtn" title="Close">✕</button>
+        </div>
+
+        <div class="mo-body">
+          <!-- Step 1: Restaurant & Customer Details -->
+          <div class="mo-grid-2">
+            <!-- Restaurant Selection -->
+            <div class="mo-card">
+              <div class="mo-card-title">🏪 Restaurant Selection</div>
+              <div class="mo-field">
+                <label for="moRestaurantSelect">Select Restaurant *</label>
+                <select id="moRestaurantSelect">
+                  <option value="">-- Choose a restaurant --</option>
+                </select>
+              </div>
+              <div id="moRestaurantInfo" class="mo-chip hidden"></div>
+            </div>
+
+            <!-- Customer Details -->
+            <div class="mo-card">
+              <div class="mo-card-title">👤 Customer Details</div>
+              <div class="mo-field">
+                <label for="moCustomerPhone">Phone Number * <span style="font-size:0.75rem;font-weight:400;color:#64748b;">(auto-lookup on type)</span></label>
+                <input id="moCustomerPhone" type="text" placeholder="e.g. 0770 12 34 56" autocomplete="off" />
+              </div>
+              <div id="moCustomerLookupChip" class="mo-chip info hidden"></div>
+              <div class="mo-field" style="margin-top:8px;">
+                <label for="moCustomerName">Customer Name</label>
+                <input id="moCustomerName" type="text" placeholder="Customer full name..." autocomplete="off" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Delivery Location & Fees -->
+          <div class="mo-grid-2">
+            <!-- Location Details -->
+            <div class="mo-card">
+              <div class="mo-card-title">📍 Delivery Location</div>
+              <div class="mo-field">
+                <label for="moDeliveryAddress">Street / Neighborhood / Address *</label>
+                <input id="moDeliveryAddress" type="text" placeholder="e.g. حي النصر قرب مسجد السلام, طابق 2" />
+              </div>
+              <div class="mo-field">
+                <label for="moCoordinates">GPS Coordinates or Google Maps Link</label>
+                <input id="moCoordinates" type="text" placeholder="Paste Maps URL or lat, lng (e.g. 34.8512, 5.7289)" />
+              </div>
+              <div id="moDistanceChip" class="mo-chip info hidden"></div>
+            </div>
+
+            <!-- Fees & Payment -->
+            <div class="mo-card">
+              <div class="mo-card-title">💵 Fees &amp; Payment</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="mo-field">
+                  <label for="moDeliveryFee">Delivery Fee (DA)</label>
+                  <input id="moDeliveryFee" type="number" min="0" step="10" value="150" />
+                </div>
+                <div class="mo-field">
+                  <label for="moServiceFee">Service Fee (DA)</label>
+                  <input id="moServiceFee" type="number" min="0" step="10" value="0" />
+                </div>
+              </div>
+              <div class="mo-field" style="margin-top:6px;">
+                <label for="moPaymentMethod">Payment Method</label>
+                <select id="moPaymentMethod">
+                  <option value="cash_on_delivery">Cash on delivery (الدفع عند الاستلام)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Menu Items & Customizations -->
+          <div class="mo-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div class="mo-card-title" style="margin:0;">🍽️ Menu Items &amp; Customizations</div>
+              <button type="button" class="btn-ghost" id="moToggleCustomItemBtn" style="font-size:0.8rem;padding:4px 8px;">
+                ➕ Add Custom Off-Menu Item
+              </button>
+            </div>
+
+            <!-- Standard Menu Item Selector -->
+            <div id="moStandardItemSection">
+              <div class="mo-item-picker-row">
+                <div style="flex:1;min-width:200px;">
+                  <label for="moItemSearch" style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Filter Menu</label>
+                  <input id="moItemSearch" type="text" placeholder="Search item by name or category..." style="padding:6px 10px;font-size:0.85rem;" />
+                </div>
+                <div style="flex:2;min-width:240px;">
+                  <label for="moItemSelect" style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Select Item</label>
+                  <select id="moItemSelect" style="padding:6px 10px;font-size:0.85rem;">
+                    <option value="">-- Select a restaurant first --</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Item Configuration Box (Pricing options, variants, supplements) -->
+              <div id="moItemConfigBox" class="mo-item-config-box hidden">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <strong id="moConfigItemName" style="font-size:0.95rem;"></strong>
+                  <span id="moConfigItemBasePrice" style="font-weight:700;color:#e65100;"></span>
+                </div>
+
+                <!-- Sizes / Pricing Options -->
+                <div id="moSizesGroup" class="mo-options-group hidden">
+                  <div class="mo-options-title">Size / Portion (الحجم)</div>
+                  <div id="moSizesPills" class="mo-pills"></div>
+                </div>
+
+                <!-- Variants -->
+                <div id="moVariantsGroup" class="mo-options-group hidden">
+                  <div class="mo-options-title">Variant / Flavor (النوع)</div>
+                  <div id="moVariantsPills" class="mo-pills"></div>
+                </div>
+
+                <!-- Supplements -->
+                <div id="moSupplementsGroup" class="mo-options-group hidden">
+                  <div class="mo-options-title">Supplements &amp; Extras (إضافات)</div>
+                  <div id="moSupplementsList" class="mo-supplements-list"></div>
+                </div>
+
+                <!-- Item Quantity & Special Instructions -->
+                <div style="display:grid;grid-template-columns:120px 1fr;gap:12px;margin-top:10px;align-items:flex-end;">
+                  <div>
+                    <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Quantity</label>
+                    <div class="mo-qty-control">
+                      <button type="button" class="mo-btn-qty" id="moConfigQtyMinus">-</button>
+                      <input id="moConfigQty" type="number" value="1" min="1" max="99" style="width:44px;text-align:center;padding:4px;" />
+                      <button type="button" class="mo-btn-qty" id="moConfigQtyPlus">+</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Item Notes / Special Instructions</label>
+                    <input id="moConfigNotes" type="text" placeholder="e.g. Extra sauce, no onions..." style="padding:6px 10px;font-size:0.85rem;" />
+                  </div>
+                </div>
+
+                <div style="margin-top:12px;text-align:right;">
+                  <button type="button" class="btn-primary" id="moAddItemBtn" style="padding:8px 16px;font-size:0.88rem;">
+                    ➕ Add Item to Cart (<span id="moConfigTotalBadge">0</span> DA)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Off-Menu Item Form -->
+            <div id="moCustomItemSection" class="mo-item-config-box hidden" style="background:#fff8e1;border-color:#ffe082;">
+              <div style="font-weight:700;font-size:0.88rem;margin-bottom:8px;color:#b45309;">
+                Custom Off-Menu Line Item (بند خاص)
+              </div>
+              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+                <div>
+                  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Item Description *</label>
+                  <input id="moCustomName" type="text" placeholder="e.g. Custom Family Platter" />
+                </div>
+                <div>
+                  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Unit Price (DA) *</label>
+                  <input id="moCustomPrice" type="number" min="0" step="50" placeholder="0" />
+                </div>
+                <div>
+                  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Quantity</label>
+                  <input id="moCustomQty" type="number" min="1" value="1" />
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <input id="moCustomNotes" type="text" placeholder="Special note for custom item..." style="flex:1;margin-right:10px;" />
+                <button type="button" class="btn-primary" id="moAddCustomItemBtn" style="padding:8px 14px;font-size:0.85rem;white-space:nowrap;">
+                  Add Custom Item
+                </button>
+              </div>
+            </div>
+
+            <!-- Order Cart Table -->
+            <div style="margin-top:14px;">
+              <div style="font-size:0.85rem;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;">
+                <span>Selected Items Cart (<span id="moCartCount">0</span>)</span>
+                <span id="moLiveSubtotal" style="color:#e65100;">Subtotal: 0 DA</span>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="mo-cart-table">
+                  <thead>
+                    <tr>
+                      <th style="min-width:180px;">Item Details</th>
+                      <th style="width:90px;">Unit Price</th>
+                      <th style="width:110px;">Qty</th>
+                      <th style="width:90px;">Total</th>
+                      <th style="width:40px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="moCartTbody">
+                    <tr>
+                      <td colspan="5" style="text-align:center;color:#9ca3af;padding:16px;">
+                        No items added yet. Select items above to add to cart.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Promo Code & General Notes -->
+          <div class="mo-grid-2">
+            <div class="mo-card">
+              <div class="mo-card-title">🎟️ Promo Code</div>
+              <div style="display:flex;gap:8px;">
+                <input id="moPromoCode" type="text" placeholder="Enter coupon code (e.g. SAHLA10)" style="text-transform:uppercase;" />
+                <button type="button" class="btn-ghost" id="moApplyPromoBtn" style="white-space:nowrap;padding:8px 14px;">Apply</button>
+              </div>
+              <div id="moPromoStatus" class="mo-chip hidden"></div>
+            </div>
+
+            <div class="mo-card">
+              <div class="mo-card-title">📝 General Order Notes</div>
+              <textarea id="moOrderNotes" rows="2" placeholder="Delivery instructions, customer notes, call upon arrival..."></textarea>
+            </div>
+          </div>
+
+          <!-- Step 5: Financial Summary Box -->
+          <div class="mo-summary-box">
+            <div class="mo-summary-item">
+              <div class="label">Subtotal</div>
+              <div class="value" id="moSumSubtotal">0 DA</div>
+            </div>
+            <div class="mo-summary-item">
+              <div class="label">Delivery Fee</div>
+              <div class="value" id="moSumDelivery">0 DA</div>
+            </div>
+            <div class="mo-summary-item">
+              <div class="label">Service Fee</div>
+              <div class="value" id="moSumService">0 DA</div>
+            </div>
+            <div class="mo-summary-item">
+              <div class="label">Discount</div>
+              <div class="value" id="moSumDiscount" style="color:#ef5350;">-0 DA</div>
+            </div>
+            <div class="mo-summary-item total">
+              <div class="label">Total Amount</div>
+              <div class="value" id="moSumTotal">0 DA</div>
+            </div>
+            <div class="mo-summary-item cash">
+              <div class="label">Cash to Collect</div>
+              <div class="value" id="moSumCash">0 DA</div>
+            </div>
+          </div>
+
+          <!-- Result / Notification Banner -->
+          <div id="moResultBanner" class="force-push-result hidden"></div>
+        </div>
+
+        <!-- Step 6: Dual Action Execution Footer -->
+        <div class="mo-actions-footer">
+          <button type="button" class="btn-mo-cancel" id="moCancelBtn">Cancel</button>
+          <button type="button" class="btn-mo-send-restaurant" id="moSendRestaurantBtn" title="Sends pending order to restaurant to accept &amp; prepare">
+            🛎️ Send Order to Restaurant (Pending)
+          </button>
+          <button type="button" class="btn-mo-broadcast-couriers" id="moBroadcastCouriersBtn" title="Creates preparing order and broadcasts immediately to couriers">
+            🛵 Direct Broadcast to Delivery Men (Preparing)
+          </button>
         </div>
       </div>
     </div>
@@ -4620,9 +5218,859 @@
       if (cancelModalDismiss) cancelModalDismiss.onclick = () => closeCancelOrderModal();
       const cancelModalConfirm = $('cancelModalConfirm');
       if (cancelModalConfirm) cancelModalConfirm.onclick = () => void submitCancelOrderFromModal();
+
+      /* ========================================================================= */
+      /* Manual Order Creation Logic                                              */
+      /* ========================================================================= */
+      let moRestaurantsList = [];
+      let moMenuItemsList = [];
+      let moSelectedRestaurant = null;
+      let moSelectedMenuItem = null;
+      let moSelectedSize = null;
+      let moSelectedVariant = null;
+      let moSelectedSupplements = [];
+      let moCart = [];
+      let moAppliedPromo = null;
+      let moPhoneLookupTimer = null;
+
+      function parseMapsCoordinates(input) {
+        if (!input) return null;
+        const str = String(input).trim();
+        const directMatch = str.match(/^(-?\d+(\.\d+)?)[,\s]+(-?\d+(\.\d+)?)$/);
+        if (directMatch) {
+          const lat = parseFloat(directMatch[1]);
+          const lng = parseFloat(directMatch[3]);
+          if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            return { latitude: lat, longitude: lng };
+          }
+        }
+        const qMatch = str.match(/[?&]q=(-?\d+(\.\d+)?),(-?\d+(\.\d+)?)/);
+        if (qMatch) {
+          const lat = parseFloat(qMatch[1]);
+          const lng = parseFloat(qMatch[3]);
+          if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            return { latitude: lat, longitude: lng };
+          }
+        }
+        const atMatch = str.match(/@(-?\d+(\.\d+)?),(-?\d+(\.\d+)?)/);
+        if (atMatch) {
+          const lat = parseFloat(atMatch[1]);
+          const lng = parseFloat(atMatch[3]);
+          if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            return { latitude: lat, longitude: lng };
+          }
+        }
+        return null;
+      }
+
+      function computeHaversineKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLon = ((lon2 - lon1) * Math.PI) / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return Number((R * c).toFixed(2));
+      }
+
+      function estimateFeeFromDistance(distKm) {
+        if (!distKm || distKm <= 0) return 150;
+        if (distKm <= 1.5) return 150;
+        if (distKm <= 2.0) return 180;
+        if (distKm <= 3.5) return 200;
+        if (distKm <= 4.0) return 250;
+        if (distKm <= 5.0) return 280;
+        if (distKm <= 7.0) return 320;
+        if (distKm <= 8.0) return 350;
+        if (distKm <= 9.0) return 380;
+        if (distKm <= 10.0) return 400;
+        return Math.round(400 + (distKm - 10) * 35);
+      }
+
+      async function openManualOrderModal() {
+        const modal = $('manualOrderModal');
+        if (!modal) return;
+
+        moCart = [];
+        moAppliedPromo = null;
+        moSelectedMenuItem = null;
+        moSelectedRestaurant = null;
+        moSelectedSize = null;
+        moSelectedVariant = null;
+        moSelectedSupplements = [];
+
+        $('moRestaurantSelect').value = '';
+        $('moCustomerPhone').value = '';
+        $('moCustomerName').value = '';
+        $('moDeliveryAddress').value = '';
+        $('moCoordinates').value = '';
+        $('moDeliveryFee').value = '150';
+        $('moServiceFee').value = '0';
+        $('moPromoCode').value = '';
+        $('moOrderNotes').value = '';
+        $('moItemSearch').value = '';
+
+        $('moRestaurantInfo').classList.add('hidden');
+        $('moCustomerLookupChip').classList.add('hidden');
+        $('moDistanceChip').classList.add('hidden');
+        $('moPromoStatus').classList.add('hidden');
+        $('moItemConfigBox').classList.add('hidden');
+        $('moCustomItemSection').classList.add('hidden');
+        $('moResultBanner').classList.add('hidden');
+
+        renderMoCart();
+        recalculateMoTotals();
+
+        modal.classList.remove('hidden');
+
+        try {
+          const res = await api('/manual-order/restaurants');
+          moRestaurantsList = res.restaurants || [];
+          const select = $('moRestaurantSelect');
+          select.innerHTML = '<option value="">-- Choose a restaurant --</option>';
+          for (const r of moRestaurantsList) {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            const statusIcon = r.is_open ? '🟢' : '🔴';
+            const city = r.city || r.wilaya || 'Biskra';
+            opt.textContent = `${statusIcon} ${r.name} (${city})`;
+            select.appendChild(opt);
+          }
+        } catch (e) {
+          console.error('Failed to load restaurants for manual order:', e);
+        }
+      }
+
+      function closeManualOrderModal() {
+        const modal = $('manualOrderModal');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      async function onMoRestaurantChange() {
+        const restId = $('moRestaurantSelect').value;
+        moSelectedRestaurant = moRestaurantsList.find((r) => r.id === restId) || null;
+
+        const infoChip = $('moRestaurantInfo');
+        const itemSelect = $('moItemSelect');
+        itemSelect.innerHTML = '<option value="">-- Loading menu items... --</option>';
+        $('moItemConfigBox').classList.add('hidden');
+
+        if (!moSelectedRestaurant) {
+          infoChip.classList.add('hidden');
+          itemSelect.innerHTML = '<option value="">-- Select a restaurant first --</option>';
+          return;
+        }
+
+        const isOpen = moSelectedRestaurant.is_open;
+        infoChip.className = `mo-chip ${isOpen ? 'open' : 'closed'}`;
+        infoChip.textContent = `${isOpen ? '🟢 Open for orders' : '🔴 Currently closed'} | Phone: ${moSelectedRestaurant.phone || '—'} | ${moSelectedRestaurant.address_line1 || 'Biskra'}`;
+        infoChip.classList.remove('hidden');
+
+        recalculateDistanceAndFee();
+
+        try {
+          const res = await api(`/manual-order/menu-items?restaurant_id=${encodeURIComponent(restId)}`);
+          moMenuItemsList = res.items || [];
+          renderMoMenuItemsPicker();
+        } catch (e) {
+          console.error('Failed to load menu items:', e);
+          itemSelect.innerHTML = '<option value="">Error loading items</option>';
+        }
+      }
+
+      function renderMoMenuItemsPicker(filterText) {
+        const itemSelect = $('moItemSelect');
+        itemSelect.innerHTML = '<option value="">-- Select an item to configure --</option>';
+
+        const q = String(filterText || '').trim().toLowerCase();
+        const filtered = q
+          ? moMenuItemsList.filter(
+              (it) =>
+                (it.name && it.name.toLowerCase().includes(q)) ||
+                (it.name_ar && it.name_ar.includes(q)) ||
+                (it.category && it.category.toLowerCase().includes(q)),
+            )
+          : moMenuItemsList;
+
+        if (!filtered.length) {
+          itemSelect.innerHTML = '<option value="">No items match search</option>';
+          return;
+        }
+
+        const categories = {};
+        for (const item of filtered) {
+          const cat = item.category || 'General';
+          if (!categories[cat]) categories[cat] = [];
+          categories[cat].push(item);
+        }
+
+        for (const [catName, items] of Object.entries(categories)) {
+          const optGroup = document.createElement('optgroup');
+          optGroup.label = catName;
+          for (const item of items) {
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            const priceStr = item.price > 0 ? `${item.price} DA` : 'Varied prices';
+            opt.textContent = `${item.name}${item.name_ar ? ' (' + item.name_ar + ')' : ''} - ${priceStr}`;
+            optGroup.appendChild(opt);
+          }
+          itemSelect.appendChild(optGroup);
+        }
+      }
+
+      function onMoItemSelectChange() {
+        const itemId = $('moItemSelect').value;
+        moSelectedMenuItem = moMenuItemsList.find((it) => it.id === itemId) || null;
+        moSelectedSize = null;
+        moSelectedVariant = null;
+        moSelectedSupplements = [];
+
+        const box = $('moItemConfigBox');
+        if (!moSelectedMenuItem) {
+          box.classList.add('hidden');
+          return;
+        }
+
+        box.classList.remove('hidden');
+        $('moConfigItemName').textContent = `${moSelectedMenuItem.name}${moSelectedMenuItem.name_ar ? ' (' + moSelectedMenuItem.name_ar + ')' : ''}`;
+        $('moConfigItemBasePrice').textContent = `${moSelectedMenuItem.price} DA`;
+        $('moConfigQty').value = '1';
+        $('moConfigNotes').value = '';
+
+        // 1. Sizes
+        const sizesGroup = $('moSizesGroup');
+        const sizesPills = $('moSizesPills');
+        sizesPills.innerHTML = '';
+        const pricingOptions = Array.isArray(moSelectedMenuItem.pricing_options) ? moSelectedMenuItem.pricing_options : [];
+
+        if (pricingOptions.length > 0) {
+          sizesGroup.classList.remove('hidden');
+          pricingOptions.forEach((opt, idx) => {
+            const label = document.createElement('label');
+            label.className = `mo-pill-label ${idx === 0 ? 'active' : ''}`;
+            const sizeLabel = opt.size_ar || opt.size || opt.size_latin || `Size ${idx + 1}`;
+            label.innerHTML = `
+              <input type="radio" name="mo_size_radio" value="${opt.id || idx}" ${idx === 0 ? 'checked' : ''} style="display:none;" />
+              <span>${sizeLabel} (<strong>${opt.price} DA</strong>)</span>
+            `;
+            if (idx === 0) {
+              moSelectedSize = { size: sizeLabel, price: parseFloat(opt.price) || 0 };
+            }
+            label.onclick = () => {
+              document.querySelectorAll('#moSizesPills .mo-pill-label').forEach((el) => el.classList.remove('active'));
+              label.classList.add('active');
+              moSelectedSize = { size: sizeLabel, price: parseFloat(opt.price) || 0 };
+              updateMoConfigPricePreview();
+            };
+            sizesPills.appendChild(label);
+          });
+        } else {
+          sizesGroup.classList.add('hidden');
+        }
+
+        // 2. Variants
+        const variantsGroup = $('moVariantsGroup');
+        const variantsPills = $('moVariantsPills');
+        variantsPills.innerHTML = '';
+        const rawVariants = Array.isArray(moSelectedMenuItem.variants) ? moSelectedMenuItem.variants : [];
+        const validVariants = rawVariants.filter((v) => v && (v.name || v.name_ar));
+
+        if (validVariants.length > 0) {
+          variantsGroup.classList.remove('hidden');
+          validVariants.forEach((v, idx) => {
+            const label = document.createElement('label');
+            label.className = `mo-pill-label ${idx === 0 ? 'active' : ''}`;
+            const vName = v.name_ar || v.name || v.name_latin || `Option ${idx + 1}`;
+            label.innerHTML = `
+              <input type="radio" name="mo_variant_radio" value="${v.id || idx}" ${idx === 0 ? 'checked' : ''} style="display:none;" />
+              <span>${vName}</span>
+            `;
+            if (idx === 0) {
+              moSelectedVariant = vName;
+            }
+            label.onclick = () => {
+              document.querySelectorAll('#moVariantsPills .mo-pill-label').forEach((el) => el.classList.remove('active'));
+              label.classList.add('active');
+              moSelectedVariant = vName;
+            };
+            variantsPills.appendChild(label);
+          });
+        } else {
+          variantsGroup.classList.add('hidden');
+        }
+
+        // 3. Supplements
+        const suppGroup = $('moSupplementsGroup');
+        const suppList = $('moSupplementsList');
+        suppList.innerHTML = '';
+        const rawSupps = Array.isArray(moSelectedMenuItem.supplements) ? moSelectedMenuItem.supplements : [];
+
+        if (rawSupps.length > 0) {
+          suppGroup.classList.remove('hidden');
+          rawSupps.forEach((s, idx) => {
+            const itemDiv = document.createElement('label');
+            itemDiv.className = 'mo-supp-item';
+            const sName = s.name_ar || s.name || 'Supplement';
+            const sPrice = parseFloat(s.price) || 0;
+            itemDiv.innerHTML = `
+              <input type="checkbox" data-supp-idx="${idx}" />
+              <span>${sName} (<strong>+${sPrice} DA</strong>)</span>
+            `;
+            const chk = itemDiv.querySelector('input');
+            chk.onchange = () => {
+              moSelectedSupplements = [];
+              suppList.querySelectorAll('input:checked').forEach((el) => {
+                const sObj = rawSupps[parseInt(el.getAttribute('data-supp-idx'), 10)];
+                if (sObj) {
+                  moSelectedSupplements.push({
+                    name: sObj.name_ar || sObj.name,
+                    price: parseFloat(sObj.price) || 0,
+                  });
+                }
+              });
+              updateMoConfigPricePreview();
+            };
+            suppList.appendChild(itemDiv);
+          });
+        } else {
+          suppGroup.classList.add('hidden');
+        }
+
+        updateMoConfigPricePreview();
+      }
+
+      function updateMoConfigPricePreview() {
+        if (!moSelectedMenuItem) return;
+        const base = moSelectedSize ? moSelectedSize.price : parseFloat(moSelectedMenuItem.price) || 0;
+        const suppSum = moSelectedSupplements.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0);
+        const qty = Math.max(1, parseInt($('moConfigQty').value, 10) || 1);
+        const total = (base + suppSum) * qty;
+        $('moConfigTotalBadge').textContent = total.toLocaleString();
+      }
+
+      function addCurrentConfiguredItemToCart() {
+        if (!moSelectedMenuItem) return;
+        const base = moSelectedSize ? moSelectedSize.price : parseFloat(moSelectedMenuItem.price) || 0;
+        const suppSum = moSelectedSupplements.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0);
+        const unitPrice = base + suppSum;
+        const qty = Math.max(1, parseInt($('moConfigQty').value, 10) || 1);
+        const notes = $('moConfigNotes').value.trim();
+
+        const descParts = [];
+        if (moSelectedSize) descParts.push(`Size: ${moSelectedSize.size}`);
+        if (moSelectedVariant) descParts.push(`Type: ${moSelectedVariant}`);
+        if (moSelectedSupplements.length > 0) {
+          descParts.push(`Extras: ${moSelectedSupplements.map((s) => s.name).join(', ')}`);
+        }
+        if (notes) descParts.push(`Note: ${notes}`);
+
+        moCart.push({
+          id: 'mo_item_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          menu_item_id: moSelectedMenuItem.id,
+          name: moSelectedMenuItem.name,
+          name_ar: moSelectedMenuItem.name_ar || null,
+          details_summary: descParts.join(' · '),
+          unit_price: unitPrice,
+          quantity: qty,
+          total_price: unitPrice * qty,
+          special_instructions: notes || null,
+          customizations: {
+            selected_size: moSelectedSize ? moSelectedSize.size : null,
+            selected_variants: moSelectedVariant ? [moSelectedVariant] : [],
+            selected_supplements: moSelectedSupplements,
+            special_instructions: notes || null,
+          },
+        });
+
+        $('moItemConfigBox').classList.add('hidden');
+        $('moItemSelect').value = '';
+        moSelectedMenuItem = null;
+
+        renderMoCart();
+        recalculateMoTotals();
+      }
+
+      function addCustomItemToCart() {
+        const name = $('moCustomName').value.trim();
+        const price = parseFloat($('moCustomPrice').value) || 0;
+        const qty = Math.max(1, parseInt($('moCustomQty').value, 10) || 1);
+        const notes = $('moCustomNotes').value.trim();
+
+        if (!name) {
+          alert('Please enter a description for the custom item.');
+          $('moCustomName').focus();
+          return;
+        }
+        if (price <= 0) {
+          alert('Please enter a valid price for the custom item.');
+          $('moCustomPrice').focus();
+          return;
+        }
+
+        moCart.push({
+          id: 'mo_custom_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          menu_item_id: null,
+          name: name,
+          name_ar: null,
+          details_summary: notes ? `Note: ${notes}` : 'Custom line item',
+          unit_price: price,
+          quantity: qty,
+          total_price: price * qty,
+          special_instructions: notes || null,
+          customizations: {
+            is_custom_item: true,
+            special_instructions: notes || null,
+          },
+        });
+
+        $('moCustomName').value = '';
+        $('moCustomPrice').value = '';
+        $('moCustomQty').value = '1';
+        $('moCustomNotes').value = '';
+        $('moCustomItemSection').classList.add('hidden');
+
+        renderMoCart();
+        recalculateMoTotals();
+      }
+
+      function renderMoCart() {
+        const tbody = $('moCartTbody');
+        const countSpan = $('moCartCount');
+        const liveSubtotal = $('moLiveSubtotal');
+
+        countSpan.textContent = String(moCart.length);
+        if (!moCart.length) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align:center;color:#9ca3af;padding:16px;">
+                No items added yet. Select items above to add to cart.
+              </td>
+            </tr>
+          `;
+          liveSubtotal.textContent = 'Subtotal: 0 DA';
+          return;
+        }
+
+        let subtotal = 0;
+        tbody.innerHTML = '';
+        moCart.forEach((it, idx) => {
+          subtotal += it.total_price;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>
+              <div style="font-weight:700;">${it.name}${it.name_ar ? ' (' + it.name_ar + ')' : ''}</div>
+              ${it.details_summary ? `<div style="font-size:0.75rem;color:#64748b;">${it.details_summary}</div>` : ''}
+            </td>
+            <td>${it.unit_price} DA</td>
+            <td>
+              <div class="mo-qty-control">
+                <button type="button" class="mo-btn-qty" data-cart-minus="${idx}">-</button>
+                <span style="font-weight:700;min-width:20px;text-align:center;">${it.quantity}</span>
+                <button type="button" class="mo-btn-qty" data-cart-plus="${idx}">+</button>
+              </div>
+            </td>
+            <td style="font-weight:700;">${it.total_price} DA</td>
+            <td>
+              <button type="button" class="mo-btn-del" data-cart-del="${idx}" title="Remove item">🗑️</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        liveSubtotal.textContent = `Subtotal: ${subtotal.toLocaleString()} DA`;
+
+        tbody.querySelectorAll('[data-cart-minus]').forEach((b) => {
+          b.onclick = () => {
+            const idx = parseInt(b.getAttribute('data-cart-minus'), 10);
+            if (moCart[idx]) {
+              if (moCart[idx].quantity > 1) {
+                moCart[idx].quantity -= 1;
+                moCart[idx].total_price = moCart[idx].unit_price * moCart[idx].quantity;
+              } else {
+                moCart.splice(idx, 1);
+              }
+              renderMoCart();
+              recalculateMoTotals();
+            }
+          };
+        });
+
+        tbody.querySelectorAll('[data-cart-plus]').forEach((b) => {
+          b.onclick = () => {
+            const idx = parseInt(b.getAttribute('data-cart-plus'), 10);
+            if (moCart[idx]) {
+              moCart[idx].quantity += 1;
+              moCart[idx].total_price = moCart[idx].unit_price * moCart[idx].quantity;
+              renderMoCart();
+              recalculateMoTotals();
+            }
+          };
+        });
+
+        tbody.querySelectorAll('[data-cart-del]').forEach((b) => {
+          b.onclick = () => {
+            const idx = parseInt(b.getAttribute('data-cart-del'), 10);
+            if (moCart[idx]) {
+              moCart.splice(idx, 1);
+              renderMoCart();
+              recalculateMoTotals();
+            }
+          };
+        });
+      }
+
+      function recalculateDistanceAndFee() {
+        const coordsStr = $('moCoordinates').value.trim();
+        const distChip = $('moDistanceChip');
+
+        if (!coordsStr || !moSelectedRestaurant) {
+          distChip.classList.add('hidden');
+          return;
+        }
+
+        const coords = parseMapsCoordinates(coordsStr);
+        if (!coords) {
+          distChip.className = 'mo-chip info';
+          distChip.textContent = '⚠️ Coordinates not detected (use direct lat,lng or Google Maps link)';
+          distChip.classList.remove('hidden');
+          return;
+        }
+
+        const rLat = parseFloat(moSelectedRestaurant.latitude);
+        const rLng = parseFloat(moSelectedRestaurant.longitude);
+
+        if (Number.isFinite(rLat) && Number.isFinite(rLng)) {
+          const distKm = computeHaversineKm(rLat, rLng, coords.latitude, coords.longitude);
+          const suggestedFee = estimateFeeFromDistance(distKm);
+
+          distChip.className = 'mo-chip info';
+          distChip.textContent = `📍 Distance: ~${distKm} km | Suggested Delivery Fee: ${suggestedFee} DA`;
+          distChip.classList.remove('hidden');
+
+          $('moDeliveryFee').value = String(suggestedFee);
+          recalculateMoTotals();
+        } else {
+          distChip.className = 'mo-chip info';
+          distChip.textContent = `📍 Delivery Coords: ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`;
+          distChip.classList.remove('hidden');
+        }
+      }
+
+      function onMoCustomerPhoneInput() {
+        clearTimeout(moPhoneLookupTimer);
+        const phone = $('moCustomerPhone').value.trim();
+        const lookupChip = $('moCustomerLookupChip');
+
+        if (phone.length < 8) {
+          lookupChip.classList.add('hidden');
+          return;
+        }
+
+        moPhoneLookupTimer = setTimeout(async () => {
+          try {
+            const res = await api(`/manual-order/customer-lookup?phone=${encodeURIComponent(phone)}`);
+            if (res.found && res.customer) {
+              lookupChip.className = 'mo-chip info';
+              lookupChip.textContent = `👤 Found: ${res.customer.name || 'Account'} (${res.customer.phone})`;
+              lookupChip.classList.remove('hidden');
+
+              if (!$('moCustomerName').value.trim() && res.customer.name) {
+                $('moCustomerName').value = res.customer.name;
+              }
+
+              if (res.customer.address) {
+                const addr = res.customer.address;
+                const fullText = addr.fullAddress || addr.street || '';
+                if (!$('moDeliveryAddress').value.trim() && fullText) {
+                  $('moDeliveryAddress').value = fullText;
+                }
+                if (!$('moCoordinates').value.trim() && addr.latitude && addr.longitude) {
+                  $('moCoordinates').value = `${addr.latitude}, ${addr.longitude}`;
+                  recalculateDistanceAndFee();
+                }
+              }
+            } else {
+              lookupChip.className = 'mo-chip info';
+              lookupChip.textContent = '👤 New Guest Customer';
+              lookupChip.classList.remove('hidden');
+            }
+          } catch (e) {
+            console.warn('Customer lookup error:', e);
+          }
+        }, 400);
+      }
+
+      async function applyPromoCode() {
+        const code = $('moPromoCode').value.trim().toUpperCase();
+        const statusChip = $('moPromoStatus');
+        if (!code) {
+          moAppliedPromo = null;
+          statusChip.classList.add('hidden');
+          recalculateMoTotals();
+          return;
+        }
+
+        statusChip.className = 'mo-chip info';
+        statusChip.textContent = 'Checking promo code...';
+        statusChip.classList.remove('hidden');
+
+        const subtotal = moCart.reduce((sum, it) => sum + it.total_price, 0);
+        const delFee = parseFloat($('moDeliveryFee').value) || 0;
+
+        try {
+          const res = await api('/manual-order/validate-promo', {
+            method: 'POST',
+            body: JSON.stringify({
+              code,
+              restaurant_id: moSelectedRestaurant?.id,
+              subtotal,
+              delivery_fee: delFee,
+            }),
+          });
+
+          if (res.valid && res.promo) {
+            moAppliedPromo = res.promo;
+            statusChip.className = 'mo-chip promo';
+            statusChip.textContent = `🎁 Code ${res.promo.code} applied: -${res.promo.discount_amount} DA`;
+            recalculateMoTotals();
+          } else {
+            moAppliedPromo = null;
+            statusChip.className = 'mo-chip closed';
+            statusChip.textContent = `❌ ${res.message || 'Invalid promo code'}`;
+            recalculateMoTotals();
+          }
+        } catch (e) {
+          moAppliedPromo = null;
+          statusChip.className = 'mo-chip closed';
+          statusChip.textContent = `❌ Error: ${e.message || 'Validation failed'}`;
+          recalculateMoTotals();
+        }
+      }
+
+      function recalculateMoTotals() {
+        const subtotal = moCart.reduce((sum, it) => sum + it.total_price, 0);
+        const delFee = Math.max(0, parseFloat($('moDeliveryFee').value) || 0);
+        const servFee = Math.max(0, parseFloat($('moServiceFee').value) || 0);
+        const discount = moAppliedPromo ? Math.min(subtotal + delFee, moAppliedPromo.discount_amount || 0) : 0;
+
+        const total = Math.max(0, subtotal + delFee + servFee - discount);
+        const cashToCollect = Math.floor(total / 10) * 10;
+
+        $('moSumSubtotal').textContent = `${subtotal.toLocaleString()} DA`;
+        $('moSumDelivery').textContent = `${delFee.toLocaleString()} DA`;
+        $('moSumService').textContent = `${servFee.toLocaleString()} DA`;
+        $('moSumDiscount').textContent = `-${discount.toLocaleString()} DA`;
+        $('moSumTotal').textContent = `${total.toLocaleString()} DA`;
+        $('moSumCash').textContent = `${cashToCollect.toLocaleString()} DA`;
+      }
+
+      async function submitManualOrder(executionMode) {
+        const banner = $('moResultBanner');
+        banner.classList.add('hidden');
+
+        if (!moSelectedRestaurant) {
+          alert('Please select a restaurant first.');
+          $('moRestaurantSelect').focus();
+          return;
+        }
+
+        const phone = $('moCustomerPhone').value.trim();
+        if (!phone || phone.length < 8) {
+          alert('Please enter a valid customer phone number.');
+          $('moCustomerPhone').focus();
+          return;
+        }
+
+        const address = $('moDeliveryAddress').value.trim();
+        if (!address) {
+          alert('Please enter a delivery address or street description.');
+          $('moDeliveryAddress').focus();
+          return;
+        }
+
+        if (!moCart.length) {
+          alert('Please add at least one item to the order cart.');
+          return;
+        }
+
+        const restName = moSelectedRestaurant.name_ar || moSelectedRestaurant.name || 'the restaurant';
+
+        const confirmMsg =
+          executionMode === 'send_to_restaurant'
+            ? `Send this manual order to ${restName} as pending?\n\nThe restaurant owner/staff will receive a push notification to accept and prepare the order.`
+            : `Directly broadcast this manual order to all available delivery couriers?\n\nThe order will be set to 'preparing' and dispatched immediately to active couriers.`;
+
+        if (!confirm(confirmMsg)) return;
+
+        const parsedCoords = parseMapsCoordinates($('moCoordinates').value.trim());
+        const safeLat = parsedCoords ? parsedCoords.latitude : parseFloat(moSelectedRestaurant.latitude) || 34.8516;
+        const safeLng = parsedCoords ? parsedCoords.longitude : parseFloat(moSelectedRestaurant.longitude) || 5.7281;
+
+        const subtotal = moCart.reduce((sum, it) => sum + it.total_price, 0);
+        const delFee = Math.max(0, parseFloat($('moDeliveryFee').value) || 0);
+        const servFee = Math.max(0, parseFloat($('moServiceFee').value) || 0);
+        const discount = moAppliedPromo ? Math.min(subtotal + delFee, moAppliedPromo.discount_amount || 0) : 0;
+
+        const payload = {
+          restaurant_id: moSelectedRestaurant.id,
+          execution_mode: executionMode,
+          customer_phone: phone,
+          customer_name: $('moCustomerName').value.trim() || null,
+          delivery_address: {
+            fullAddress: address,
+            street: address,
+            city: moSelectedRestaurant.city || 'Biskra',
+            latitude: safeLat,
+            longitude: safeLng,
+            instructions: $('moOrderNotes').value.trim() || null,
+          },
+          items: moCart,
+          subtotal: subtotal,
+          delivery_fee: delFee,
+          service_fee: servFee,
+          promo_code: moAppliedPromo ? moAppliedPromo.code : null,
+          promo_id: moAppliedPromo ? moAppliedPromo.id : null,
+          discount_amount: discount,
+          special_instructions: $('moOrderNotes').value.trim() || null,
+          payment_method: $('moPaymentMethod').value || 'cash_on_delivery',
+        };
+
+        const btnSend = $('moSendRestaurantBtn');
+        const btnBroadcast = $('moBroadcastCouriersBtn');
+        btnSend.disabled = true;
+        btnBroadcast.disabled = true;
+
+        banner.className = 'force-push-result warn';
+        banner.textContent = 'Creating order and notifying recipients...';
+        banner.classList.remove('hidden');
+
+        try {
+          const res = await api('/manual-order/create', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
+
+          banner.className = 'force-push-result ok';
+          const notifMsg =
+            executionMode === 'direct_broadcast'
+              ? `Broadcast sent to ${res.notifications?.courier_count || 0} online couriers.`
+              : `Order sent to ${restName} ops for confirmation.`;
+          banner.textContent = `✅ Order #${res.order_number} created successfully! ${notifMsg}`;
+
+          loadOrders().catch(() => {});
+          loadAlerts().catch(() => {});
+
+          setTimeout(() => {
+            closeManualOrderModal();
+          }, 2200);
+        } catch (e) {
+          banner.className = 'force-push-result err';
+          banner.textContent = `❌ ${e.message || 'Failed to create manual order'}`;
+        } finally {
+          btnSend.disabled = false;
+          btnBroadcast.disabled = false;
+        }
+      }
+
+      // Attach Manual Order Event Listeners
+      const openMoBtn = $('openManualOrderModalBtn');
+      if (openMoBtn) openMoBtn.onclick = () => openManualOrderModal();
+
+      const moCloseBtn = $('moCloseBtn');
+      if (moCloseBtn) moCloseBtn.onclick = () => closeManualOrderModal();
+
+      const moCancelBtn = $('moCancelBtn');
+      if (moCancelBtn) moCancelBtn.onclick = () => closeManualOrderModal();
+
+      const moModalEl = $('manualOrderModal');
+      if (moModalEl) {
+        moModalEl.addEventListener('click', (e) => {
+          if (e.target === moModalEl) closeManualOrderModal();
+        });
+      }
+
+      const moRestSelect = $('moRestaurantSelect');
+      if (moRestSelect) moRestSelect.onchange = () => onMoRestaurantChange();
+
+      const moCustPhone = $('moCustomerPhone');
+      if (moCustPhone) moCustPhone.oninput = () => onMoCustomerPhoneInput();
+
+      const moCoordsInput = $('moCoordinates');
+      if (moCoordsInput) moCoordsInput.oninput = () => recalculateDistanceAndFee();
+
+      const moDelFeeInput = $('moDeliveryFee');
+      if (moDelFeeInput) moDelFeeInput.oninput = () => recalculateMoTotals();
+
+      const moServFeeInput = $('moServiceFee');
+      if (moServFeeInput) moServFeeInput.oninput = () => recalculateMoTotals();
+
+      const moItemSearchInput = $('moItemSearch');
+      if (moItemSearchInput) {
+        moItemSearchInput.oninput = () => renderMoMenuItemsPicker(moItemSearchInput.value);
+      }
+
+      const moItemSelectEl = $('moItemSelect');
+      if (moItemSelectEl) moItemSelectEl.onchange = () => onMoItemSelectChange();
+
+      const moConfigQtyMinus = $('moConfigQtyMinus');
+      if (moConfigQtyMinus) {
+        moConfigQtyMinus.onclick = () => {
+          const val = Math.max(1, (parseInt($('moConfigQty').value, 10) || 1) - 1);
+          $('moConfigQty').value = String(val);
+          updateMoConfigPricePreview();
+        };
+      }
+
+      const moConfigQtyPlus = $('moConfigQtyPlus');
+      if (moConfigQtyPlus) {
+        moConfigQtyPlus.onclick = () => {
+          const val = Math.max(1, (parseInt($('moConfigQty').value, 10) || 1) + 1);
+          $('moConfigQty').value = String(val);
+          updateMoConfigPricePreview();
+        };
+      }
+
+      const moConfigQtyInput = $('moConfigQty');
+      if (moConfigQtyInput) moConfigQtyInput.oninput = () => updateMoConfigPricePreview();
+
+      const moAddItemBtn = $('moAddItemBtn');
+      if (moAddItemBtn) moAddItemBtn.onclick = () => addCurrentConfiguredItemToCart();
+
+      const moToggleCustomBtn = $('moToggleCustomItemBtn');
+      if (moToggleCustomBtn) {
+        moToggleCustomBtn.onclick = () => {
+          const sec = $('moCustomItemSection');
+          sec.classList.toggle('hidden');
+          if (!sec.classList.contains('hidden')) {
+            $('moCustomName').focus();
+          }
+        };
+      }
+
+      const moAddCustomBtn = $('moAddCustomItemBtn');
+      if (moAddCustomBtn) moAddCustomBtn.onclick = () => addCustomItemToCart();
+
+      const moApplyPromoBtn = $('moApplyPromoBtn');
+      if (moApplyPromoBtn) moApplyPromoBtn.onclick = () => applyPromoCode();
+
+      const moSendRestBtn = $('moSendRestaurantBtn');
+      if (moSendRestBtn) moSendRestBtn.onclick = () => submitManualOrder('send_to_restaurant');
+
+      const moBroadcastBtn = $('moBroadcastCouriersBtn');
+      if (moBroadcastBtn) moBroadcastBtn.onclick = () => submitManualOrder('direct_broadcast');
+
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && cancelModalEl && !cancelModalEl.classList.contains('hidden')) {
-          closeCancelOrderModal();
+        if (e.key === 'Escape') {
+          if (cancelModalEl && !cancelModalEl.classList.contains('hidden')) {
+            closeCancelOrderModal();
+          }
+          if (moModalEl && !moModalEl.classList.contains('hidden')) {
+            closeManualOrderModal();
+          }
         }
       });
 
