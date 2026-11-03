@@ -341,6 +341,81 @@
         border: 1px solid rgba(255, 199, 0, 0.3);
         letter-spacing: 0.03em;
       }
+      .sahla-brand-metric .metric-val,
+      .sahla-brand-metric .sahla-metric-val {
+        font-weight: 800;
+        color: #FFC700;
+      }
+      .sahla-brand-metric .metric-lbl,
+      .sahla-brand-metric .sahla-metric-label {
+        font-size: 0.72rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      /* Sahla Brand Header Actions (Manual Order & Push Notification) */
+      .sahla-brand-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 4px;
+      }
+      .sahla-hdr-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-family: var(--font-sans);
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        line-height: 1;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+        text-decoration: none;
+      }
+      .sahla-hdr-btn:active {
+        transform: translateY(0);
+      }
+      .sahla-hdr-btn-order {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+      }
+      .sahla-hdr-btn-order:hover {
+        background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.45);
+        transform: translateY(-1px);
+        color: #ffffff !important;
+      }
+      .sahla-hdr-btn-push {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 199, 0, 0.45);
+        color: #FFD43B !important;
+        font-weight: 700;
+      }
+      .sahla-hdr-btn-push:hover:not(.active) {
+        background: rgba(255, 199, 0, 0.2);
+        border-color: #FFC700;
+        color: #ffffff !important;
+        transform: translateY(-1px);
+      }
+      .sahla-hdr-btn-push.active {
+        background: #FFC700 !important;
+        border-color: #FFC700 !important;
+        color: #064E3B !important;
+        font-weight: 800;
+        box-shadow: 0 2px 8px rgba(255, 199, 0, 0.4);
+      }
+      .sahla-hdr-btn .hdr-btn-icon {
+        font-size: 0.88rem;
+        display: inline-flex;
+        align-items: center;
+      }
 
       /* Modern Navigation Bar */
       .tabs {
@@ -1966,6 +2041,16 @@
           </div>
         </div>
         <div class="sahla-brand-right">
+          <div class="sahla-brand-actions">
+            <button type="button" class="sahla-hdr-btn sahla-hdr-btn-order" id="openManualOrderModalBtn" title="Create manual order on behalf of customer">
+              <span class="hdr-btn-icon">➕</span>
+              <span>Manual Order</span>
+            </button>
+            <button type="button" class="tab sahla-hdr-btn sahla-hdr-btn-push" data-tab="force-push" id="forcePushTabBtn" title="Send targeted or broadcast push notifications">
+              <span class="hdr-btn-icon">🔔</span>
+              <span>Push Notification</span>
+            </button>
+          </div>
           <div class="sahla-live-status-pill">
             <span class="pulse-beacon"><span class="pulse-core"></span></span>
             <span>LIVE SYSTEM</span>
@@ -2016,12 +2101,6 @@
           </button>
           <button type="button" class="tab" data-tab="tasks">
             <span class="tab-icon">📑</span> Tasks
-          </button>
-          <button type="button" class="manual-order-nav-btn" id="openManualOrderModalBtn" title="Create manual order on behalf of customer">
-            ➕ Manual Order
-          </button>
-          <button type="button" class="tab force-tab" data-tab="force-push" id="forcePushTabBtn">
-            <span class="tab-icon">🔔</span> Forced Push Notification
           </button>
         </div>
 
@@ -7106,6 +7185,13 @@
       document.querySelectorAll('.tab[data-tab]').forEach((btn) => {
         btn.onclick = () => selectTab(btn.getAttribute('data-tab'));
       });
+      const forcePushBtnEl = $('forcePushTabBtn');
+      if (forcePushBtnEl) {
+        forcePushBtnEl.onclick = (e) => {
+          if (e) e.preventDefault();
+          selectTab('force-push');
+        };
+      }
 
       $('refreshTasks').onclick = () => loadTasks();
             $('refreshDeliveryMen').onclick = () => loadDeliveryPersonnel().catch(() => {});
