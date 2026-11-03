@@ -6,7 +6,7 @@
     <title>Sahla — Performance</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       :root {
         --bg: #f8fafc;
@@ -19,6 +19,9 @@
         --accent-hover: #ea580c;
         --accent-light: #fff7ed;
         --accent-border: #fed7aa;
+        --sahla-green: #064E3B;
+        --sahla-yellow: #FFC700;
+        --sahla-amber: #F59E0B;
         --danger: #ef4444;
         --danger-light: #fef2f2;
         --danger-border: #fecaca;
@@ -31,7 +34,7 @@
         --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
         --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-        --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-sans: 'Plus Jakarta Sans', 'Cairo', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
       * {
         box-sizing: border-box;
@@ -188,6 +191,157 @@
         margin: 0;
       }
 
+      /* ========================================================================= */
+      /* Sahla Brand Header                                                        */
+      /* ========================================================================= */
+      .sahla-brand-header {
+        background: linear-gradient(135deg, #064E3B 0%, #033628 100%);
+        border-bottom: 3px solid #FFC700;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        box-shadow: 0 4px 16px rgba(6, 78, 59, 0.16);
+      }
+      .sahla-brand-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .sahla-logo-box {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 4px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+        border: 1px solid rgba(255, 199, 0, 0.4);
+      }
+      .sahla-logo-img {
+        height: 32px;
+        width: auto;
+        object-fit: contain;
+        display: block;
+      }
+      .sahla-brand-titles {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .sahla-brand-main {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .sahla-arabic-brand {
+        font-family: 'Cairo', sans-serif;
+        font-size: 1.45rem;
+        font-weight: 900;
+        color: #FFC700;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      }
+      .sahla-brand-sep {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.95rem;
+      }
+      .sahla-latin-brand {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: -0.01em;
+      }
+      .sahla-badge-ops {
+        background: rgba(255, 199, 0, 0.18);
+        border: 1px solid rgba(255, 199, 0, 0.45);
+        color: #FFD43B;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 3px 9px;
+        border-radius: 999px;
+      }
+      .sahla-brand-tagline {
+        font-family: 'Cairo', sans-serif;
+        font-size: 0.74rem;
+        color: rgba(255, 255, 255, 0.78);
+        font-weight: 600;
+      }
+      .sahla-brand-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+      }
+      .sahla-live-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 6px 12px;
+        border-radius: 999px;
+        color: #ffffff;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+      }
+      .pulse-core {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35);
+        animation: pulseAnimation 2s infinite ease-in-out;
+      }
+      @keyframes pulseAnimation {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+        70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+      }
+      .sahla-brand-metric {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        padding: 5px 12px;
+        border-radius: 8px;
+        color: #ffffff;
+        font-size: 0.8rem;
+      }
+      .sahla-brand-metric .metric-icon {
+        font-size: 0.95rem;
+      }
+      .sahla-brand-metric .metric-val {
+        font-weight: 800;
+        color: #FFC700;
+      }
+      .sahla-brand-metric .metric-lbl {
+        font-size: 0.72rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .sahla-brand-time {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #FFD43B;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 199, 0, 0.3);
+        letter-spacing: 0.03em;
+      }
+
       /* Modern Navigation Bar */
       .tabs {
         display: flex;
@@ -195,11 +349,11 @@
         gap: 6px;
         margin: 0 0 20px;
         background: #ffffff;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 2px solid #fed7aa;
         padding: 8px 16px;
         overflow-x: auto;
         scrollbar-width: none;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
       }
       .tabs::-webkit-scrollbar {
         display: none;
@@ -207,7 +361,7 @@
       .tabs button {
         padding: 8px 14px;
         background: transparent;
-        color: #64748b;
+        color: #475569;
         border: 1px solid transparent;
         border-radius: 8px;
         font-weight: 600;
@@ -220,15 +374,19 @@
         transition: all 0.15s ease;
       }
       .tabs button:hover:not(.active):not(.manual-order-nav-btn) {
-        background: #f1f5f9;
-        color: #1e293b;
+        background: #fffbf2;
+        color: #d97706;
       }
       .tabs button.active {
-        background: #fff7ed;
-        color: #ea580c;
+        background: linear-gradient(180deg, #fffbf2 0%, #fff7e6 100%);
+        color: #c2410c;
         border-color: #fed7aa;
-        font-weight: 700;
-        box-shadow: 0 1px 2px rgba(234, 88, 12, 0.08);
+        border-bottom: 2px solid #f97316;
+        font-weight: 800;
+        box-shadow: 0 2px 6px rgba(249, 115, 22, 0.12);
+      }
+      .tab-icon {
+        font-size: 0.95rem;
       }
       .tabs button.force-tab {
         margin-left: 4px;
@@ -249,6 +407,27 @@
         color: #0f172a;
         border-color: #94a3b8;
         font-weight: 700;
+      }
+      .tab-badge {
+        display: none !important;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 6px;
+        margin-left: 6px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        line-height: 1;
+        background: #ef4444;
+        color: #ffffff;
+        vertical-align: middle;
+        border: none;
+        box-shadow: 0 1px 3px rgba(239, 68, 68, 0.35);
+      }
+      .tab-badge.visible {
+        display: inline-flex !important;
       }
       /* Delivery Man Table Features */
       .pin-star-btn {
@@ -681,6 +860,7 @@
         overflow-x: auto;
         background: #ffffff;
         border: 1px solid var(--border);
+        border-top: 3px solid #f59e0b;
         border-radius: 14px;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 4px 16px rgba(15, 23, 42, 0.02);
         margin-left: max(12px, env(safe-area-inset-left));
@@ -703,7 +883,7 @@
         vertical-align: middle;
       }
       th {
-        background: #f8fafc;
+        background: #fafaf9;
         color: #475569;
         font-weight: 700;
         font-size: 0.72rem;
@@ -722,11 +902,11 @@
         border-bottom: none;
       }
       td[colspan] {
-        padding: 32px 16px !important;
+        padding: 36px 16px !important;
         text-align: center;
         color: #94a3b8;
-        font-size: 0.86rem;
-        font-weight: 500;
+        font-size: 0.88rem;
+        font-weight: 600;
       }
       .status-pill {
         display: inline-flex;
@@ -769,16 +949,32 @@
         flex-wrap: wrap;
       }
       .alerts-head {
-        font-size: 0.98rem;
+        font-size: 1.02rem;
         font-weight: 800;
-        margin: 24px 0 12px;
+        margin: 26px 0 12px;
         color: #0f172a;
         text-align: left;
         padding-left: max(12px, env(safe-area-inset-left));
         padding-right: max(12px, env(safe-area-inset-right));
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        letter-spacing: -0.01em;
+      }
+      .alerts-head::before {
+        content: '';
+        display: inline-block;
+        width: 4px;
+        height: 18px;
+        background: linear-gradient(180deg, #FFC700, #F97316);
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .head-icon {
+        font-size: 1.15rem;
+        display: inline-flex;
+        align-items: center;
+      }
         letter-spacing: -0.01em;
       }
       .alerts-head:first-of-type {
@@ -1740,6 +1936,10 @@
   <body>
     <div id="gate">
       <div class="login-panel">
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;">
+          <img src="/logo.webp" alt="Sahla Logo" style="height:44px;width:auto;" onerror="this.src='/logo.png'" />
+          <span style="font-family:'Cairo',sans-serif;font-size:1.75rem;font-weight:900;color:#064E3B;">ساهلة</span>
+        </div>
         <h2>Performance dashboard</h2>
         <p>Enter the access password to load live orders and tasks from the database.</p>
         <label for="pw">Password</label>
@@ -1750,6 +1950,34 @@
     </div>
 
     <div id="app" class="hidden">
+      <header class="sahla-brand-header">
+        <div class="sahla-brand-left">
+          <div class="sahla-logo-box">
+            <img src="/logo.webp" alt="Sahla Logo" class="sahla-logo-img" onerror="this.src='/logo.png'" />
+          </div>
+          <div class="sahla-brand-titles">
+            <div class="sahla-brand-main">
+              <span class="sahla-arabic-brand">ساهلة</span>
+              <span class="sahla-brand-sep">•</span>
+              <span class="sahla-latin-brand">Sahla Delivery</span>
+              <span class="sahla-badge-ops">Console</span>
+            </div>
+            <div class="sahla-brand-tagline">خلي في بلاصتك.. حنا نجيو لعندك • Live Dispatch &amp; Operations</div>
+          </div>
+        </div>
+        <div class="sahla-brand-right">
+          <div class="sahla-live-status-pill">
+            <span class="pulse-beacon"><span class="pulse-core"></span></span>
+            <span>LIVE SYSTEM</span>
+          </div>
+          <div class="sahla-brand-metric" id="headerActiveOrdersPill" title="Orders needing attention or active dispatch">
+            <span class="sahla-metric-label">Alerts</span>
+            <span class="sahla-metric-val" id="headerActiveOrdersCount">0</span>
+          </div>
+          <div class="sahla-brand-time" id="sahlaBrandClock" title="Algerian Local Time (UTC+1)">--:--:--</div>
+        </div>
+      </header>
+
       <main>
         <div id="dashboardErrorBanner" class="hidden dashboard-error-banner" role="alert">
           <div style="display:flex;align-items:center;gap:8px;">
@@ -1760,32 +1988,40 @@
         </div>
         <div class="tabs">
           <button type="button" class="tab active" data-tab="alerts" id="alertsTabBtn">
-            Orders + alerts<span id="alertsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">⚡</span> Orders + alerts<span id="alertsBadge" class="tab-badge">0</span>
           </button>
-          <button type="button" class="tab" data-tab="delivery-history">Delivered history</button>
-          <button type="button" class="tab" data-tab="delivery-men">Delivery man</button>
+          <button type="button" class="tab" data-tab="delivery-history">
+            <span class="tab-icon">📋</span> Delivered history
+          </button>
+          <button type="button" class="tab" data-tab="delivery-men">
+            <span class="tab-icon">🛵</span> Delivery man
+          </button>
           <button type="button" class="tab" data-tab="sahla-payments" id="sahlaPaymentsTabBtn">
-            Sahla Payments<span id="sahlaPaymentsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">💰</span> Sahla Payments<span id="sahlaPaymentsBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="parcel-alerts" id="parcelAlertsTabBtn">
-            Parcel + alerts<span id="parcelAlertsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">📦</span> Parcel + alerts<span id="parcelAlertsBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="reviews" id="reviewsTabBtn">
-            Restaurant reviews<span id="reviewsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">⭐</span> Restaurant reviews<span id="reviewsBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="delivery-reviews" id="deliveryReviewsTabBtn">
-            Delivery reviews<span id="deliveryReviewsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">📬</span> Delivery reviews<span id="deliveryReviewsBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="partner-requests" id="partnerReqTabBtn">
-            Sahla Partner Requests<span id="partnerReqBadge" class="tab-badge">0</span>
+            <span class="tab-icon">🤝</span> Sahla Partner Requests<span id="partnerReqBadge" class="tab-badge">0</span>
           </button>
-          <button type="button" class="tab" data-tab="restaurant-tables">Restaurant tables</button>
-          <button type="button" class="tab" data-tab="tasks">Tasks</button>
+          <button type="button" class="tab" data-tab="restaurant-tables">
+            <span class="tab-icon">🍽️</span> Restaurant tables
+          </button>
+          <button type="button" class="tab" data-tab="tasks">
+            <span class="tab-icon">📑</span> Tasks
+          </button>
           <button type="button" class="manual-order-nav-btn" id="openManualOrderModalBtn" title="Create manual order on behalf of customer">
             ➕ Manual Order
           </button>
           <button type="button" class="tab force-tab" data-tab="force-push" id="forcePushTabBtn">
-            Forced Push Notification
+            <span class="tab-icon">🔔</span> Forced Push Notification
           </button>
         </div>
 
@@ -1861,7 +2097,7 @@
         </section>
 
         <section id="panel-alerts">
-          <h3 class="alerts-head">Orders stuck in pending (≥ threshold)</h3>
+          <h3 class="alerts-head"><span class="head-icon">⏳</span> Orders stuck in pending (≥ threshold)</h3>
           <p class="meta" id="alertsOrdersMeta"></p>
           <div class="order-box-wrap">
             <table>
@@ -1886,7 +2122,7 @@
               <tbody id="alertsOrdersBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head">Picked up — not delivered (≥ delay)</h3>
+          <h3 class="alerts-head"><span class="head-icon">🛵</span> Picked up — not delivered (≥ delay)</h3>
           <p class="meta" id="alertsPickedUpMeta"></p>
           <div class="order-box-wrap">
             <table>
@@ -1910,7 +2146,7 @@
               <tbody id="alertsPickedUpBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head">New orders (without active alerts)</h3>
+          <h3 class="alerts-head"><span class="head-icon">✨</span> New orders (without active alerts)</h3>
           <p class="meta" id="ordersMeta"></p>
           <div class="order-box-wrap">
             <table>
@@ -1935,7 +2171,7 @@
               <tbody id="ordersBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head">Cancelled orders</h3>
+          <h3 class="alerts-head"><span class="head-icon">🚫</span> Cancelled orders</h3>
           <div class="toolbar">
             <div class="field">
               <label for="cancelledOrdersDatePreset">Date filter</label>
@@ -1974,7 +2210,7 @@
               <tbody id="cancelledOrdersBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head">Open tasks with no cost offers (≥ threshold)</h3>
+          <h3 class="alerts-head"><span class="head-icon">📋</span> Open tasks with no cost offers (≥ threshold)</h3>
           <p class="meta" id="alertsTasksMeta"></p>
           <div class="order-box-wrap">
             <table>
@@ -1996,7 +2232,7 @@
         </section>
 
         <section id="panel-parcel-alerts" class="hidden">
-          <h3 class="alerts-head">Parcel waiting alerts (≥ 5 min)</h3>
+          <h3 class="alerts-head"><span class="head-icon">📦</span> Parcel waiting alerts (≥ 5 min)</h3>
           <p class="meta" id="alertsParcelMeta"></p>
           <div class="order-box-wrap">
             <table>
@@ -2017,7 +2253,7 @@
               <tbody id="alertsParcelBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head">Parcel orders</h3>
+          <h3 class="alerts-head"><span class="head-icon">🚚</span> Parcel orders</h3>
           <p class="meta" id="parcelOrdersMeta"></p>
           <div class="order-box-wrap">
             <table>
@@ -2250,7 +2486,7 @@
           </div>
           <input id="partnerReqType" type="hidden" value="delivery" />
           <div id="partnerDeliverySection">
-            <h3 class="alerts-head">Delivery man requests</h3>
+            <h3 class="alerts-head"><span class="head-icon">🛵</span> Delivery man requests</h3>
           <div class="toolbar">
             <div class="field">
               <label for="dmReqStatus">Status</label>
@@ -2285,7 +2521,7 @@
           </div>
           </div>
           <div id="partnerRestaurantSection" class="hidden">
-            <h3 class="alerts-head">Restaurant requests</h3>
+            <h3 class="alerts-head"><span class="head-icon">🍽️</span> Restaurant requests</h3>
           <div class="toolbar">
             <div class="field">
               <label for="restReqStatus">Status</label>
@@ -2324,7 +2560,7 @@
           </div>
           </div>
           <div id="partnerParcelSection" class="hidden">
-            <h3 class="alerts-head">Parcel sender requests</h3>
+            <h3 class="alerts-head"><span class="head-icon">📦</span> Parcel sender requests</h3>
           <div class="toolbar">
             <div class="field">
               <label for="parcelSenderReqStatus">Status</label>
@@ -4468,6 +4704,29 @@
         } else {
           tabBadge.textContent = '0';
           tabBadge.classList.remove('visible');
+        }
+        const hdrActive = $('headerActiveOrdersCount');
+        if (hdrActive) {
+          hdrActive.textContent = label;
+        }
+      }
+
+      function updateSahlaClock() {
+        const el = $('sahlaBrandClock');
+        if (!el) return;
+        try {
+          const now = new Date();
+          const str = now.toLocaleTimeString('en-GB', {
+            timeZone: 'Africa/Algiers',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+          el.textContent = str + ' (DZ)';
+        } catch {
+          const now = new Date();
+          el.textContent = now.toTimeString().split(' ')[0] + ' (DZ)';
         }
       }
 
@@ -7462,6 +7721,8 @@
       updateCancelledOrdersDateInputVisibility();
       updateForcePushTargetFields();
       updateForcePushScheduleFields();
+      updateSahlaClock();
+      setInterval(updateSahlaClock, 1000);
       tryBootstrap();
     </script>
   </body>
