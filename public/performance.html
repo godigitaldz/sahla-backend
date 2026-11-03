@@ -155,7 +155,7 @@
         border-bottom-color: rgba(255, 255, 255, 0.75);
       }
       .tabs button.force-tab {
-        margin-left: auto;
+        margin-left: 4px;
         align-self: center;
         padding: 8px 14px;
         background: #fff;
@@ -880,12 +880,18 @@
 
       /* Manual Order Creation Modal & Trigger */
       .manual-order-nav-btn {
+        margin-left: auto;
+        align-self: center;
+        padding: 8px 16px !important;
         background: linear-gradient(135deg, #e65100, #ff9800) !important;
         color: #fff !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
+        font-size: 0.9rem !important;
         border: none !important;
+        border-radius: 12px !important;
         box-shadow: 0 2px 8px rgba(230, 81, 0, 0.3);
         cursor: pointer;
+        line-height: 1;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
       }
       .manual-order-nav-btn:hover {
@@ -1498,7 +1504,7 @@
           </button>
           <button type="button" class="tab" data-tab="restaurant-tables">Restaurant tables</button>
           <button type="button" class="tab" data-tab="tasks">Tasks</button>
-          <button type="button" class="tab manual-order-nav-btn" id="openManualOrderModalBtn" title="Create manual order on behalf of customer">
+          <button type="button" class="manual-order-nav-btn" id="openManualOrderModalBtn" title="Create manual order on behalf of customer">
             ➕ Manual Order
           </button>
           <button type="button" class="tab force-tab" data-tab="force-push" id="forcePushTabBtn">
@@ -6411,7 +6417,15 @@
 
       // Attach Manual Order Event Listeners
       const openMoBtn = $('openManualOrderModalBtn');
-      if (openMoBtn) openMoBtn.onclick = () => openManualOrderModal();
+      if (openMoBtn) {
+        openMoBtn.onclick = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          openManualOrderModal();
+        };
+      }
 
       const moCloseBtn = $('moCloseBtn');
       if (moCloseBtn) moCloseBtn.onclick = () => closeManualOrderModal();
@@ -6521,7 +6535,7 @@
             /* ignore */
           }
         }
-        document.querySelectorAll('.tab').forEach((b) => {
+        document.querySelectorAll('.tab[data-tab]').forEach((b) => {
           b.classList.toggle('active', b.getAttribute('data-tab') === tab);
         });
         $('panel-tasks').classList.toggle('hidden', tab !== 'tasks');
@@ -6553,7 +6567,7 @@
         if (tab === 'delivery-reviews') loadDeliveryReviews().catch(() => {});
       }
 
-      document.querySelectorAll('.tab').forEach((btn) => {
+      document.querySelectorAll('.tab[data-tab]').forEach((btn) => {
         btn.onclick = () => selectTab(btn.getAttribute('data-tab'));
       });
 
