@@ -3088,4 +3088,492 @@ router.get('/tasks', requirePerformanceAuth, async (req, res) => {
   }
 });
 
+/* ========================================================================= */
+/* Sahla Payments & Taxes Management                                         */
+/* ========================================================================= */
+
+router.get('/sahla-payments', requirePerformanceAuth, async (req, res) => {
+  try {
+    const { data: couriers, error } = await supabaseAdmin
+      .from('delivery_personnel')
+      .select(`
+        id,
+        user_id,
+        delivery_name,
+        work_phone,
+        sahla_tax,
+        credit,
+        tax_payment,
+        pending_collection,
+        wallet_financial_mode,
+        is_online,
+        is_available,
+        user:user_id (
+          id,
+          name,
+          phone
+        )
+      `)
+      .or('sahla_tax.gt.0,tax_payment.not.is.null')
+      .order('sahla_tax', { ascending: false });
+
+    if (error) throw error;
+
+    const unpaid = [];
+    const ongoing = [];
+
+    let totalUnpaidTax = 0;
+    let totalOngoingAmount = 0;
+
+    for (const c of couriers || []) {
+      const sahlaTax = Number(c.sahla_tax) || 0;
+      const credit = Number(c.credit) || 0;
+      const netAmount = Math.max(0, sahlaTax - credit);
+      const taxPayment = c.tax_payment && typeof c.tax_payment === 'object' ? c.tax_payment : null;
+      const paymentStatus = taxPayment ? taxPayment.status : null;
+      const isOngoing = paymentStatus === 'pending' || paymentStatus === 'auto_generated';
+
+      const courierName = (c.delivery_name || '').trim() || (c.user?.name || '').trim() || 'Unknown Courier';
+      const courierPhone = (c.work_phone || '').trim() || (c.user?.phone || '').trim() || '';
+
+      const pendingOrders = Array.isArray(c.pending_collection?.orders) ? c.pending_collection.orders : [];
+      const pendingCount = Number(c.pending_collection?.order_count) || pendingOrders.length || 0;
+
+      if (isOngoing) {
+        const paymentAmount = Number(taxPayment.total_amount) || sahlaTax;
+        totalOngoingAmount += paymentAmount;
+        ongoing.push({
+          id: c.id,
+          user_id: c.user_id,
+          delivery_name: courierName,
+          work_phone: courierPhone,
+          payment_number: taxPayment.payment_number || 'N/A',
+          status: paymentStatus,
+          total_amount: paymentAmount,
+          total_tax_amount: Number(taxPayment.total_tax_amount) || sahlaTax,
+          credit_amount: Number(taxPayment.credit_payment_amount) || credit,
+          receipt_url: taxPayment.receipt_url || null,
+          submitted_at: taxPayment.submitted_at || null,
+          auto_generated_at: taxPayment.auto_generated_at || null,
+          orders: Array.isArray(taxPayment.orders) ? taxPayment.orders : [],
+          tasks: Array.isArray(taxPayment.tasks) ? taxPayment.tasks : [],
+          order_count: Array.isArray(taxPayment.orders) ? taxPayment.orders.length : 0,
+          task_count: Array.isArray(taxPayment.tasks) ? taxPayment.tasks.length : 0,
+        });
+      }
+
+      if (sahlaTax > 0 && !isOngoing) {
+        totalUnpaidTax += sahlaTax;
+        unpaid.push({
+          id: c.id,
+          user_id: c.user_id,
+          delivery_name: courierName,
+          work_phone: courierPhone,
+          sahla_tax: sahlaTax,
+          credit: credit,
+          net_amount: netAmount,
+          order_count: pendingCount,
+          pending_orders: pendingOrders,
+          wallet_financial_mode: c.wallet_financial_mode || 'legacy',
+          is_online: Boolean(c.is_online),
+          is_available: Boolean(c.is_available),
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      unpaid,
+      ongoing,
+      summary: {
+        total_unpaid_tax: Math.round(totalUnpaidTax * 100) / 100,
+        unpaid_count: unpaid.length,
+        total_ongoing_amount: Math.round(totalOngoingAmount * 100) / 100,
+        ongoing_count: ongoing.length,
+      },
+    });
+  } catch (e) {
+    console.error('performance /sahla-payments GET', e);
+    return res.status(500).json({ success: false, error: e.message || 'Failed to load Sahla payments' });
+  }
+});
+
+router.get('/sahla-payments/:id/orders', requirePerformanceAuth, async (req, res) => {
+  try {
+    const courierId = req.params.id;
+    if (!courierId) {
+      return res.status(400).json({ success: false, error: 'Courier ID is required' });
+    }
+
+    const { data: courier, error: courierErr } = await supabaseAdmin
+      .from('delivery_personnel')
+      .select(`
+        id,
+        user_id,
+        delivery_name,
+        work_phone,
+        sahla_tax,
+        credit,
+        tax_payment,
+        pending_collection,
+        user:user_id (
+          id,
+          name,
+          phone
+        )
+      `)
+      .eq('id', courierId)
+      .maybeSingle();
+
+    if (courierErr || !courier) {
+      return res.status(404).json({ success: false, error: 'Courier not found' });
+    }
+
+    const courierName = (courier.delivery_name || '').trim() || (courier.user?.name || '').trim() || 'Unknown Courier';
+    const courierPhone = (courier.work_phone || '').trim() || (courier.user?.phone || '').trim() || '';
+
+    const taxPayment = courier.tax_payment && typeof courier.tax_payment === 'object' ? courier.tax_payment : null;
+    const isOngoing = taxPayment && (taxPayment.status === 'pending' || taxPayment.status === 'auto_generated');
+
+    let orders = [];
+    let tasks = [];
+
+    if (isOngoing && Array.isArray(taxPayment.orders) && taxPayment.orders.length > 0) {
+      orders = taxPayment.orders;
+      tasks = Array.isArray(taxPayment.tasks) ? taxPayment.tasks : [];
+    } else {
+      if (Array.isArray(courier.pending_collection?.orders) && courier.pending_collection.orders.length > 0) {
+        orders = courier.pending_collection.orders;
+      }
+
+      if (orders.length === 0) {
+        const { data: dbOrders } = await supabaseAdmin
+          .from('orders')
+          .select(`
+            id,
+            order_number,
+            subtotal,
+            delivery_fee,
+            tax_amount,
+            delivery_tax,
+            service_fee,
+            delivery_fee_discount,
+            total_amount,
+            status,
+            tax_paid,
+            created_at,
+            actual_delivery_time,
+            restaurant:restaurant_id (
+              name
+            ),
+            customer:customer_id (
+              name,
+              phone
+            )
+          `)
+          .eq('delivery_person_id', courierId)
+          .in('status', ['delivered', 'collected'])
+          .or('tax_paid.eq.false,tax_paid.is.null')
+          .order('actual_delivery_time', { ascending: false });
+
+        if (dbOrders && dbOrders.length > 0) {
+          orders = dbOrders.map((o) => ({
+            id: o.id,
+            order_id: o.id,
+            order_number: o.order_number,
+            subtotal: Number(o.subtotal) || 0,
+            delivery_fee: Number(o.delivery_fee) || 0,
+            tax_amount: Number(o.tax_amount) || 0,
+            delivery_tax: Number(o.delivery_tax) || 0,
+            service_fee: Number(o.service_fee) || 0,
+            delivery_fee_discount: Number(o.delivery_fee_discount) || 0,
+            total_amount: Number(o.total_amount) || 0,
+            total: (Number(o.tax_amount) || 0) + (Number(o.delivery_tax) || 0) + (Number(o.service_fee) || 0) - (Number(o.delivery_fee_discount) || 0),
+            created_at: o.created_at,
+            actual_delivery_time: o.actual_delivery_time,
+            restaurant: o.restaurant || { name: 'Restaurant' },
+            customer: o.customer || { name: 'Customer' },
+          }));
+        }
+      }
+
+      if (courier.user_id) {
+        const { data: dbTasks } = await supabaseAdmin
+          .from('tasks')
+          .select('id, delivery_tax, description, status, created_at, completed_at, tax_paid')
+          .eq('delivery_man_id', courier.user_id)
+          .eq('status', 'completed')
+          .or('tax_paid.eq.false,tax_paid.is.null');
+
+        if (dbTasks && dbTasks.length > 0) {
+          tasks = dbTasks.map((t) => ({
+            id: t.id,
+            task_id: t.id,
+            delivery_tax: Number(t.delivery_tax) || 0,
+            total: Number(t.delivery_tax) || 0,
+            description: t.description || 'Task',
+            created_at: t.created_at,
+            completed_at: t.completed_at,
+          }));
+        }
+      }
+    }
+
+    return res.json({
+      success: true,
+      courier: {
+        id: courier.id,
+        delivery_name: courierName,
+        work_phone: courierPhone,
+        sahla_tax: Number(courier.sahla_tax) || 0,
+        credit: Number(courier.credit) || 0,
+        is_ongoing: Boolean(isOngoing),
+        payment_number: taxPayment?.payment_number || null,
+        status: taxPayment?.status || null,
+        receipt_url: taxPayment?.receipt_url || null,
+      },
+      orders,
+      tasks,
+    });
+  } catch (e) {
+    console.error('performance /sahla-payments/:id/orders GET', e);
+    return res.status(500).json({ success: false, error: e.message || 'Failed to load order details' });
+  }
+});
+
+router.post('/sahla-payments/:id/approve', requirePerformanceAuth, async (req, res) => {
+  try {
+    const courierId = req.params.id;
+    if (!courierId) {
+      return res.status(400).json({ success: false, error: 'Courier ID is required' });
+    }
+
+    const { data: courier, error: courierErr } = await supabaseAdmin
+      .from('delivery_personnel')
+      .select('id, user_id, delivery_name, work_phone, sahla_tax, credit, tax_payment')
+      .eq('id', courierId)
+      .maybeSingle();
+
+    if (courierErr || !courier) {
+      return res.status(404).json({ success: false, error: 'Courier not found' });
+    }
+
+    const taxPayment = courier.tax_payment && typeof courier.tax_payment === 'object' ? courier.tax_payment : null;
+    const status = taxPayment?.status;
+    if (!taxPayment || (status !== 'pending' && status !== 'auto_generated')) {
+      return res.status(400).json({ success: false, error: 'No active pending or auto-generated payment found' });
+    }
+
+    const orders = Array.isArray(taxPayment.orders) ? taxPayment.orders : [];
+    const tasks = Array.isArray(taxPayment.tasks) ? taxPayment.tasks : [];
+
+    const orderIds = orders.map((o) => o.order_id || o.id).filter(Boolean);
+    if (orderIds.length > 0) {
+      await supabaseAdmin.from('orders').update({ tax_paid: true }).in('id', orderIds);
+    }
+
+    const taskIds = tasks.map((t) => t.task_id || t.id).filter(Boolean);
+    if (taskIds.length > 0) {
+      await supabaseAdmin.from('tasks').update({ tax_paid: true }).in('id', taskIds);
+    }
+
+    const now = new Date().toISOString();
+    const paymentNumber = taxPayment.payment_number || `SAHLA-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const totalTax = Number(taxPayment.total_tax_amount) || Number(courier.sahla_tax) || 0;
+    const netAmount = Number(taxPayment.total_amount) || totalTax;
+    const credit = Number(courier.credit) || 0;
+
+    await supabaseAdmin.from('delivery_sahla_payment_history').insert({
+      delivery_personnel_id: courierId,
+      payment_number: paymentNumber,
+      status: 'approved',
+      settlement_type: taxPayment.generated_by_admin ? 'admin_collect' : 'courier_payment',
+      total_tax_amount: totalTax,
+      net_amount: netAmount,
+      credit_amount: credit,
+      receipt_url: taxPayment.receipt_url || null,
+      orders_snapshot: orders,
+      tasks_snapshot: tasks,
+      metadata: {
+        approved_by: 'admin_performance_dashboard',
+        approved_at: now,
+        ...(taxPayment.generated_by_admin ? { generated_by_admin: true } : {}),
+      },
+      completed_at: now,
+    });
+
+    await supabaseAdmin.from('delivery_personnel').update({
+      sahla_tax: 0.0,
+      credit: 0.0,
+      tax: 0.0,
+      delivery_tax: 0.0,
+      service_fee: 0.0,
+      is_online: true,
+      tax_payment: null,
+      pending_collection: { orders: [], order_count: 0, total_amount: 0.0 },
+      updated_at: now,
+    }).eq('id', courierId);
+
+    try {
+      await supabaseAdmin.rpc('recalculate_delivery_personnel_sahla_totals', {
+        p_delivery_person_id: courierId,
+      });
+    } catch (_) {}
+
+    return res.json({
+      success: true,
+      message: `Payment ${paymentNumber} approved for ${courier.delivery_name || 'courier'}.`,
+      payment_number: paymentNumber,
+    });
+  } catch (e) {
+    console.error('performance /sahla-payments/:id/approve POST', e);
+    return res.status(500).json({ success: false, error: e.message || 'Failed to approve payment' });
+  }
+});
+
+router.post('/sahla-payments/:id/reject', requirePerformanceAuth, async (req, res) => {
+  try {
+    const courierId = req.params.id;
+    const reason = (req.body?.reason || '').trim();
+
+    const { data: courier, error: courierErr } = await supabaseAdmin
+      .from('delivery_personnel')
+      .select('id, delivery_name, tax_payment')
+      .eq('id', courierId)
+      .maybeSingle();
+
+    if (courierErr || !courier) {
+      return res.status(404).json({ success: false, error: 'Courier not found' });
+    }
+
+    const taxPayment = courier.tax_payment && typeof courier.tax_payment === 'object' ? courier.tax_payment : null;
+    if (!taxPayment) {
+      return res.status(400).json({ success: false, error: 'No active payment to reject' });
+    }
+
+    const now = new Date().toISOString();
+    const updatedPayment = {
+      ...taxPayment,
+      status: 'rejected',
+      rejected_at: now,
+      rejected_by: 'admin_performance_dashboard',
+      reject_reason: reason || 'Receipt rejected by admin',
+    };
+
+    await supabaseAdmin
+      .from('delivery_personnel')
+      .update({
+        tax_payment: updatedPayment,
+        updated_at: now,
+      })
+      .eq('id', courierId);
+
+    return res.json({
+      success: true,
+      message: `Payment rejected for ${courier.delivery_name || 'courier'}`,
+    });
+  } catch (e) {
+    console.error('performance /sahla-payments/:id/reject POST', e);
+    return res.status(500).json({ success: false, error: e.message || 'Failed to reject payment' });
+  }
+});
+
+router.post('/sahla-payments/:id/collect', requirePerformanceAuth, async (req, res) => {
+  try {
+    const courierId = req.params.id;
+    const { data: courier, error: courierErr } = await supabaseAdmin
+      .from('delivery_personnel')
+      .select('id, user_id, delivery_name, work_phone, sahla_tax, credit, pending_collection')
+      .eq('id', courierId)
+      .maybeSingle();
+
+    if (courierErr || !courier) {
+      return res.status(404).json({ success: false, error: 'Courier not found' });
+    }
+
+    const sahlaTax = Number(courier.sahla_tax) || 0;
+    const credit = Number(courier.credit) || 0;
+
+    let orders = Array.isArray(courier.pending_collection?.orders) ? courier.pending_collection.orders : [];
+    if (orders.length === 0) {
+      const { data: dbOrders } = await supabaseAdmin
+        .from('orders')
+        .select('id, order_number, tax_amount, service_fee, delivery_tax, delivery_fee_discount')
+        .eq('delivery_person_id', courierId)
+        .in('status', ['delivered', 'collected'])
+        .or('tax_paid.eq.false,tax_paid.is.null');
+      orders = dbOrders || [];
+    }
+
+    const orderIds = orders.map((o) => o.order_id || o.id).filter(Boolean);
+    if (orderIds.length > 0) {
+      await supabaseAdmin.from('orders').update({ tax_paid: true }).in('id', orderIds);
+    }
+
+    let taskIds = [];
+    let tasks = [];
+    if (courier.user_id) {
+      const { data: dbTasks } = await supabaseAdmin
+        .from('tasks')
+        .select('id, delivery_tax')
+        .eq('delivery_man_id', courier.user_id)
+        .eq('status', 'completed')
+        .or('tax_paid.eq.false,tax_paid.is.null');
+      tasks = dbTasks || [];
+      taskIds = tasks.map((t) => t.id).filter(Boolean);
+      if (taskIds.length > 0) {
+        await supabaseAdmin.from('tasks').update({ tax_paid: true }).in('id', taskIds);
+      }
+    }
+
+    const now = new Date().toISOString();
+    const paymentNumber = `SAHLA-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    await supabaseAdmin.from('delivery_sahla_payment_history').insert({
+      delivery_personnel_id: courierId,
+      payment_number: paymentNumber,
+      status: 'approved',
+      settlement_type: 'admin_collect',
+      total_tax_amount: sahlaTax,
+      net_amount: Math.max(0, sahlaTax - credit),
+      credit_amount: credit,
+      receipt_url: null,
+      orders_snapshot: orders,
+      tasks_snapshot: tasks,
+      metadata: {
+        admin_collected: true,
+        collected_at: now,
+      },
+      completed_at: now,
+    });
+
+    await supabaseAdmin.from('delivery_personnel').update({
+      sahla_tax: 0.0,
+      credit: 0.0,
+      tax: 0.0,
+      delivery_tax: 0.0,
+      service_fee: 0.0,
+      is_online: true,
+      tax_payment: null,
+      pending_collection: { orders: [], order_count: 0, total_amount: 0.0 },
+      updated_at: now,
+    }).eq('id', courierId);
+
+    try {
+      await supabaseAdmin.rpc('recalculate_delivery_personnel_sahla_totals', {
+        p_delivery_person_id: courierId,
+      });
+    } catch (_) {}
+
+    return res.json({
+      success: true,
+      message: `Sahla Tax of ${sahlaTax} DA collected and marked paid for ${courier.delivery_name || 'courier'}.`,
+      payment_number: paymentNumber,
+    });
+  } catch (e) {
+    console.error('performance /sahla-payments/:id/collect POST', e);
+    return res.status(500).json({ success: false, error: e.message || 'Failed to collect payment' });
+  }
+});
+
 export default router;

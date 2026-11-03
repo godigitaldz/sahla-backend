@@ -1205,6 +1205,253 @@
         opacity: 0.6;
         cursor: not-allowed;
       }
+
+      /* ========================================================================= */
+      /* Sahla Payments Tab & Screen Styles                                        */
+      /* ========================================================================= */
+      .sahla-payments-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding: 0 12px 32px;
+      }
+      .sahla-summary-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-bottom: 8px;
+      }
+      .sahla-stat-card {
+        padding: 14px 18px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(17, 24, 39, 0.05);
+      }
+      .sahla-stat-label {
+        font-size: 0.78rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+        display: block;
+      }
+      .sahla-stat-value {
+        font-size: 1.45rem;
+        font-weight: 800;
+        margin-top: 4px;
+        color: #111;
+        display: block;
+      }
+      .sahla-stat-value.unpaid {
+        color: #d32f2f;
+      }
+      .sahla-stat-value.ongoing {
+        color: #e65100;
+      }
+      .sahla-field-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(17, 24, 39, 0.06);
+        overflow: hidden;
+      }
+      .sahla-field-header {
+        padding: 16px 20px;
+        background: #fafafa;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .sahla-field-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .sahla-field-title {
+        font-size: 1.12rem;
+        font-weight: 800;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sahla-field-subtitle {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin: 2px 0 0;
+      }
+      .sahla-field-badge {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      .sahla-field-badge.unpaid {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+      }
+      .sahla-field-badge.ongoing {
+        background: #fff3e0;
+        color: #e65100;
+        border: 1px solid #ffe0b2;
+      }
+      .sahla-tax-due-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        background: #ffebee;
+        color: #c62828;
+        border-radius: 8px;
+        font-weight: 800;
+        font-size: 0.95rem;
+        white-space: nowrap;
+      }
+      .sahla-payment-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-radius: 8px;
+        font-weight: 800;
+        font-size: 0.95rem;
+        white-space: nowrap;
+      }
+      .sahla-status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 9px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: capitalize;
+        white-space: nowrap;
+      }
+      .sahla-status-chip.pending {
+        background: #fff8e1;
+        color: #f57f17;
+        border: 1px solid #ffe082;
+      }
+      .sahla-status-chip.auto_generated {
+        background: #e3f2fd;
+        color: #1565c0;
+        border: 1px solid #90caf9;
+      }
+      .sahla-status-chip.approved {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+      }
+      .sahla-status-chip.rejected {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ef9a9a;
+      }
+      .btn-orders-details {
+        padding: 6px 12px;
+        background: #f0f4f8;
+        color: #1b2430;
+        border: 1px solid #cfd8dc;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s ease;
+      }
+      .btn-orders-details:hover {
+        background: #eceff1;
+        border-color: #b0bec5;
+        transform: translateY(-1px);
+      }
+      .btn-sahla-collect {
+        padding: 6px 12px;
+        background: #fb8c00;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 2px 6px rgba(251, 140, 0, 0.3);
+        transition: all 0.15s ease;
+      }
+      .btn-sahla-collect:hover {
+        background: #f57c00;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(251, 140, 0, 0.4);
+      }
+      .btn-sahla-approve {
+        padding: 6px 12px;
+        background: #2e7d32;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);
+        transition: all 0.15s ease;
+      }
+      .btn-sahla-approve:hover {
+        background: #1b5e20;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(46, 125, 50, 0.4);
+      }
+      .btn-sahla-reject {
+        padding: 6px 12px;
+        background: #fff;
+        color: #c62828;
+        border: 1px solid #ef5350;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.15s ease;
+      }
+      .btn-sahla-reject:hover {
+        background: #ffebee;
+      }
+      .sahla-receipt-thumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #1976d2;
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .sahla-receipt-none {
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-style: italic;
+      }
+      .sahla-orders-modal-dialog {
+        width: min(1000px, calc(100vw - 32px)) !important;
+        max-width: 1000px !important;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        padding: 0 !important;
+        overflow: hidden;
+      }
     </style>
   </head>
   <body>
@@ -1234,6 +1481,9 @@
           </button>
           <button type="button" class="tab" data-tab="delivery-history">Delivered history</button>
           <button type="button" class="tab" data-tab="delivery-men">Delivery man</button>
+          <button type="button" class="tab" data-tab="sahla-payments" id="sahlaPaymentsTabBtn">
+            Sahla Payments<span id="sahlaPaymentsBadge" class="tab-badge">0</span>
+          </button>
           <button type="button" class="tab" data-tab="parcel-alerts" id="parcelAlertsTabBtn">
             Parcel + alerts<span id="parcelAlertsBadge" class="tab-badge">0</span>
           </button>
@@ -1882,7 +2132,187 @@
             </table>
           </div>
         </section>
+
+        <!-- Sahla Payments Panel -->
+        <section id="panel-sahla-payments" class="hidden">
+          <div class="toolbar" style="margin-bottom: 16px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <h2 style="margin:0;font-size:1.25rem;font-weight:800;color:#111;">💰 Sahla Payments Management</h2>
+              <span class="meta" style="margin:0;">(إدارة مدفوعات وضرائب سهلة)</span>
+            </div>
+            <div class="field" style="margin-left:auto;">
+              <label for="sahlaSearchInput">Search</label>
+              <input id="sahlaSearchInput" type="text" placeholder="Filter courier name or phone..." style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.85rem;" />
+            </div>
+            <button type="button" class="btn-refresh" id="refreshSahlaPaymentsBtn">Refresh</button>
+          </div>
+
+          <div class="sahla-payments-container">
+            <!-- Summary Bar -->
+            <div class="sahla-summary-bar">
+              <div class="sahla-stat-card">
+                <span class="sahla-stat-label">Total Unpaid Sahla Tax</span>
+                <div class="sahla-stat-value unpaid" id="sahlaSumUnpaidTax">0.00 DA</div>
+                <span class="meta" id="sahlaSumUnpaidCouriers">0 couriers</span>
+              </div>
+              <div class="sahla-stat-card">
+                <span class="sahla-stat-label">Ongoing Payments</span>
+                <div class="sahla-stat-value ongoing" id="sahlaSumOngoingAmount">0.00 DA</div>
+                <span class="meta" id="sahlaSumOngoingCount">0 pending approvals</span>
+              </div>
+            </div>
+
+            <!-- Top Field: Non Paid Sahla Taxs -->
+            <div class="sahla-field-card" id="sahlaUnpaidSection">
+              <div class="sahla-field-header">
+                <div class="sahla-field-title-wrap">
+                  <div>
+                    <h3 class="sahla-field-title">
+                      <span>🔴 Non Paid Sahla Taxs</span>
+                    </h3>
+                    <p class="sahla-field-subtitle">ضرائب سهلة غير مدفوعة للمناديب</p>
+                  </div>
+                  <span class="sahla-field-badge unpaid" id="sahlaUnpaidBadgeCount">0 Couriers</span>
+                </div>
+              </div>
+              <div style="overflow-x: auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Delivery Man</th>
+                      <th>Phone</th>
+                      <th>Sahla Tax Due</th>
+                      <th>Orders Count</th>
+                      <th>Orders Details</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sahlaUnpaidBody">
+                    <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">Loading unpaid taxes...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Bottom Field: Ongoing Sahla Tax Payments -->
+            <div class="sahla-field-card" id="sahlaOngoingSection">
+              <div class="sahla-field-header">
+                <div class="sahla-field-title-wrap">
+                  <div>
+                    <h3 class="sahla-field-title">
+                      <span>🟡 Ongoing Sahla Tax Payments</span>
+                    </h3>
+                    <p class="sahla-field-subtitle">دفعات ضرائب سهلة قيد المعالجة والموافقة</p>
+                  </div>
+                  <span class="sahla-field-badge ongoing" id="sahlaOngoingBadgeCount">0 Payments</span>
+                </div>
+              </div>
+              <div style="overflow-x: auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Delivery Man</th>
+                      <th>Phone</th>
+                      <th>Payment</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Receipt</th>
+                      <th>Orders Details</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sahlaOngoingBody">
+                    <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">Loading ongoing payments...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
+    </div>
+
+    <!-- Sahla Payment Orders Details Modal -->
+    <div id="sahlaPaymentOrdersModal" class="modal-overlay hidden" role="dialog" aria-labelledby="sahlaOrdersModalTitle" aria-modal="true">
+      <div class="modal-dialog sahla-orders-modal-dialog">
+        <div class="mo-header">
+          <div>
+            <h3 id="sahlaOrdersModalTitle" style="margin:0;font-size:1.15rem;font-weight:800;">📦 Orders Details (تفاصيل الطلبات)</h3>
+            <p id="sahlaOrdersModalSubtitle" class="meta" style="margin:2px 0 0;font-size:0.82rem;"></p>
+          </div>
+          <button type="button" class="mo-close-btn" id="sahlaOrdersModalCloseBtn" title="Close">✕</button>
+        </div>
+
+        <div class="mo-body" style="padding:16px 20px;overflow-y:auto;max-height:calc(90vh - 130px);">
+          <!-- Summary Cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;margin-bottom:14px;">
+            <div class="sahla-stat-card" style="padding:10px 14px;">
+              <span class="sahla-stat-label">Orders Count</span>
+              <div class="sahla-stat-value" id="modalOrdersCount" style="font-size:1.2rem;">0</div>
+            </div>
+            <div class="sahla-stat-card" style="padding:10px 14px;">
+              <span class="sahla-stat-label">Orders Subtotal</span>
+              <div class="sahla-stat-value" id="modalOrdersSubtotal" style="font-size:1.2rem;">0 DA</div>
+            </div>
+            <div class="sahla-stat-card" style="padding:10px 14px;">
+              <span class="sahla-stat-label">Delivery Fees</span>
+              <div class="sahla-stat-value" id="modalOrdersDeliveryFees" style="font-size:1.2rem;">0 DA</div>
+            </div>
+            <div class="sahla-stat-card" style="padding:10px 14px;">
+              <span class="sahla-stat-label">Sahla Tax / Share</span>
+              <div class="sahla-stat-value unpaid" id="modalOrdersSahlaTax" style="font-size:1.2rem;">0 DA</div>
+            </div>
+          </div>
+
+          <!-- Orders Table -->
+          <h4 style="margin:10px 0 8px;font-size:0.92rem;font-weight:700;">Delivered Orders Breakdown</h4>
+          <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;margin-bottom:16px;">
+            <table style="margin:0;">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Order #</th>
+                  <th>Restaurant</th>
+                  <th>Customer</th>
+                  <th>Subtotal</th>
+                  <th>Delivery Fee</th>
+                  <th>Rest. Tax</th>
+                  <th>Deliv. Tax</th>
+                  <th>Service Fee</th>
+                  <th>Sahla Line</th>
+                  <th>Delivered At</th>
+                </tr>
+              </thead>
+              <tbody id="sahlaModalOrdersBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Tasks Table (if any) -->
+          <div id="sahlaModalTasksContainer" class="hidden">
+            <h4 style="margin:14px 0 8px;font-size:0.92rem;font-weight:700;">Completed Tasks Breakdown</h4>
+            <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;">
+              <table style="margin:0;">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Task ID</th>
+                    <th>Description</th>
+                    <th>Delivery Tax</th>
+                  </tr>
+                </thead>
+                <tbody id="sahlaModalTasksBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="mo-footer" style="padding:14px 20px;border-top:1px solid var(--border);background:#fafafa;display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn-ghost" id="sahlaOrdersModalDismissBtn">Close</button>
+          <div id="sahlaModalActionButtons" style="display:inline-flex;gap:8px;"></div>
+        </div>
+      </div>
     </div>
 
     <div id="cancelOrderModal" class="modal-overlay hidden" role="dialog" aria-labelledby="cancelModalTitle" aria-modal="true">
@@ -2998,6 +3428,7 @@
           await loadMeta();
           await loadAlerts();
           await loadOrders();
+          loadSahlaPayments().catch(() => {});
           applyViewFromQuery();
         } catch {
           /* stay on gate */
@@ -3136,6 +3567,7 @@
           selectTab('partner-requests', { skipPersist: true });
         }
         else if (v === 'delivery-men') selectTab('delivery-men', { skipPersist: true });
+        else if (v === 'sahla-payments') selectTab('sahla-payments', { skipPersist: true });
         else if (v === 'delivery-history') selectTab('delivery-history', { skipPersist: true });
         else if (v === 'reviews') selectTab('reviews', { skipPersist: true });
         else if (v === 'delivery-reviews') selectTab('delivery-reviews', { skipPersist: true });
@@ -5201,6 +5633,7 @@
           await loadMeta();
           await loadAlerts();
           await loadOrders();
+          loadSahlaPayments().catch(() => {});
           applyViewFromQuery();
         } catch (e) {
           $('gateErr').textContent = e.message || 'Unlock failed';
@@ -6071,6 +6504,10 @@
           if (moModalEl && !moModalEl.classList.contains('hidden')) {
             closeManualOrderModal();
           }
+          const sModal = $('sahlaPaymentOrdersModal');
+          if (sModal && !sModal.classList.contains('hidden')) {
+            sModal.classList.add('hidden');
+          }
         }
       });
 
@@ -6092,6 +6529,7 @@
         $('panel-parcel-alerts').classList.toggle('hidden', tab !== 'parcel-alerts');
         $('panel-delivery-history').classList.toggle('hidden', tab !== 'delivery-history');
         $('panel-delivery-men').classList.toggle('hidden', tab !== 'delivery-men');
+        $('panel-sahla-payments').classList.toggle('hidden', tab !== 'sahla-payments');
         $('panel-partner-requests').classList.toggle('hidden', tab !== 'partner-requests');
         $('panel-restaurant-tables').classList.toggle('hidden', tab !== 'restaurant-tables');
         $('panel-reviews').classList.toggle('hidden', tab !== 'reviews');
@@ -6107,6 +6545,7 @@
           loadOrders().catch(() => {});
         }
         if (tab === 'delivery-men') loadDeliveryPersonnel().catch(() => {});
+        if (tab === 'sahla-payments') loadSahlaPayments().catch(() => {});
         if (tab === 'delivery-history') loadDeliveryHistory().catch(() => {});
         if (tab === 'partner-requests') loadPartnerRequests().catch(() => {});
         if (tab === 'restaurant-tables') loadRestaurantTablesPanel().catch(() => {});
@@ -6323,6 +6762,385 @@
         if (oid) void collectPayment(oid, btn);
       });
 
+      /* ========================================================================= */
+      /* Sahla Payments Tab Logic                                                  */
+      /* ========================================================================= */
+      let cachedSahlaUnpaidRows = [];
+      let cachedSahlaOngoingRows = [];
+
+      async function loadSahlaPayments() {
+        try {
+          const json = await api('/sahla-payments', { method: 'GET' });
+          if (!json || !json.success) return;
+
+          cachedSahlaUnpaidRows = json.unpaid || [];
+          cachedSahlaOngoingRows = json.ongoing || [];
+
+          const ongoingCount = json.summary?.ongoing_count || 0;
+          const unpaidCount = json.summary?.unpaid_count || 0;
+          const badgeEl = $('sahlaPaymentsBadge');
+          if (badgeEl) {
+            if (ongoingCount > 0) {
+              badgeEl.textContent = ongoingCount > 99 ? '99+' : String(ongoingCount);
+              badgeEl.classList.add('visible');
+              badgeEl.style.background = '#e65100';
+            } else if (unpaidCount > 0) {
+              badgeEl.textContent = unpaidCount > 99 ? '99+' : String(unpaidCount);
+              badgeEl.classList.add('visible');
+              badgeEl.style.background = '#757575';
+            } else {
+              badgeEl.textContent = '0';
+              badgeEl.classList.remove('visible');
+            }
+          }
+
+          if ($('sahlaSumUnpaidTax')) {
+            $('sahlaSumUnpaidTax').textContent = (json.summary?.total_unpaid_tax || 0).toLocaleString('fr-DZ', { minimumFractionDigits: 2 }) + ' DA';
+          }
+          if ($('sahlaSumUnpaidCouriers')) {
+            $('sahlaSumUnpaidCouriers').textContent = `${unpaidCount} couriers with pending tax`;
+          }
+          if ($('sahlaSumOngoingAmount')) {
+            $('sahlaSumOngoingAmount').textContent = (json.summary?.total_ongoing_amount || 0).toLocaleString('fr-DZ', { minimumFractionDigits: 2 }) + ' DA';
+          }
+          if ($('sahlaSumOngoingCount')) {
+            $('sahlaSumOngoingCount').textContent = `${ongoingCount} pending admin approval`;
+          }
+
+          renderSahlaTables();
+        } catch (e) {
+          console.error('loadSahlaPayments error:', e);
+        }
+      }
+
+      function renderSahlaTables() {
+        const query = ($('sahlaSearchInput')?.value || '').trim().toLowerCase();
+
+        const filteredUnpaid = cachedSahlaUnpaidRows.filter(c => {
+          if (!query) return true;
+          const name = (c.delivery_name || '').toLowerCase();
+          const phone = (c.work_phone || '').toLowerCase();
+          return name.includes(query) || phone.includes(query);
+        });
+
+        const filteredOngoing = cachedSahlaOngoingRows.filter(c => {
+          if (!query) return true;
+          const name = (c.delivery_name || '').toLowerCase();
+          const phone = (c.work_phone || '').toLowerCase();
+          const pnum = (c.payment_number || '').toLowerCase();
+          return name.includes(query) || phone.includes(query) || pnum.includes(query);
+        });
+
+        if ($('sahlaUnpaidBadgeCount')) {
+          $('sahlaUnpaidBadgeCount').textContent = `${filteredUnpaid.length} Couriers`;
+        }
+        if ($('sahlaOngoingBadgeCount')) {
+          $('sahlaOngoingBadgeCount').textContent = `${filteredOngoing.length} Payments`;
+        }
+
+        // Render Unpaid Table
+        const unpaidBody = $('sahlaUnpaidBody');
+        if (unpaidBody) {
+          if (filteredUnpaid.length === 0) {
+            unpaidBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">
+              ${query ? 'No matching unpaid couriers found' : '🎉 All Sahla taxes are fully paid! No outstanding balances.'}
+            </td></tr>`;
+          } else {
+            unpaidBody.innerHTML = filteredUnpaid.map((c, idx) => {
+              const nameEsc = esc(c.delivery_name || 'Unknown');
+              const phoneEsc = esc(c.work_phone || '-');
+              const taxVal = Number(c.sahla_tax) || 0;
+              const creditVal = Number(c.credit) || 0;
+              const ordersCount = c.order_count || (c.pending_orders ? c.pending_orders.length : 0);
+
+              let creditBadge = '';
+              if (creditVal > 0) {
+                creditBadge = `<div style="font-size:0.75rem;color:#2e7d32;margin-top:2px;">Credit: -${creditVal.toFixed(2)} DA</div>`;
+              }
+
+              return `<tr>
+                <td style="font-weight:600;color:var(--muted);">${idx + 1}</td>
+                <td>
+                  <div style="font-weight:700;color:#111;">${nameEsc}</div>
+                  <div class="meta" style="font-size:0.75rem;">ID: ${c.id.substring(0, 8)}...</div>
+                </td>
+                <td>
+                  ${phoneEsc !== '-' ? `<a href="tel:${phoneEsc}" style="color:#1976d2;text-decoration:none;font-weight:600;">${phoneEsc}</a>` : '-'}
+                </td>
+                <td>
+                  <span class="sahla-tax-due-badge">${taxVal.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA</span>
+                  ${creditBadge}
+                </td>
+                <td>
+                  <span style="font-weight:700;padding:2px 8px;background:#f5f5f5;border-radius:6px;">${ordersCount} orders</span>
+                </td>
+                <td>
+                  <button type="button" class="btn-orders-details" onclick="openSahlaOrderDetails('${c.id}', 'unpaid')">
+                    📦 Orders Details
+                  </button>
+                </td>
+                <td>
+                  <button type="button" class="btn-sahla-collect" onclick="collectSahlaTaxDirect('${c.id}', '${esc(c.delivery_name || '')}', ${taxVal})">
+                    💰 Mark Paid
+                  </button>
+                </td>
+              </tr>`;
+            }).join('');
+          }
+        }
+
+        // Render Ongoing Table
+        const ongoingBody = $('sahlaOngoingBody');
+        if (ongoingBody) {
+          if (filteredOngoing.length === 0) {
+            ongoingBody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">
+              ${query ? 'No matching ongoing payments found' : 'No ongoing payments awaiting approval.'}
+            </td></tr>`;
+          } else {
+            ongoingBody.innerHTML = filteredOngoing.map((c, idx) => {
+              const nameEsc = esc(c.delivery_name || 'Unknown');
+              const phoneEsc = esc(c.work_phone || '-');
+              const pnumEsc = esc(c.payment_number || 'N/A');
+              const totalAmount = Number(c.total_amount) || 0;
+              const status = c.status || 'pending';
+              const dateRaw = c.submitted_at || c.auto_generated_at || '';
+              const dateFormatted = dateRaw ? fmtDate(dateRaw) : '-';
+
+              let statusChip = '';
+              if (status === 'pending') {
+                statusChip = '<span class="sahla-status-chip pending">🟡 Courier Uploaded</span>';
+              } else if (status === 'auto_generated') {
+                statusChip = '<span class="sahla-status-chip auto_generated">🔵 Auto Generated</span>';
+              } else {
+                statusChip = `<span class="sahla-status-chip">${esc(status)}</span>`;
+              }
+
+              let receiptHtml = '<span class="sahla-receipt-none">No receipt</span>';
+              if (c.receipt_url) {
+                receiptHtml = `<a class="sahla-receipt-thumb" href="${esc(c.receipt_url)}" target="_blank" rel="noopener noreferrer">
+                  📄 View Receipt
+                </a>`;
+              }
+
+              return `<tr>
+                <td style="font-weight:600;color:var(--muted);">${idx + 1}</td>
+                <td>
+                  <div style="font-weight:700;color:#111;">${nameEsc}</div>
+                  <div class="meta" style="font-size:0.75rem;">ID: ${c.id.substring(0, 8)}...</div>
+                </td>
+                <td>
+                  ${phoneEsc !== '-' ? `<a href="tel:${phoneEsc}" style="color:#1976d2;text-decoration:none;font-weight:600;">${phoneEsc}</a>` : '-'}
+                </td>
+                <td>
+                  <div style="font-weight:700;color:#111;font-size:0.85rem;">${pnumEsc}</div>
+                  <span class="sahla-payment-badge">${totalAmount.toLocaleString('fr-DZ', { minimumFractionDigits: 2 })} DA</span>
+                </td>
+                <td>${statusChip}</td>
+                <td style="font-size:0.8rem;white-space:nowrap;">${dateFormatted}</td>
+                <td>${receiptHtml}</td>
+                <td>
+                  <button type="button" class="btn-orders-details" onclick="openSahlaOrderDetails('${c.id}', 'ongoing')">
+                    📦 Orders Details
+                  </button>
+                </td>
+                <td>
+                  <div class="btn-row">
+                    <button type="button" class="btn-sahla-approve" onclick="approveSahlaPayment('${c.id}', '${pnumEsc}')">
+                      ✓ Approve
+                    </button>
+                    <button type="button" class="btn-sahla-reject" onclick="rejectSahlaPayment('${c.id}', '${pnumEsc}')">
+                      ✕ Reject
+                    </button>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('');
+          }
+        }
+      }
+
+      async function openSahlaOrderDetails(courierId, mode) {
+        try {
+          const modal = $('sahlaPaymentOrdersModal');
+          if (!modal) return;
+
+          $('sahlaOrdersModalSubtitle').textContent = 'Loading order details...';
+          $('sahlaModalOrdersBody').innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted);">Loading orders...</td></tr>';
+          $('sahlaModalTasksContainer').classList.add('hidden');
+          $('sahlaModalActionButtons').innerHTML = '';
+          modal.classList.remove('hidden');
+
+          const json = await api(`/sahla-payments/${courierId}/orders`, { method: 'GET' });
+          if (!json || !json.success) {
+            alert('Failed to load orders: ' + (json?.error || 'Unknown error'));
+            modal.classList.add('hidden');
+            return;
+          }
+
+          const courier = json.courier || {};
+          const orders = json.orders || [];
+          const tasks = json.tasks || [];
+
+          const courierName = courier.delivery_name || 'Courier';
+          const courierPhone = courier.work_phone ? ` • Phone: ${courier.work_phone}` : '';
+          const pnumText = courier.payment_number ? ` • Payment: ${courier.payment_number}` : '';
+          $('sahlaOrdersModalSubtitle').textContent = `${courierName}${courierPhone}${pnumText}`;
+
+          let totalSubtotal = 0;
+          let totalDeliveryFee = 0;
+          let totalSahla = 0;
+
+          orders.forEach((o) => {
+            totalSubtotal += Number(o.subtotal) || 0;
+            totalDeliveryFee += Number(o.delivery_fee) || 0;
+            const line = (Number(o.tax_amount) || 0) + (Number(o.delivery_tax) || 0) + (Number(o.service_fee) || 0) - (Number(o.delivery_fee_discount) || 0);
+            totalSahla += (Number(o.total) != null && !isNaN(o.total)) ? Number(o.total) : line;
+          });
+
+          tasks.forEach((t) => {
+            totalSahla += Number(t.delivery_tax) || Number(t.total) || 0;
+          });
+
+          $('modalOrdersCount').textContent = orders.length + (tasks.length ? ` (+${tasks.length} tasks)` : '');
+          $('modalOrdersSubtotal').textContent = totalSubtotal.toLocaleString('fr-DZ', { minimumFractionDigits: 0 }) + ' DA';
+          $('modalOrdersDeliveryFees').textContent = totalDeliveryFee.toLocaleString('fr-DZ', { minimumFractionDigits: 0 }) + ' DA';
+          $('modalOrdersSahlaTax').textContent = totalSahla.toLocaleString('fr-DZ', { minimumFractionDigits: 2 }) + ' DA';
+
+          if (orders.length === 0) {
+            $('sahlaModalOrdersBody').innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted);">No orders recorded for this courier.</td></tr>';
+          } else {
+            $('sahlaModalOrdersBody').innerHTML = orders.map((o, i) => {
+              const orderNum = o.order_number || o.id?.substring(0, 8) || '-';
+              const restName = o.restaurant?.name || o.restaurant_name || 'N/A';
+              const custName = o.customer?.name || 'Customer';
+              const custPhone = o.customer?.phone ? `<br><span class="meta">${esc(o.customer.phone)}</span>` : '';
+              const subtotal = Number(o.subtotal) || 0;
+              const deliveryFee = Number(o.delivery_fee) || 0;
+              const restTax = Number(o.tax_amount) || 0;
+              const delivTax = Number(o.delivery_tax) || 0;
+              const serviceFee = Number(o.service_fee) || 0;
+              const lineSahla = (Number(o.total) != null && !isNaN(o.total))
+                ? Number(o.total)
+                : (restTax + delivTax + serviceFee - (Number(o.delivery_fee_discount) || 0));
+              const dateStr = o.actual_delivery_time || o.created_at || '';
+
+              return `<tr>
+                <td style="font-weight:600;color:var(--muted);">${i + 1}</td>
+                <td style="font-weight:700;">${esc(orderNum)}</td>
+                <td>${esc(restName)}</td>
+                <td>${esc(custName)}${custPhone}</td>
+                <td>${subtotal} DA</td>
+                <td>${deliveryFee} DA</td>
+                <td style="color:#e65100;font-weight:600;">${restTax} DA</td>
+                <td style="color:#e65100;font-weight:600;">${delivTax} DA</td>
+                <td style="color:#e65100;font-weight:600;">${serviceFee} DA</td>
+                <td><strong style="color:#c62828;">${lineSahla} DA</strong></td>
+                <td style="font-size:0.78rem;white-space:nowrap;">${dateStr ? fmtDate(dateStr) : '-'}</td>
+              </tr>`;
+            }).join('');
+          }
+
+          if (tasks.length > 0) {
+            $('sahlaModalTasksContainer').classList.remove('hidden');
+            $('sahlaModalTasksBody').innerHTML = tasks.map((t, i) => `<tr>
+              <td style="font-weight:600;color:var(--muted);">${i + 1}</td>
+              <td style="font-weight:700;">${esc(t.task_id || t.id || '-')}</td>
+              <td>${esc(t.description || 'Errand / Delivery')}</td>
+              <td style="color:#c62828;font-weight:700;">${(Number(t.delivery_tax) || 0)} DA</td>
+            </tr>`).join('');
+          }
+
+          const actionContainer = $('sahlaModalActionButtons');
+          if (mode === 'ongoing') {
+            actionContainer.innerHTML = `
+              <button type="button" class="btn-sahla-reject" onclick="rejectSahlaPayment('${courierId}', '${esc(courier.payment_number || '')}'); $('sahlaPaymentOrdersModal').classList.add('hidden');">
+                ✕ Reject Payment
+              </button>
+              <button type="button" class="btn-sahla-approve" onclick="approveSahlaPayment('${courierId}', '${esc(courier.payment_number || '')}'); $('sahlaPaymentOrdersModal').classList.add('hidden');">
+                ✓ Approve Payment
+              </button>
+            `;
+          } else {
+            actionContainer.innerHTML = `
+              <button type="button" class="btn-sahla-collect" onclick="collectSahlaTaxDirect('${courierId}', '${esc(courierName)}', ${courier.sahla_tax || totalSahla}); $('sahlaPaymentOrdersModal').classList.add('hidden');">
+                💰 Mark Paid &amp; Clear
+              </button>
+            `;
+          }
+        } catch (e) {
+          console.error('openSahlaOrderDetails error:', e);
+        }
+      }
+
+      async function approveSahlaPayment(courierId, paymentNumber) {
+        if (!confirm(`Are you sure you want to APPROVE payment ${paymentNumber || ''}?\nThis will mark all included orders as tax_paid=true, reset the courier balance, and record the payment in history.`)) {
+          return;
+        }
+        try {
+          const json = await api(`/sahla-payments/${courierId}/approve`, {
+            method: 'POST',
+          });
+          if (json && json.success) {
+            alert(json.message || 'Payment approved successfully!');
+            await loadSahlaPayments();
+          } else {
+            alert('Approval failed: ' + (json?.error || 'Unknown error'));
+          }
+        } catch (e) {
+          alert('Error approving payment: ' + e.message);
+        }
+      }
+
+      async function rejectSahlaPayment(courierId, paymentNumber) {
+        const reason = prompt(`Enter rejection reason for payment ${paymentNumber || ''}:`, 'Receipt invalid / Unverified payment');
+        if (reason === null) return;
+
+        try {
+          const json = await api(`/sahla-payments/${courierId}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+          });
+          if (json && json.success) {
+            alert(json.message || 'Payment rejected.');
+            await loadSahlaPayments();
+          } else {
+            alert('Rejection failed: ' + (json?.error || 'Unknown error'));
+          }
+        } catch (e) {
+          alert('Error rejecting payment: ' + e.message);
+        }
+      }
+
+      async function collectSahlaTaxDirect(courierId, courierName, amount) {
+        if (!confirm(`Mark ${amount} DA as collected/paid for courier "${courierName}"?\nThis will mark orders as tax paid and reset the courier Sahla tax balance.`)) {
+          return;
+        }
+        try {
+          const json = await api(`/sahla-payments/${courierId}/collect`, {
+            method: 'POST',
+          });
+          if (json && json.success) {
+            alert(json.message || 'Tax marked as paid successfully!');
+            await loadSahlaPayments();
+          } else {
+            alert('Collection failed: ' + (json?.error || 'Unknown error'));
+          }
+        } catch (e) {
+          alert('Error collecting tax: ' + e.message);
+        }
+      }
+
+      $('refreshSahlaPaymentsBtn').onclick = () => loadSahlaPayments().catch(() => {});
+      $('sahlaSearchInput').oninput = () => renderSahlaTables();
+      $('sahlaOrdersModalCloseBtn').onclick = () => $('sahlaPaymentOrdersModal').classList.add('hidden');
+      $('sahlaOrdersModalDismissBtn').onclick = () => $('sahlaPaymentOrdersModal').classList.add('hidden');
+      const sahlaModalEl = $('sahlaPaymentOrdersModal');
+      if (sahlaModalEl) {
+        sahlaModalEl.addEventListener('click', (e) => {
+          if (e.target === sahlaModalEl) sahlaModalEl.classList.add('hidden');
+        });
+      }
+
       /** Alerts + global badges (incl. request & review counts): ~real-time while dashboard is open. */
       const REALTIME_POLL_MS = 5000;
       setInterval(() => {
@@ -6341,6 +7159,7 @@
         const tab = document.querySelector('.tab.active')?.getAttribute('data-tab');
         if (tab === 'alerts') loadOrders().catch(() => {});
         if (tab === 'delivery-men') loadDeliveryPersonnel().catch(() => {});
+        if (tab === 'sahla-payments') loadSahlaPayments().catch(() => {});
         if (tab === 'delivery-history') loadDeliveryHistory().catch(() => {});
         if (tab === 'tasks') loadTasks().catch(() => {});
         if (tab === 'partner-requests') loadPartnerRequests().catch(() => {});
