@@ -625,10 +625,21 @@ router.post('/delivery-man-requests/:id/approve', requirePerformanceAuth, async 
 
     const { data: existing, error: exErr } = await supabaseAdmin
       .from('delivery_personnel')
-      .select('id')
+      .select('id, current_latitude, current_longitude')
       .eq('user_id', request.user_id)
       .maybeSingle();
     if (exErr) throw exErr;
+
+    const biskraCoords = (() => {
+      const minLat = 34.8380;
+      const maxLat = 34.8680;
+      const minLng = 5.7000;
+      const maxLng = 5.7420;
+      return {
+        lat: Number((minLat + Math.random() * (maxLat - minLat)).toFixed(7)),
+        lng: Number((minLng + Math.random() * (maxLng - minLng)).toFixed(7)),
+      };
+    })();
 
     let personnelOk = false;
     if (!existing) {
@@ -641,7 +652,10 @@ router.post('/delivery-man-requests/:id/approve', requirePerformanceAuth, async 
         vehicle_brand: vehicleBrand,
         vehicle_year: vehicleYear,
         vehicle_color: request.vehicle_color ?? null,
-        wilaya: request.wilaya ?? null,
+        wilaya: request.wilaya || 'Biskra',
+        province: 'Biskra',
+        current_latitude: biskraCoords.lat,
+        current_longitude: biskraCoords.lng,
         delivery_name: request.full_name?.trim() || null,
         work_phone: request.phone?.trim() || null,
         is_available: true,
@@ -666,13 +680,18 @@ router.post('/delivery-man-requests/:id/approve', requirePerformanceAuth, async 
         vehicle_brand: vehicleBrand,
         vehicle_year: vehicleYear,
         vehicle_color: request.vehicle_color ?? null,
-        wilaya: request.wilaya ?? null,
+        wilaya: request.wilaya || 'Biskra',
+        province: 'Biskra',
         delivery_name: request.full_name?.trim() || null,
         work_phone: request.phone?.trim() || null,
         is_available: true,
         is_online: true,
         updated_at: now,
       };
+      if (!existing.current_latitude || !existing.current_longitude) {
+        updatePayload.current_latitude = biskraCoords.lat;
+        updatePayload.current_longitude = biskraCoords.lng;
+      }
       const { data: up, error: upErr } = await supabaseAdmin
         .from('delivery_personnel')
         .update(updatePayload)
