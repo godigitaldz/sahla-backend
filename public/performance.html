@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sahla — Performance</title>
+    <link rel="icon" type="image/png" href="/sahla-logo-circle.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -210,20 +211,50 @@
         align-items: center;
         gap: 14px;
       }
-      .sahla-logo-box {
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 4px 10px;
+      .sahla-hdr-logo-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #FFC700;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+        background: #f3de11;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-        border: 1px solid rgba(255, 199, 0, 0.4);
+        flex-shrink: 0;
+        transition: transform 0.15s ease;
       }
-      .sahla-logo-img {
-        height: 32px;
-        width: auto;
-        object-fit: contain;
+      .sahla-hdr-logo-circle:hover {
+        transform: scale(1.05);
+      }
+      .sahla-hdr-logo-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .sahla-gate-logo-circle {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3.5px solid #FFC700;
+        box-shadow: 0 6px 18px rgba(243, 222, 17, 0.35), 0 2px 8px rgba(0, 0, 0, 0.08);
+        background: #f3de11;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease;
+      }
+      .sahla-gate-logo-circle:hover {
+        transform: scale(1.04);
+      }
+      .sahla-gate-logo-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         display: block;
       }
       .sahla-brand-titles {
@@ -2140,9 +2171,11 @@
   <body>
     <div id="gate">
       <div class="login-panel">
-        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;">
-          <img src="/logo.webp" alt="Sahla Logo" style="height:44px;width:auto;" onerror="this.src='/logo.png'" />
-          <span style="font-family:'Cairo',sans-serif;font-size:1.75rem;font-weight:900;color:#064E3B;">ساهلة</span>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;">
+          <div class="sahla-gate-logo-circle" title="Sahla Delivery">
+            <img src="/sahla-logo-circle.png" alt="Sahla Logo" />
+          </div>
+          <span style="font-family:'Cairo',sans-serif;font-size:1.35rem;font-weight:900;color:#064E3B;margin-top:6px;line-height:1;">ساهلة</span>
         </div>
         <h2>Performance dashboard</h2>
         <p>Enter the access password to load live orders and tasks from the database.</p>
@@ -2156,6 +2189,9 @@
     <div id="app" class="hidden">
       <header class="sahla-brand-header">
         <div class="sahla-brand-left">
+          <div class="sahla-hdr-logo-circle" title="Sahla Delivery">
+            <img src="/sahla-logo-circle.png" alt="Sahla" />
+          </div>
           <div class="sahla-brand-titles">
             <div class="sahla-brand-main">
               <span class="sahla-arabic-brand">ساهلة</span>
