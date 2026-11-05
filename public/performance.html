@@ -421,30 +421,26 @@
       .tabs {
         display: flex;
         align-items: center;
-        gap: 6px;
-        margin: 0 0 20px;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin: 0 0 16px;
         background: #ffffff;
         border-bottom: 2px solid #fed7aa;
-        padding: 8px 16px;
-        overflow-x: auto;
-        scrollbar-width: none;
+        padding: 6px 12px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
       }
-      .tabs::-webkit-scrollbar {
-        display: none;
-      }
       .tabs button {
-        padding: 8px 14px;
+        padding: 6px 11px;
         background: transparent;
         color: #475569;
         border: 1px solid transparent;
         border-radius: 8px;
         font-weight: 600;
-        font-size: 0.84rem;
+        font-size: 0.81rem;
         white-space: nowrap;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
         cursor: pointer;
         transition: all 0.15s ease;
       }
@@ -994,6 +990,13 @@
         color: #475569;
         white-space: nowrap;
       }
+      .status-pill.status-pending { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+      .status-pill.status-confirmed { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+      .status-pill.status-preparing { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+      .status-pill.status-ready { background: #fef9c3; color: #a16207; border: 1px solid #fef08a; }
+      .status-pill.status-picked_up { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
+      .status-pill.status-delivered { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+      .status-pill.status-cancelled { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
       .order-status-select {
         min-width: 118px;
         height: 30px;
@@ -1425,15 +1428,141 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 14px rgba(249, 115, 22, 0.45);
       }
-      .mo-modal-dialog {
-        width: min(940px, calc(100vw - 32px)) !important;
-        max-width: 940px !important;
-        max-height: 90vh;
+
+      /* Order Details Eye Button */
+      .btn-order-eye {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        padding: 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      }
+      .btn-order-eye:hover {
+        background: #fff7ed;
+        border-color: #f97316;
+        transform: scale(1.08);
+        box-shadow: 0 2px 6px rgba(249, 115, 22, 0.25);
+      }
+
+      /* Order Details Modal */
+      .order-details-modal-dialog {
+        width: min(1080px, calc(100vw - 32px)) !important;
+        max-width: 1080px !important;
+        max-height: 92vh;
         display: flex;
         flex-direction: column;
         padding: 0 !important;
         overflow: hidden;
         border-radius: 16px;
+      }
+      .order-details-body {
+        padding: 20px 24px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .od-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 14px;
+      }
+      .od-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px 16px;
+      }
+      .od-card-title {
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #64748b;
+        letter-spacing: 0.04em;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .od-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      .od-table th {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 700;
+        padding: 8px 12px;
+        text-align: left;
+        border-bottom: 1px solid #cbd5e1;
+      }
+      .od-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: top;
+      }
+      .od-financials-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 12px;
+        padding: 12px 16px;
+      }
+      .od-timeline {
+        border-left: 2px solid #e2e8f0;
+        padding-left: 16px;
+        margin-left: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .od-timeline-item {
+        position: relative;
+        font-size: 0.82rem;
+      }
+      .od-timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -21px;
+        top: 4px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #f97316;
+      }
+
+      /* Expanded Manual Order Widescreen Dialog */
+      .mo-modal-dialog {
+        width: min(1540px, calc(100vw - 32px)) !important;
+        max-width: 1540px !important;
+        max-height: 94vh;
+        display: flex;
+        flex-direction: column;
+        padding: 0 !important;
+        overflow: hidden;
+        border-radius: 16px;
+      }
+      .mo-widescreen-grid {
+        display: grid;
+        grid-template-columns: 460px 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+      @media (max-width: 1024px) {
+        .mo-widescreen-grid {
+          grid-template-columns: 1fr;
+        }
       }
       .mo-header {
         padding: 16px 22px;
@@ -2027,9 +2156,6 @@
     <div id="app" class="hidden">
       <header class="sahla-brand-header">
         <div class="sahla-brand-left">
-          <div class="sahla-logo-box">
-            <img src="/logo.webp" alt="Sahla Logo" class="sahla-logo-img" onerror="this.src='/logo.png'" />
-          </div>
           <div class="sahla-brand-titles">
             <div class="sahla-brand-main">
               <span class="sahla-arabic-brand">ساهلة</span>
@@ -2037,7 +2163,6 @@
               <span class="sahla-latin-brand">Sahla Delivery</span>
               <span class="sahla-badge-ops">Console</span>
             </div>
-            <div class="sahla-brand-tagline">خلي في بلاصتك.. حنا نجيو لعندك • Live Dispatch &amp; Operations</div>
           </div>
         </div>
         <div class="sahla-brand-right">
@@ -2182,6 +2307,7 @@
             <table>
               <thead>
                 <tr>
+                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
                   <th>Order</th>
                   <th>Status</th>
                   <th>Restaurant</th>
@@ -2207,6 +2333,7 @@
             <table>
               <thead>
                 <tr>
+                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
                   <th>Order</th>
                   <th>Status</th>
                   <th>Restaurant</th>
@@ -2231,6 +2358,7 @@
             <table>
               <thead>
                 <tr>
+                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
                   <th>#</th>
                   <th>Order</th>
                   <th>Status</th>
@@ -2271,6 +2399,7 @@
             <table>
               <thead>
                 <tr>
+                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
                   <th>#</th>
                   <th>Order</th>
                   <th>Status</th>
@@ -2317,6 +2446,7 @@
             <table>
               <thead>
                 <tr>
+                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
                   <th>Order</th>
                   <th>Parcel sender</th>
                   <th>Status</th>
@@ -2338,6 +2468,7 @@
             <table>
               <thead>
                 <tr>
+                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
                   <th>#</th>
                   <th>Order</th>
                   <th>Status</th>
@@ -2393,7 +2524,10 @@
 
                 <section id="panel-delivery-men" class="hidden">
           <div class="toolbar">
-            <button type="button" class="btn-refresh" id="refreshDeliveryMen">Refresh</button>
+            <div class="field" style="flex:1;max-width:320px;">
+              <label for="deliveryMenSearchInput">Search</label>
+              <input type="text" id="deliveryMenSearchInput" placeholder="Search by name, phone, notes..." autocomplete="off" />
+            </div>
             <div class="field">
               <label for="deliveryMenAvailableFilter">Available</label>
               <select id="deliveryMenAvailableFilter">
@@ -2406,6 +2540,7 @@
               <input type="checkbox" id="deliveryMenShowBlocked" />
               <span>Show blocked</span>
             </label>
+            <button type="button" class="btn-refresh" id="refreshDeliveryMen">Refresh</button>
           </div>
           <p class="meta" id="deliveryMenMeta"></p>
           <div style="overflow-x: auto">
@@ -2453,6 +2588,7 @@
             <table>
               <thead>
                 <tr>
+                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
                   <th>#</th>
                   <th>Order</th>
                   <th>Restaurant</th>
@@ -2931,7 +3067,35 @@
       </div>
     </div>
 
-    <!-- Manual Order Creation Modal -->
+    <!-- Complete Order Details Modal (View full order like restaurant owner) -->
+    <div id="orderDetailsModal" class="modal-overlay hidden" role="dialog" aria-labelledby="odModalTitle" aria-modal="true">
+      <div class="modal-dialog order-details-modal-dialog">
+        <div class="mo-header" style="background:linear-gradient(135deg, #064E3B 0%, #033628 100%);color:#fff;border-bottom:2px solid #FFC700;padding:12px 20px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:1.3rem;">👁️</span>
+            <div>
+              <h3 id="odModalTitle" style="margin:0;font-size:1.15rem;font-weight:800;color:#fff;">Order Details</h3>
+              <p id="odModalSubtitle" style="margin:2px 0 0;font-size:0.8rem;color:#a7f3d0;"></p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span id="odStatusBadge" class="status-pill" style="font-size:0.85rem;padding:4px 10px;font-weight:700;"></span>
+            <button type="button" class="mo-close-btn" id="odCloseBtn" title="Close" style="color:#fff;background:rgba(255,255,255,0.18);">✕</button>
+          </div>
+        </div>
+
+        <div class="order-details-body" id="odModalContent">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="mo-footer" style="padding:12px 20px;border-top:1px solid #e2e8f0;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;">
+          <div id="odFooterSummary" style="font-size:0.85rem;color:#475569;font-weight:600;"></div>
+          <button type="button" class="btn-ghost" id="odDismissBtn" style="padding:7px 18px;">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual Order Creation Modal (Widescreen No-Scroll Layout) -->
     <div id="manualOrderModal" class="modal-overlay hidden" role="dialog" aria-labelledby="moModalTitle" aria-modal="true">
       <div class="modal-dialog mo-modal-dialog">
         <div class="mo-header">
@@ -2940,249 +3104,246 @@
         </div>
 
         <div class="mo-body">
-          <!-- Step 1: Restaurant & Customer Details -->
-          <div class="mo-grid-2">
-            <!-- Restaurant Selection -->
-            <div class="mo-card">
-              <div class="mo-card-title">🏪 Restaurant Selection</div>
-              <div class="mo-field">
-                <label for="moRestaurantSelect">Select Restaurant *</label>
-                <select id="moRestaurantSelect">
-                  <option value="">-- Choose a restaurant --</option>
-                </select>
-              </div>
-              <div id="moRestaurantInfo" class="mo-chip hidden"></div>
-            </div>
-
-            <!-- Customer Details -->
-            <div class="mo-card">
-              <div class="mo-card-title">👤 Customer Details</div>
-              <div class="mo-field">
-                <label for="moCustomerPhone">Phone Number * <span style="font-size:0.75rem;font-weight:400;color:#64748b;">(auto-lookup on type)</span></label>
-                <input id="moCustomerPhone" type="text" placeholder="e.g. 0770 12 34 56" autocomplete="off" />
-              </div>
-              <div id="moCustomerLookupChip" class="mo-chip info hidden"></div>
-              <div class="mo-field" style="margin-top:8px;">
-                <label for="moCustomerName">Customer Name</label>
-                <input id="moCustomerName" type="text" placeholder="Customer full name..." autocomplete="off" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 2: Delivery Location & Fees -->
-          <div class="mo-grid-2">
-            <!-- Location Details -->
-            <div class="mo-card">
-              <div class="mo-card-title">📍 Delivery Location</div>
-              <div class="mo-field">
-                <label for="moDeliveryAddress">Street / Neighborhood / Address *</label>
-                <input id="moDeliveryAddress" type="text" placeholder="e.g. حي النصر قرب مسجد السلام, طابق 2" />
-              </div>
-              <div class="mo-field">
-                <label for="moCoordinates">GPS Coordinates or Google Maps Link</label>
-                <input id="moCoordinates" type="text" placeholder="Paste Maps URL or lat, lng (e.g. 34.8512, 5.7289)" />
-              </div>
-              <div id="moDistanceChip" class="mo-chip info hidden"></div>
-            </div>
-
-            <!-- Fees & Payment -->
-            <div class="mo-card">
-              <div class="mo-card-title">💵 Fees &amp; Payment</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="mo-widescreen-grid">
+            <!-- Left Column: Logistics, Customer, Location, Fees, Promo, Notes -->
+            <div class="mo-left-col" style="display:flex;flex-direction:column;gap:10px;">
+              <!-- Restaurant & Customer Details -->
+              <div class="mo-card">
+                <div class="mo-card-title">🏪 Restaurant Selection &amp; 👤 Customer</div>
                 <div class="mo-field">
-                  <label for="moDeliveryFee">Delivery Fee (DA)</label>
-                  <input id="moDeliveryFee" type="number" min="0" step="10" value="150" />
-                </div>
-                <div class="mo-field">
-                  <label for="moServiceFee">Service Fee (DA)</label>
-                  <input id="moServiceFee" type="number" min="0" step="10" value="0" />
-                </div>
-              </div>
-              <div class="mo-field" style="margin-top:6px;">
-                <label for="moPaymentMethod">Payment Method</label>
-                <select id="moPaymentMethod">
-                  <option value="cash_on_delivery">Cash on delivery (الدفع عند الاستلام)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 3: Menu Items & Customizations -->
-          <div class="mo-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <div class="mo-card-title" style="margin:0;">🍽️ Menu Items &amp; Customizations</div>
-              <button type="button" class="btn-ghost" id="moToggleCustomItemBtn" style="font-size:0.8rem;padding:4px 8px;">
-                ➕ Add Custom Off-Menu Item
-              </button>
-            </div>
-
-            <!-- Standard Menu Item Selector -->
-            <div id="moStandardItemSection">
-              <div class="mo-item-picker-row">
-                <div style="flex:1;min-width:200px;">
-                  <label for="moItemSearch" style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Filter Menu</label>
-                  <input id="moItemSearch" type="text" placeholder="Search item by name or category..." style="padding:6px 10px;font-size:0.85rem;" />
-                </div>
-                <div style="flex:2;min-width:240px;">
-                  <label for="moItemSelect" style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Select Item</label>
-                  <select id="moItemSelect" style="padding:6px 10px;font-size:0.85rem;">
-                    <option value="">-- Select a restaurant first --</option>
+                  <label for="moRestaurantSelect">Select Restaurant *</label>
+                  <select id="moRestaurantSelect">
+                    <option value="">-- Choose a restaurant --</option>
                   </select>
                 </div>
+                <div id="moRestaurantInfo" class="mo-chip hidden"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+                  <div class="mo-field">
+                    <label for="moCustomerPhone">Phone * <span style="font-size:0.7rem;font-weight:400;color:#64748b;">(auto-lookup)</span></label>
+                    <input id="moCustomerPhone" type="text" placeholder="0770 12 34 56" autocomplete="off" />
+                  </div>
+                  <div class="mo-field">
+                    <label for="moCustomerName">Customer Name</label>
+                    <input id="moCustomerName" type="text" placeholder="Customer name..." autocomplete="off" />
+                  </div>
+                </div>
+                <div id="moCustomerLookupChip" class="mo-chip info hidden" style="margin-top:4px;"></div>
               </div>
 
-              <!-- Item Configuration Box (Pricing options, variants, supplements) -->
-              <div id="moItemConfigBox" class="mo-item-config-box hidden">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                  <strong id="moConfigItemName" style="font-size:0.95rem;"></strong>
-                  <span id="moConfigItemBasePrice" style="font-weight:700;color:#e65100;"></span>
+              <!-- Delivery Location -->
+              <div class="mo-card">
+                <div class="mo-card-title">📍 Delivery Location</div>
+                <div class="mo-field">
+                  <label for="moDeliveryAddress">Street / Neighborhood / Address *</label>
+                  <input id="moDeliveryAddress" type="text" placeholder="e.g. حي النصر قرب مسجد السلام, طابق 2" />
                 </div>
-
-                <!-- Sizes / Pricing Options -->
-                <div id="moSizesGroup" class="mo-options-group hidden">
-                  <div class="mo-options-title">Size / Portion (الحجم)</div>
-                  <div id="moSizesPills" class="mo-pills"></div>
+                <div class="mo-field" style="margin-top:6px;">
+                  <label for="moCoordinates">GPS Coordinates or Google Maps Link</label>
+                  <input id="moCoordinates" type="text" placeholder="Paste Maps URL or lat, lng (e.g. 34.8512, 5.7289)" />
                 </div>
+                <div id="moDistanceChip" class="mo-chip info hidden" style="margin-top:4px;"></div>
+              </div>
 
-                <!-- Variants -->
-                <div id="moVariantsGroup" class="mo-options-group hidden">
-                  <div class="mo-options-title">Variant / Flavor (النوع)</div>
-                  <div id="moVariantsPills" class="mo-pills"></div>
+              <!-- Fees, Payment & Promo Code -->
+              <div class="mo-card">
+                <div class="mo-card-title">💵 Fees, Payment &amp; 🎟️ Promo Code</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <div class="mo-field">
+                    <label for="moDeliveryFee">Delivery Fee (DA)</label>
+                    <input id="moDeliveryFee" type="number" min="0" step="10" value="150" />
+                  </div>
+                  <div class="mo-field">
+                    <label for="moServiceFee">Service Fee (DA)</label>
+                    <input id="moServiceFee" type="number" min="0" step="10" value="0" />
+                  </div>
                 </div>
-
-                <!-- Supplements -->
-                <div id="moSupplementsGroup" class="mo-options-group hidden">
-                  <div class="mo-options-title">Supplements &amp; Extras (إضافات)</div>
-                  <div id="moSupplementsList" class="mo-supplements-list"></div>
-                </div>
-
-                <!-- Item Quantity & Special Instructions -->
-                <div style="display:grid;grid-template-columns:120px 1fr;gap:12px;margin-top:10px;align-items:flex-end;">
-                  <div>
-                    <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Quantity</label>
-                    <div class="mo-qty-control">
-                      <button type="button" class="mo-btn-qty" id="moConfigQtyMinus">-</button>
-                      <input id="moConfigQty" type="number" value="1" min="1" max="99" style="width:44px;text-align:center;padding:4px;" />
-                      <button type="button" class="mo-btn-qty" id="moConfigQtyPlus">+</button>
+                <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-top:6px;">
+                  <div class="mo-field">
+                    <label for="moPaymentMethod">Payment Method</label>
+                    <select id="moPaymentMethod">
+                      <option value="cash_on_delivery">Cash on delivery (الدفع عند الاستلام)</option>
+                    </select>
+                  </div>
+                  <div class="mo-field">
+                    <label for="moPromoCode">Promo Code</label>
+                    <div style="display:flex;gap:4px;">
+                      <input id="moPromoCode" type="text" placeholder="CODE" style="text-transform:uppercase;" />
+                      <button type="button" class="btn-ghost" id="moApplyPromoBtn" style="white-space:nowrap;padding:4px 8px;font-size:0.75rem;">Apply</button>
                     </div>
                   </div>
-                  <div>
-                    <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Item Notes / Special Instructions</label>
-                    <input id="moConfigNotes" type="text" placeholder="e.g. Extra sauce, no onions..." style="padding:6px 10px;font-size:0.85rem;" />
+                </div>
+                <div id="moPromoStatus" class="mo-chip hidden" style="margin-top:4px;"></div>
+              </div>
+
+              <!-- General Order Notes -->
+              <div class="mo-card">
+                <div class="mo-card-title">📝 General Order Notes</div>
+                <textarea id="moOrderNotes" rows="2" placeholder="Delivery instructions, customer notes, call upon arrival..."></textarea>
+              </div>
+            </div>
+
+            <!-- Right Column: Menu Items, Customizations, Cart, Financial Summary -->
+            <div class="mo-right-col" style="display:flex;flex-direction:column;gap:10px;">
+              <div class="mo-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <div class="mo-card-title" style="margin:0;">🍽️ Menu Items &amp; Customizations</div>
+                  <button type="button" class="btn-ghost" id="moToggleCustomItemBtn" style="font-size:0.78rem;padding:4px 8px;">
+                    ➕ Add Custom Off-Menu Item
+                  </button>
+                </div>
+
+                <!-- Standard Menu Item Selector -->
+                <div id="moStandardItemSection">
+                  <div class="mo-item-picker-row" style="margin-bottom:8px;">
+                    <div style="flex:1;min-width:180px;">
+                      <label for="moItemSearch" style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Filter Menu</label>
+                      <input id="moItemSearch" type="text" placeholder="Search item by name..." style="padding:5px 8px;font-size:0.82rem;" />
+                    </div>
+                    <div style="flex:2;min-width:220px;">
+                      <label for="moItemSelect" style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Select Item</label>
+                      <select id="moItemSelect" style="padding:5px 8px;font-size:0.82rem;">
+                        <option value="">-- Select a restaurant first --</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Item Configuration Box (Pricing options, variants, supplements) -->
+                  <div id="moItemConfigBox" class="mo-item-config-box hidden">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                      <strong id="moConfigItemName" style="font-size:0.92rem;"></strong>
+                      <span id="moConfigItemBasePrice" style="font-weight:700;color:#e65100;"></span>
+                    </div>
+
+                    <!-- Sizes / Pricing Options -->
+                    <div id="moSizesGroup" class="mo-options-group hidden">
+                      <div class="mo-options-title">Size / Portion (الحجم)</div>
+                      <div id="moSizesPills" class="mo-pills"></div>
+                    </div>
+
+                    <!-- Variants -->
+                    <div id="moVariantsGroup" class="mo-options-group hidden">
+                      <div class="mo-options-title">Variant / Flavor (النوع)</div>
+                      <div id="moVariantsPills" class="mo-pills"></div>
+                    </div>
+
+                    <!-- Supplements -->
+                    <div id="moSupplementsGroup" class="mo-options-group hidden">
+                      <div class="mo-options-title">Supplements &amp; Extras (إضافات)</div>
+                      <div id="moSupplementsList" class="mo-supplements-list"></div>
+                    </div>
+
+                    <!-- Item Quantity & Special Instructions -->
+                    <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;margin-top:8px;align-items:flex-end;">
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Quantity</label>
+                        <div class="mo-qty-control">
+                          <button type="button" class="mo-btn-qty" id="moConfigQtyMinus">-</button>
+                          <input id="moConfigQty" type="number" value="1" min="1" max="99" style="width:40px;text-align:center;padding:3px;" />
+                          <button type="button" class="mo-btn-qty" id="moConfigQtyPlus">+</button>
+                        </div>
+                      </div>
+                      <div>
+                        <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Item Notes / Special Instructions</label>
+                        <input id="moConfigNotes" type="text" placeholder="e.g. Extra sauce, no onions..." style="padding:5px 8px;font-size:0.82rem;" />
+                      </div>
+                    </div>
+
+                    <div style="margin-top:10px;text-align:right;">
+                      <button type="button" class="btn-primary" id="moAddItemBtn" style="padding:6px 14px;font-size:0.84rem;">
+                        ➕ Add Item to Cart (<span id="moConfigTotalBadge">0</span> DA)
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div style="margin-top:12px;text-align:right;">
-                  <button type="button" class="btn-primary" id="moAddItemBtn" style="padding:8px 16px;font-size:0.88rem;">
-                    ➕ Add Item to Cart (<span id="moConfigTotalBadge">0</span> DA)
-                  </button>
+                <!-- Custom Off-Menu Item Form -->
+                <div id="moCustomItemSection" class="mo-item-config-box hidden" style="background:#fff8e1;border-color:#ffe082;">
+                  <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;color:#b45309;">
+                    Custom Off-Menu Line Item (بند خاص)
+                  </div>
+                  <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:6px;">
+                    <div>
+                      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Item Description *</label>
+                      <input id="moCustomName" type="text" placeholder="e.g. Custom Family Platter" style="padding:5px 8px;font-size:0.82rem;" />
+                    </div>
+                    <div>
+                      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Unit Price (DA) *</label>
+                      <input id="moCustomPrice" type="number" min="0" step="50" placeholder="0" style="padding:5px 8px;font-size:0.82rem;" />
+                    </div>
+                    <div>
+                      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Quantity</label>
+                      <input id="moCustomQty" type="number" min="1" value="1" style="padding:5px 8px;font-size:0.82rem;" />
+                    </div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <input id="moCustomNotes" type="text" placeholder="Special note for custom item..." style="flex:1;padding:5px 8px;font-size:0.82rem;" />
+                    <button type="button" class="btn-primary" id="moAddCustomItemBtn" style="padding:6px 12px;font-size:0.82rem;white-space:nowrap;">
+                      Add Custom Item
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Custom Off-Menu Item Form -->
-            <div id="moCustomItemSection" class="mo-item-config-box hidden" style="background:#fff8e1;border-color:#ffe082;">
-              <div style="font-weight:700;font-size:0.88rem;margin-bottom:8px;color:#b45309;">
-                Custom Off-Menu Line Item (بند خاص)
-              </div>
-              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:8px;">
-                <div>
-                  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Item Description *</label>
-                  <input id="moCustomName" type="text" placeholder="e.g. Custom Family Platter" />
+                <!-- Order Cart Table -->
+                <div style="margin-top:10px;">
+                  <div style="font-size:0.82rem;font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between;">
+                    <span>Selected Items Cart (<span id="moCartCount">0</span>)</span>
+                    <span id="moLiveSubtotal" style="color:#e65100;">Subtotal: 0 DA</span>
+                  </div>
+                  <div style="max-height:180px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
+                    <table class="mo-cart-table" style="margin:0;">
+                      <thead>
+                        <tr>
+                          <th style="min-width:160px;">Item Details</th>
+                          <th style="width:80px;">Unit Price</th>
+                          <th style="width:100px;">Qty</th>
+                          <th style="width:80px;">Total</th>
+                          <th style="width:36px;"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="moCartTbody">
+                        <tr>
+                          <td colspan="5" style="text-align:center;color:#9ca3af;padding:12px;">
+                            No items added yet. Select items above to add to cart.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div>
-                  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Unit Price (DA) *</label>
-                  <input id="moCustomPrice" type="number" min="0" step="50" placeholder="0" />
-                </div>
-                <div>
-                  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:4px;">Quantity</label>
-                  <input id="moCustomQty" type="number" min="1" value="1" />
-                </div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <input id="moCustomNotes" type="text" placeholder="Special note for custom item..." style="flex:1;margin-right:10px;" />
-                <button type="button" class="btn-primary" id="moAddCustomItemBtn" style="padding:8px 14px;font-size:0.85rem;white-space:nowrap;">
-                  Add Custom Item
-                </button>
-              </div>
-            </div>
 
-            <!-- Order Cart Table -->
-            <div style="margin-top:14px;">
-              <div style="font-size:0.85rem;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;">
-                <span>Selected Items Cart (<span id="moCartCount">0</span>)</span>
-                <span id="moLiveSubtotal" style="color:#e65100;">Subtotal: 0 DA</span>
+              <!-- Financial Summary Box -->
+              <div class="mo-summary-box" style="padding:10px 14px;gap:8px;">
+                <div class="mo-summary-item">
+                  <div class="label">Subtotal</div>
+                  <div class="value" id="moSumSubtotal">0 DA</div>
+                </div>
+                <div class="mo-summary-item">
+                  <div class="label">Delivery Fee</div>
+                  <div class="value" id="moSumDelivery">0 DA</div>
+                </div>
+                <div class="mo-summary-item">
+                  <div class="label">Service Fee</div>
+                  <div class="value" id="moSumService">0 DA</div>
+                </div>
+                <div class="mo-summary-item">
+                  <div class="label">Discount</div>
+                  <div class="value" id="moSumDiscount" style="color:#ef5350;">-0 DA</div>
+                </div>
+                <div class="mo-summary-item total">
+                  <div class="label">Total Amount</div>
+                  <div class="value" id="moSumTotal">0 DA</div>
+                </div>
+                <div class="mo-summary-item cash">
+                  <div class="label">Cash to Collect</div>
+                  <div class="value" id="moSumCash">0 DA</div>
+                </div>
               </div>
-              <div style="overflow-x:auto;">
-                <table class="mo-cart-table">
-                  <thead>
-                    <tr>
-                      <th style="min-width:180px;">Item Details</th>
-                      <th style="width:90px;">Unit Price</th>
-                      <th style="width:110px;">Qty</th>
-                      <th style="width:90px;">Total</th>
-                      <th style="width:40px;"></th>
-                    </tr>
-                  </thead>
-                  <tbody id="moCartTbody">
-                    <tr>
-                      <td colspan="5" style="text-align:center;color:#9ca3af;padding:16px;">
-                        No items added yet. Select items above to add to cart.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+
+              <!-- Result / Notification Banner -->
+              <div id="moResultBanner" class="force-push-result hidden"></div>
             </div>
           </div>
-
-          <!-- Step 4: Promo Code & General Notes -->
-          <div class="mo-grid-2">
-            <div class="mo-card">
-              <div class="mo-card-title">🎟️ Promo Code</div>
-              <div style="display:flex;gap:8px;">
-                <input id="moPromoCode" type="text" placeholder="Enter coupon code (e.g. SAHLA10)" style="text-transform:uppercase;" />
-                <button type="button" class="btn-ghost" id="moApplyPromoBtn" style="white-space:nowrap;padding:8px 14px;">Apply</button>
-              </div>
-              <div id="moPromoStatus" class="mo-chip hidden"></div>
-            </div>
-
-            <div class="mo-card">
-              <div class="mo-card-title">📝 General Order Notes</div>
-              <textarea id="moOrderNotes" rows="2" placeholder="Delivery instructions, customer notes, call upon arrival..."></textarea>
-            </div>
-          </div>
-
-          <!-- Step 5: Financial Summary Box -->
-          <div class="mo-summary-box">
-            <div class="mo-summary-item">
-              <div class="label">Subtotal</div>
-              <div class="value" id="moSumSubtotal">0 DA</div>
-            </div>
-            <div class="mo-summary-item">
-              <div class="label">Delivery Fee</div>
-              <div class="value" id="moSumDelivery">0 DA</div>
-            </div>
-            <div class="mo-summary-item">
-              <div class="label">Service Fee</div>
-              <div class="value" id="moSumService">0 DA</div>
-            </div>
-            <div class="mo-summary-item">
-              <div class="label">Discount</div>
-              <div class="value" id="moSumDiscount" style="color:#ef5350;">-0 DA</div>
-            </div>
-            <div class="mo-summary-item total">
-              <div class="label">Total Amount</div>
-              <div class="value" id="moSumTotal">0 DA</div>
-            </div>
-            <div class="mo-summary-item cash">
-              <div class="label">Cash to Collect</div>
-              <div class="value" id="moSumCash">0 DA</div>
-            </div>
-          </div>
-
-          <!-- Result / Notification Banner -->
-          <div id="moResultBanner" class="force-push-result hidden"></div>
         </div>
 
         <!-- Step 6: Dual Action Execution Footer -->
@@ -4893,6 +5054,7 @@
                 : '');
           }
           tr.innerHTML =
+            '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
             '<td>' +
             esc(o.order_number || o.id) +
             '<span class="order-summary-inline">Items: ' +
@@ -4955,7 +5117,7 @@
         });
         if (!mo.length) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="14" class="meta">None</td>';
+          tr.innerHTML = '<td colspan="15" class="meta">None</td>';
           ob.appendChild(tr);
         }
 
@@ -4974,6 +5136,7 @@
                 : '');
           }
           tr.innerHTML =
+            '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
             '<td>' +
             esc(o.order_number || o.id) +
             '<span class="order-summary-inline">Items: ' +
@@ -5018,7 +5181,7 @@
         });
         if (!mp.length) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="13" class="meta">None</td>';
+          tr.innerHTML = '<td colspan="14" class="meta">None</td>';
           pb.appendChild(tr);
         }
 
@@ -5029,6 +5192,7 @@
           tr.className = 'row-warn';
           const sender = o.parcel_sender && (o.parcel_sender.name || o.parcel_sender.id);
           tr.innerHTML =
+            '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
             '<td>' +
             esc(o.order_number || o.id) +
             '<span class="order-summary-inline">Items: ' +
@@ -5056,7 +5220,7 @@
         });
         if (!mw.length) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="10" class="meta">None</td>';
+          tr.innerHTML = '<td colspan="11" class="meta">None</td>';
           wb.appendChild(tr);
         }
 
@@ -5424,7 +5588,7 @@
           cb.innerHTML = '';
           if (!rows.length) {
             const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="13" class="meta">No cancelled orders for this filter.</td>';
+            tr.innerHTML = '<td colspan="14" class="meta">No cancelled orders for this filter.</td>';
             cb.appendChild(tr);
             return;
           }
@@ -5441,6 +5605,7 @@
                   : '');
             }
             tr.innerHTML =
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
               '<td class="num">' +
               (i + 1) +
               '</td><td>' +
@@ -5517,7 +5682,7 @@
           tb.innerHTML = '';
           if (!newOrders.length) {
             const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="14" class="meta">No orders match the filters.</td>';
+            tr.innerHTML = '<td colspan="15" class="meta">No orders match the filters.</td>';
             tb.appendChild(tr);
           } else {
             newOrders.forEach((o, i) => {
@@ -5532,6 +5697,7 @@
                   : '');
             }
             tr.innerHTML =
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
               '<td class="num">' +
               (i + 1) +
               '</td><td>' +
@@ -5626,7 +5792,7 @@
         } else {
           const errMsg = ordersRes.reason?.message || 'Failed to load orders';
           $('ordersMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
-          tb.innerHTML = '<tr><td colspan="14" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load orders:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadOrders()">Retry</button></td></tr>';
+          tb.innerHTML = '<tr><td colspan="15" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load orders:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadOrders()">Retry</button></td></tr>';
         }
 
         const pob = $('parcelOrdersBody');
@@ -5643,13 +5809,14 @@
           pob.innerHTML = '';
           if (!parcelActiveRows.length) {
             const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="10" class="meta">No parcel orders match the filters.</td>';
+            tr.innerHTML = '<td colspan="12" class="meta">No parcel orders match the filters.</td>';
             pob.appendChild(tr);
           } else {
             parcelActiveRows.forEach((o, i) => {
               const tr = document.createElement('tr');
               const sender = o.parcel_sender && (o.parcel_sender.name || o.parcel_sender.id);
               tr.innerHTML =
+                '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
                 '<td class="num">' +
                 (i + 1) +
                 '</td><td>' +
@@ -5679,7 +5846,7 @@
         } else {
           const errMsg = parcelRes.reason?.message || 'Failed to load parcel orders';
           $('parcelOrdersMeta').innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
-          pob.innerHTML = '<tr><td colspan="10" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load parcel orders:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadOrders()">Retry</button></td></tr>';
+          pob.innerHTML = '<tr><td colspan="12" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load parcel orders:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadOrders()">Retry</button></td></tr>';
         }
 
         await loadCancelledOrders().catch((e) => {
@@ -5803,10 +5970,21 @@
       function filterDeliveryPersonnelRows(rows) {
         const availableFilter = ($('deliveryMenAvailableFilter')?.value || 'all').trim();
         const showBlocked = Boolean($('deliveryMenShowBlocked')?.checked);
+        const q = ($('deliveryMenSearchInput')?.value || '').trim().toLowerCase();
         return (rows || []).filter((row) => {
           if (!showBlocked && row.is_blocked === true) return false;
           if (availableFilter === 'yes' && row.is_available !== true) return false;
           if (availableFilter === 'no' && row.is_available === true) return false;
+          if (q) {
+            const name = String(row.delivery_name || '').toLowerCase();
+            const phone = String(row.work_phone || '').toLowerCase();
+            const id = String(row.id || '').toLowerCase();
+            const uid = String(row.user_id || '').toLowerCase();
+            const note = String(cachedDeliveryManNotes?.[row.user_id] || '').toLowerCase();
+            if (!name.includes(q) && !phone.includes(q) && !id.includes(q) && !uid.includes(q) && !note.includes(q)) {
+              return false;
+            }
+          }
           return true;
         });
       }
@@ -6110,7 +6288,7 @@
           tb.innerHTML = '';
           if (!rows.length) {
             const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="8" class="meta">No delivered orders for this filter.</td>';
+            tr.innerHTML = '<td colspan="9" class="meta">No delivered orders for this filter.</td>';
             tb.appendChild(tr);
             return;
           }
@@ -6119,6 +6297,7 @@
             const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
             const collect = needsCollectPayment(o);
             tr.innerHTML =
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
               '<td class="num">' +
               (i + 1) +
               '</td><td>' +
@@ -6148,7 +6327,7 @@
           if (dhm) dhm.innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
           const tb = $('deliveryHistoryBody');
           if (tb) {
-            tb.innerHTML = '<tr><td colspan="8" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load delivered history:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryHistory()">Retry</button></td></tr>';
+            tb.innerHTML = '<tr><td colspan="9" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load delivered history:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryHistory()">Retry</button></td></tr>';
           }
         }
       }
@@ -7194,7 +7373,18 @@
       }
 
       $('refreshTasks').onclick = () => loadTasks();
-            $('refreshDeliveryMen').onclick = () => loadDeliveryPersonnel().catch(() => {});
+      $('refreshDeliveryMen').onclick = () => loadDeliveryPersonnel().catch(() => {});
+      const searchDmEl = $('deliveryMenSearchInput');
+      if (searchDmEl) {
+        searchDmEl.oninput = () => {
+          if (!cachedDeliveryPersonnelRows.length) return;
+          renderDeliveryPersonnelTable(
+            cachedDeliveryPersonnelRows,
+            cachedPinnedUserIds || [],
+            cachedDeliveryManNotes || {},
+          );
+        };
+      }
       $('deliveryMenAvailableFilter').onchange = () => {
         if (!cachedDeliveryPersonnelRows.length) {
           loadDeliveryPersonnel().catch(() => {});
@@ -7764,6 +7954,278 @@
         } catch (e) {
           alert('Error collecting tax: ' + e.message);
         }
+      }
+
+      function orderStatusClass(st) {
+        return 'status-' + String(st || '').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      }
+
+      async function openOrderDetailsModal(orderId) {
+        if (!orderId) return;
+        const modal = $('orderDetailsModal');
+        if (!modal) return;
+        const titleEl = $('odModalTitle');
+        const subtitleEl = $('odModalSubtitle');
+        const badgeEl = $('odStatusBadge');
+        const contentEl = $('odModalContent');
+        const footerEl = $('odFooterSummary');
+
+        titleEl.textContent = 'Loading order...';
+        subtitleEl.textContent = `Order ID: ${orderId}`;
+        badgeEl.textContent = '...';
+        badgeEl.className = 'status-pill';
+        contentEl.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#64748b;"><div style="font-size:1.8rem;margin-bottom:8px;">⏳</div><div>Loading comprehensive order details...</div></div>';
+        if (footerEl) footerEl.textContent = '';
+        modal.classList.remove('hidden');
+
+        try {
+          const res = await api(`/orders/${encodeURIComponent(orderId)}`);
+          if (!res || !res.success || !res.order) {
+            throw new Error(res?.error || 'Order not found');
+          }
+          const o = res.order;
+          const num = o.order_number || o.id;
+          titleEl.textContent = `Order #${num}`;
+          subtitleEl.textContent = `Created: ${fmtDate(o.created_at)} • Updated: ${fmtDate(o.updated_at)}`;
+          badgeEl.textContent = (o.status || 'unknown').toUpperCase();
+          badgeEl.className = `status-pill ${orderStatusClass(o.status)}`;
+
+          const rest = o.restaurant || {};
+          const cust = o.customer || {};
+          const courier = o.delivery_personnel || {};
+          const courierUser = courier.user || {};
+          const courierName = courier.delivery_name || courierUser.name || o.courier_display_name || 'Not assigned';
+          const courierPhone = courier.work_phone || courierUser.phone || o.courier_display_phone || '—';
+          const items = Array.isArray(o.items) ? o.items : [];
+          const events = Array.isArray(o.events) ? o.events : [];
+
+          // Render summary cards: Restaurant, Customer, Courier
+          let cardsHtml = `
+            <div class="od-summary-grid">
+              <div class="od-card">
+                <div class="od-card-title">🏪 Restaurant</div>
+                <div style="font-weight:700;font-size:0.95rem;color:#1e293b;">${esc(rest.name || o.restaurant_id || '—')}</div>
+                <div style="font-size:0.84rem;color:#475569;margin-top:4px;">
+                  📞 Phone: ${rest.phone ? `<a href="tel:${esc(rest.phone)}" style="color:#0284c7;font-weight:600;">${esc(rest.phone)}</a>` : '—'}
+                </div>
+                <div style="font-size:0.82rem;color:#64748b;margin-top:2px;">
+                  📍 ${esc([rest.address_line1, rest.city].filter(Boolean).join(', ') || 'No address')}
+                </div>
+              </div>
+
+              <div class="od-card">
+                <div class="od-card-title">👤 Customer &amp; Delivery</div>
+                <div style="font-weight:700;font-size:0.95rem;color:#1e293b;">${esc(cust.name || o.customer_name || 'Guest / App Customer')}</div>
+                <div style="font-size:0.84rem;color:#475569;margin-top:4px;">
+                  📞 Phone: ${(cust.phone || o.customer_phone) ? `<a href="tel:${esc(cust.phone || o.customer_phone)}" style="color:#0284c7;font-weight:600;">${esc(cust.phone || o.customer_phone)}</a>` : '—'}
+                </div>
+                <div style="font-size:0.82rem;color:#64748b;margin-top:2px;">
+                  📍 ${esc(o.delivery_address || '—')}
+                </div>
+                ${o.delivery_latitude && o.delivery_longitude ? `
+                  <div style="margin-top:4px;">
+                    <a href="https://www.google.com/maps/search/?api=1&query=${esc(o.delivery_latitude)},${esc(o.delivery_longitude)}" target="_blank" rel="noopener" style="font-size:0.78rem;color:#059669;font-weight:600;text-decoration:underline;">
+                      🗺️ View on Google Maps (${esc(o.delivery_latitude)}, ${esc(o.delivery_longitude)})
+                    </a>
+                  </div>
+                ` : ''}
+                ${o.notes ? `<div style="margin-top:6px;padding:6px 8px;background:#fef3c7;border-radius:6px;font-size:0.8rem;color:#92400e;"><strong>Note:</strong> ${esc(o.notes)}</div>` : ''}
+              </div>
+
+              <div class="od-card">
+                <div class="od-card-title">🛵 Assigned Courier</div>
+                <div style="font-weight:700;font-size:0.95rem;color:#1e293b;">${esc(courierName)}</div>
+                <div style="font-size:0.84rem;color:#475569;margin-top:4px;">
+                  📞 Phone: ${courierPhone !== '—' ? `<a href="tel:${esc(courierPhone)}" style="color:#0284c7;font-weight:600;">${esc(courierPhone)}</a>` : '—'}
+                </div>
+                <div style="font-size:0.82rem;color:#64748b;margin-top:2px;">
+                  🛵 Vehicle: ${esc([courier.vehicle_type, courier.vehicle_model, courier.vehicle_plate, courier.vehicle_color].filter(Boolean).join(' • ') || 'Standard courier')}
+                </div>
+              </div>
+            </div>
+          `;
+
+          // Render itemized list with every customization, variant, supplement, notes
+          let itemsHtml = `
+            <div class="od-card" style="padding:0;overflow:hidden;">
+              <div style="padding:12px 16px;background:#f1f5f9;border-bottom:1px solid #cbd5e1;display:flex;justify-content:space-between;align-items:center;">
+                <span class="od-card-title" style="margin:0;">🍽️ Order Items Breakdown (${items.length} item${items.length === 1 ? '' : 's'})</span>
+                <span style="font-size:0.85rem;font-weight:700;color:#e65100;">Subtotal: ${(Number(o.subtotal || o.total_amount || 0)).toLocaleString()} DA</span>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="od-table">
+                  <thead>
+                    <tr>
+                      <th style="width:40px;">#</th>
+                      <th style="min-width:240px;">Item Details &amp; Customizations</th>
+                      <th style="width:90px;text-align:right;">Unit Price</th>
+                      <th style="width:60px;text-align:center;">Qty</th>
+                      <th style="width:100px;text-align:right;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+          `;
+
+          if (!items.length) {
+            itemsHtml += `<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">No itemized records found for this order. (Summary: ${esc(o.order_items_summary || 'N/A')})</td></tr>`;
+          } else {
+            items.forEach((it, idx) => {
+              const mi = it.menu_item || {};
+              const itemName = mi.name_ar || mi.name || mi.name_latin || 'Custom Item';
+              const altName = (mi.name_ar && mi.name && mi.name !== mi.name_ar) ? mi.name : '';
+              const unitP = Number(it.unit_price ?? it.price ?? 0);
+              const qty = Number(it.quantity || 1);
+              const lineTotal = Number(it.total_price ?? (unitP * qty));
+
+              // Extract customization details
+              const customDetails = [];
+              let custObj = {};
+              if (typeof it.customizations === 'string') {
+                try { custObj = JSON.parse(it.customizations || '{}'); } catch (_) { custObj = {}; }
+              } else if (it.customizations && typeof it.customizations === 'object') {
+                custObj = it.customizations;
+              }
+
+              // Size / pricing option
+              if (custObj.size) customDetails.push(`<strong>Size:</strong> ${esc(custObj.size)}`);
+              else if (custObj.pricing_option?.size) customDetails.push(`<strong>Size:</strong> ${esc(custObj.pricing_option.size)}`);
+              else if (custObj.additional_options?.size) customDetails.push(`<strong>Size:</strong> ${esc(custObj.additional_options.size)}`);
+
+              // Variant
+              if (custObj.variant && typeof custObj.variant === 'string') customDetails.push(`<strong>Variant:</strong> ${esc(custObj.variant)}`);
+              else if (custObj.variant?.name) customDetails.push(`<strong>Variant:</strong> ${esc(custObj.variant.name)}`);
+              else if (custObj.additional_options?.variant?.name) customDetails.push(`<strong>Variant:</strong> ${esc(custObj.additional_options.variant.name)}`);
+
+              // Supplements / Extras
+              const supps = custObj.supplements || custObj.additional_options?.supplements || custObj.extras || [];
+              if (Array.isArray(supps) && supps.length > 0) {
+                const suppLabels = supps.map(s => {
+                  if (typeof s === 'string') return esc(s);
+                  const sName = s.name_ar || s.name || s.name_latin || 'Extra';
+                  const sPrice = s.price ? ` (+${s.price} DA)` : '';
+                  return `${esc(sName)}${sPrice}`;
+                });
+                customDetails.push(`<strong>Supplements:</strong> ${suppLabels.join(', ')}`);
+              }
+
+              // Special instructions
+              const instr = it.special_instructions || custObj.notes || custObj.special_instructions;
+              if (instr) {
+                customDetails.push(`<span style="color:#d97706;"><strong>Instructions:</strong> ${esc(instr)}</span>`);
+              }
+
+              const thumb = mi.image ? `<img src="${esc(mi.image)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid #e2e8f0;" alt="" />` : `<div style="width:36px;height:36px;border-radius:6px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">🍽️</div>`;
+
+              itemsHtml += `
+                <tr>
+                  <td style="color:#94a3b8;font-size:0.8rem;text-align:center;">${idx + 1}</td>
+                  <td>
+                    <div style="display:flex;align-items:flex-start;gap:10px;">
+                      ${thumb}
+                      <div>
+                        <div style="font-weight:700;color:#1e293b;font-size:0.9rem;">${esc(itemName)} ${altName ? `<span style="font-weight:400;color:#64748b;font-size:0.82rem;">(${esc(altName)})</span>` : ''}</div>
+                        ${mi.category ? `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:#f1f5f9;font-size:0.72rem;color:#475569;margin-top:2px;">${esc(mi.category)}</span>` : ''}
+                        ${customDetails.length > 0 ? `<div style="font-size:0.8rem;color:#475569;margin-top:4px;display:flex;flex-direction:column;gap:2px;">${customDetails.join('')}</div>` : ''}
+                      </div>
+                    </div>
+                  </td>
+                  <td style="text-align:right;font-weight:600;font-size:0.88rem;">${unitP.toLocaleString()} DA</td>
+                  <td style="text-align:center;font-weight:700;font-size:0.9rem;color:#0f766e;">x${qty}</td>
+                  <td style="text-align:right;font-weight:700;font-size:0.92rem;color:#c2410c;">${lineTotal.toLocaleString()} DA</td>
+                </tr>
+              `;
+            });
+          }
+
+          itemsHtml += `
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `;
+
+          // Render Financial breakdown
+          const subtotalVal = Number(o.subtotal ?? (Number(o.total_amount || 0) - Number(o.delivery_fee || 0)));
+          const delVal = Number(o.delivery_fee || 0);
+          const servVal = Number(o.service_fee || 0);
+          const discVal = Number(o.discount || 0);
+          const totalVal = Number(o.total_amount || 0);
+
+          let financialsHtml = `
+            <div class="od-financials-grid">
+              <div>
+                <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:700;">Subtotal</div>
+                <div style="font-size:1.05rem;font-weight:700;color:#1e293b;">${subtotalVal.toLocaleString()} DA</div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:700;">Delivery Fee</div>
+                <div style="font-size:1.05rem;font-weight:700;color:#1e293b;">${delVal.toLocaleString()} DA</div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:700;">Service Fee</div>
+                <div style="font-size:1.05rem;font-weight:700;color:#1e293b;">${servVal.toLocaleString()} DA</div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:700;">Discount / Promo</div>
+                <div style="font-size:1.05rem;font-weight:700;color:#dc2626;">-${discVal.toLocaleString()} DA</div>
+              </div>
+              <div style="border-left:2px solid #fed7aa;padding-left:12px;">
+                <div style="font-size:0.75rem;color:#c2410c;text-transform:uppercase;font-weight:800;">Total Amount</div>
+                <div style="font-size:1.3rem;font-weight:800;color:#ea580c;">${totalVal.toLocaleString()} DA</div>
+              </div>
+              <div style="border-left:2px solid #fed7aa;padding-left:12px;">
+                <div style="font-size:0.75rem;color:#047857;text-transform:uppercase;font-weight:800;">Payment</div>
+                <div style="font-size:0.95rem;font-weight:700;color:#065f46;">${esc(o.payment_method || 'Cash on delivery')}</div>
+                <div style="font-size:0.75rem;color:#059669;font-weight:600;">Status: ${esc(o.payment_status || 'pending')}</div>
+              </div>
+            </div>
+          `;
+
+          // Render Events / History Timeline if present
+          let eventsHtml = '';
+          if (events.length > 0) {
+            eventsHtml = `
+              <div class="od-card">
+                <div class="od-card-title">📜 Lifecycle Events Timeline (${events.length})</div>
+                <div class="od-timeline">
+                  ${events.map(ev => `
+                    <div class="od-timeline-item">
+                      <div style="font-weight:700;color:#1e293b;">${esc(ev.event_type || ev.status || 'Event')} <span style="font-weight:400;color:#64748b;font-size:0.75rem;">by ${esc(ev.actor_role || ev.actor_id || 'System')}</span></div>
+                      <div style="font-size:0.75rem;color:#94a3b8;">${fmtDate(ev.created_at)}</div>
+                      ${ev.notes ? `<div style="font-size:0.78rem;color:#475569;margin-top:2px;">${esc(ev.notes)}</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }
+
+          contentEl.innerHTML = cardsHtml + itemsHtml + financialsHtml + eventsHtml;
+          if (footerEl) {
+            footerEl.textContent = `Order #${num} • ${items.length} item(s) • Total: ${totalVal.toLocaleString()} DA`;
+          }
+        } catch (err) {
+          contentEl.innerHTML = `
+            <div style="text-align:center;padding:40px 20px;color:#dc2626;">
+              <div style="font-size:2rem;margin-bottom:8px;">⚠️</div>
+              <div style="font-weight:700;font-size:1rem;margin-bottom:4px;">Failed to load order details</div>
+              <div style="font-size:0.85rem;color:#64748b;margin-bottom:14px;">${esc(err.message || 'Unknown error')}</div>
+              <button type="button" class="btn-refresh" onclick="openOrderDetailsModal('${esc(orderId)}')">Retry</button>
+            </div>
+          `;
+        }
+      }
+      window.openOrderDetailsModal = openOrderDetailsModal;
+
+      const odModalEl = $('orderDetailsModal');
+      const odCloseBtnEl = $('odCloseBtn');
+      const odDismissBtnEl = $('odDismissBtn');
+      if (odCloseBtnEl) odCloseBtnEl.onclick = () => odModalEl.classList.add('hidden');
+      if (odDismissBtnEl) odDismissBtnEl.onclick = () => odModalEl.classList.add('hidden');
+      if (odModalEl) {
+        odModalEl.addEventListener('click', (e) => {
+          if (e.target === odModalEl) odModalEl.classList.add('hidden');
+        });
       }
 
       $('refreshSahlaPaymentsBtn').onclick = () => loadSahlaPayments().catch(() => {});

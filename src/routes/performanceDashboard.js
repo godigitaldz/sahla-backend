@@ -1115,6 +1115,77 @@ router.get('/cancelled-orders', requirePerformanceAuth, async (req, res) => {
   }
 });
 
+router.get('/orders/:id', requirePerformanceAuth, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { data: order, error } = await supabaseAdmin
+      .from('orders')
+      .select(`
+        *,
+        restaurant:restaurants(id, name, phone, city, address_line1, logo_url),
+        customer:customer_id(id, name, phone),
+        delivery_personnel(
+          id,
+          delivery_name,
+          work_phone,
+          vehicle_type,
+          vehicle_plate,
+          vehicle_model,
+          vehicle_color,
+          user:user_id(id, name, phone)
+        )
+      `)
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!order) return res.status(404).json({ success: false, error: 'Order not found' });
+
+    const enriched = enrichOrderCourier(order);
+
+    const { data: items, error: itemsErr } = await supabaseAdmin
+      .from('order_items')
+      .select(`
+        id,
+        order_id,
+        menu_item_id,
+        quantity,
+        unit_price,
+        total_price,
+        price,
+        special_instructions,
+        customizations,
+        tax_free,
+        created_at,
+        menu_item:menu_items(id, name, name_ar, name_latin, image, category)
+      `)
+      .eq('order_id', id)
+      .order('created_at', { ascending: true });
+
+    if (itemsErr) console.warn('Order items error:', itemsErr);
+
+    const { data: events, error: eventsErr } = await supabaseAdmin
+      .from('order_events')
+      .select('*')
+      .eq('order_id', id)
+      .order('created_at', { ascending: true });
+
+    if (eventsErr) console.warn('Order events error:', eventsErr);
+
+    return res.json({
+      success: true,
+      order: {
+        ...enriched,
+        items: items || [],
+        events: events || [],
+      },
+    });
+  } catch (e) {
+    console.error('performance /orders/:id', e);
+    return res.status(500).json({ success: false, error: e.message || 'Fetch order details failed' });
+  }
+});
+
 /* ========================================================================= */
 /* Order Actions: status, assign, unassign, cancel, collect, accept, pickup, */
 /* deliver, rebroadcast                                                      */
@@ -2952,14 +3023,24 @@ router.get('/alerts', requirePerformanceAuth, async (req, res) => {
       }
     }
 
+    const [
+      stalePendingOrdersWithItems,
+      parcelWaitingOrdersWithItems,
+      pickedUpDelayedWithItems,
+    ] = await Promise.all([
+      attachOrderItemsSummary(stalePendingOrders),
+      attachOrderItemsSummary(parcelWaitingOrders),
+      attachOrderItemsSummary(pickedUpDeliveryDelayed),
+    ]);
+
     return res.json({
       success: true,
       thresholdMinutes: minutes,
-      stalePendingOrders,
+      stalePendingOrders: stalePendingOrdersWithItems,
       tasksWithoutOffers,
-      parcelWaitingOrders,
+      parcelWaitingOrders: parcelWaitingOrdersWithItems,
       parcel_waiting_minutes: minutes,
-      pickedUpDeliveryDelayed,
+      pickedUpDeliveryDelayed: pickedUpDelayedWithItems,
       picked_up_delay_minutes: pickupDelayMin,
       pending_delivery_man_requests: cDm.count ?? 0,
       pending_restaurant_requests: cR.count ?? 0,
