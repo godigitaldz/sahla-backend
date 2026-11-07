@@ -189,7 +189,7 @@ function buildOrderItemsSummary(items) {
       const qty = Number(it?.quantity);
       const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
       const menu = unwrapEmbed(it?.menu_item);
-      const name = String(menu?.name || it?.name || '').trim();
+      const name = String(menu?.name || menu?.name_ar || it?.name || '').trim();
       if (!name) return null;
       const note = String(it?.special_instructions ?? '').trim();
       return note ? `${safeQty}x ${name} (${note})` : `${safeQty}x ${name}`;
@@ -210,7 +210,7 @@ async function attachOrderItemsSummary(orders) {
     try {
       const { data, error } = await supabaseAdmin
         .from('order_items')
-        .select('order_id, quantity, special_instructions, menu_item:menu_items(name)')
+        .select('order_id, quantity, special_instructions, menu_item:menu_items(name, name_ar)')
         .in('order_id', slice);
       if (!error && data) {
         for (const it of data) {

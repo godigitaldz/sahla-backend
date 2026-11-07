@@ -2620,14 +2620,20 @@
             <button type="button" class="btn-collect-all" id="collectAllDeliveryHistory" disabled>Collect all</button>
           </div>
           <p class="meta" id="deliveryHistoryMeta"></p>
-          <div style="overflow-x: auto">
+          <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
                   <th style="width:36px;text-align:center;" title="View order details">👁️</th>
                   <th>#</th>
                   <th>Order</th>
+                  <th>Status</th>
                   <th>Restaurant</th>
+                  <th>Courier</th>
+                  <th>Courier phone</th>
+                  <th>Customer phone</th>
+                  <th>Del. FF (orig)</th>
+                  <th>Assigned</th>
                   <th>Total</th>
                   <th>Payment method</th>
                   <th>Payment status</th>
@@ -3673,6 +3679,7 @@
           await loadAlerts().catch(() => {});
           await loadOrders().catch(() => {});
           await loadCancelledOrders().catch(() => {});
+          await loadDeliveryHistory().catch(() => {});
         } catch (e) {
           alert(e.message || 'Cancel failed');
         } finally {
@@ -4047,6 +4054,7 @@
           await loadAlerts().catch(() => {});
           await loadOrders().catch(() => {});
           await loadCancelledOrders().catch(() => {});
+          await loadDeliveryHistory().catch(() => {});
         } catch (e) {
           alert('Status update failed: ' + (e && e.message ? e.message : String(e)));
           sel.disabled = false;
@@ -6324,7 +6332,7 @@
           tb.innerHTML = '';
           if (!rows.length) {
             const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="9" class="meta">No delivered orders for this filter.</td>';
+            tr.innerHTML = '<td colspan="15" class="meta">No delivered orders for this filter.</td>';
             tb.appendChild(tr);
             return;
           }
@@ -6332,14 +6340,35 @@
             const tr = document.createElement('tr');
             const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
             const collect = needsCollectPayment(o);
+            let assignedCell = '—';
+            if (o.courier_assigned_ago_label) {
+              assignedCell =
+                esc(o.courier_assigned_ago_label) +
+                (o.courier_assigned_time_exact === false
+                  ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                  : '');
+            }
             tr.innerHTML =
               '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
               '<td class="num">' +
               (i + 1) +
               '</td><td>' +
               esc(o.order_number || o.id) +
-              '</td><td>' +
+              '<span class="order-summary-inline">Items: ' +
+              esc(o.order_items_summary || 'No items') +
+              '</span>' +
+              '</td><td data-status-cell></td><td>' +
               esc(rest || o.restaurant_id || '—') +
+              '</td><td>' +
+              esc(o.courier_display_name || '—') +
+              '</td><td>' +
+              esc(o.courier_display_phone || '—') +
+              '</td><td>' +
+              esc(o.customer_display_phone || '—') +
+              '</td><td class="num">' +
+              esc(fmtOrigDeliveryFf(o)) +
+              '</td><td>' +
+              assignedCell +
               '</td><td class="num">' +
               esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
               '</td><td>' +
@@ -6355,6 +6384,7 @@
               '</td><td>' +
               esc(fmtDate(o.updated_at || o.created_at)) +
               '</td>';
+            appendOrderStatusSelect(tr.querySelector('[data-status-cell]'), o);
             tb.appendChild(tr);
           });
         } catch (e) {
@@ -6363,7 +6393,7 @@
           if (dhm) dhm.innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
           const tb = $('deliveryHistoryBody');
           if (tb) {
-            tb.innerHTML = '<tr><td colspan="9" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load delivered history:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryHistory()">Retry</button></td></tr>';
+            tb.innerHTML = '<tr><td colspan="15" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load delivered history:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryHistory()">Retry</button></td></tr>';
           }
         }
       }
