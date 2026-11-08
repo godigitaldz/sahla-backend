@@ -1,0 +1,10 @@
+name = "sahla-delivery-working-hours"
+main = "index.js"
+compatibility_date = "2024-09-23"
+
+# Trigger sync every 5 minutes to accurately catch shift boundaries (11:00 AM & 10:00 PM Africa/Algiers)
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+BACKEND_URL = "https://sahla-delivery.com"

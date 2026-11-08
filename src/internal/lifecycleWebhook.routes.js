@@ -14,6 +14,7 @@ import { runLifecycleSelfHealOnce } from '../services/lifecycleSelfHealService.j
 import { runLifecycleBootstrapOnce } from '../services/lifecycleBootstrapService.js';
 import { runPreparingUnassignedRebroadcastOnce } from '../services/preparingUnassignedRebroadcastPoller.js';
 import { acquireWindowLock } from '../services/distributedLockService.js';
+import { syncWorkingHours } from '../services/deliveryWorkingHoursService.js';
 
 const router = express.Router();
 
@@ -257,6 +258,7 @@ async function runCronTick(req, res) {
     pickup_alerts: null,
     parcel_alerts: null,
     web_order_push_drainer: null,
+    working_hours_sync: null,
     errors: [],
     elapsed_ms: 0,
   };
@@ -338,11 +340,48 @@ async function runCronTick(req, res) {
     result.web_order_push_drainer = { skipped: true, reason: 'budget_exhausted' };
   }
 
+  if (remainingMs() > 4_000) {
+    try {
+      result.working_hours_sync = await syncWorkingHours({ logger: log });
+    } catch (e) {
+      result.errors.push({ stage: 'working_hours_sync', error: e?.message || String(e) });
+      log.error('cron working hours sync failed', { error: e?.message });
+    }
+  } else {
+    result.working_hours_sync = { skipped: true, reason: 'budget_exhausted' };
+  }
+
   result.elapsed_ms = Date.now() - tickStartedAt;
   return res.json({ success: true, ...result });
 }
 
+async function handleSyncWorkingHours(req, res) {
+  const bearer = String(req.headers.authorization || '')
+    .replace(/^Bearer\s+/i, '')
+    .trim();
+  const querySecret = typeof req.query?.secret === 'string' ? req.query.secret.trim() : '';
+  const secret = String(process.env.CRON_SECRET || '').trim();
+  if (!secret || (bearer !== secret && querySecret !== secret)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+
+  const traceId = createTraceId(req.headers['x-trace-id']);
+  const log = traceLogger(console, traceId);
+  const force = req.query?.force === 'true' || req.query?.force === '1' || req.body?.force === true;
+
+  try {
+    const syncRes = await syncWorkingHours({ force, logger: log });
+    return res.json({ success: true, trace_id: traceId, ...syncRes });
+  } catch (e) {
+    log.error('syncWorkingHours endpoint error:', e);
+    return res.status(500).json({ success: false, error: e?.message || 'Sync failed' });
+  }
+}
+
 router.get('/pending-orders-poll', runCronTick);
 router.post('/pending-orders-poll', runCronTick);
+
+router.get('/delivery-personnel/sync-working-hours', handleSyncWorkingHours);
+router.post('/delivery-personnel/sync-working-hours', handleSyncWorkingHours);
 
 export default router;

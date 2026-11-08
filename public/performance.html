@@ -695,6 +695,95 @@
         opacity: 0.7;
       }
 
+      /* Delivery Working Hours Styles */
+      .wh-cell {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .wh-time-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+      }
+      .wh-time-badge.is-custom {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fde68a;
+      }
+      .wh-auto-closed-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.70rem;
+        font-weight: 700;
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fca5a5;
+      }
+      .btn-wh-edit {
+        padding: 3px 7px;
+        border-radius: 5px;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #475569;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.12s ease;
+      }
+      .btn-wh-edit:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+        color: #0f172a;
+      }
+      .working-hours-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        white-space: nowrap;
+      }
+      .working-hours-pill.is-open {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+        color: #065f46;
+      }
+      .working-hours-pill.is-closed {
+        background: #fff1f2;
+        border-color: #fecdd3;
+        color: #9f1239;
+      }
+      .working-hours-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #94a3b8;
+        display: inline-block;
+      }
+      .working-hours-pill.is-open .working-hours-dot {
+        background: #10b981;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+      }
+      .working-hours-pill.is-closed .working-hours-dot {
+        background: #f43f5e;
+        box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.2);
+      }
+
       /* Toolbars & Form Controls */
       .toolbar {
         display: flex;
@@ -2577,6 +2666,12 @@
               <span>Show blocked</span>
             </label>
             <button type="button" class="btn-refresh" id="refreshDeliveryMen">Refresh</button>
+            <button type="button" class="btn-refresh" id="btnSyncWorkingHours" title="Manually trigger working hours synchronization" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;">⚡ Sync hours</button>
+            <button type="button" class="btn-refresh" id="btnConfigWorkingHours" title="Configure system default working hours">🕒 Default hours</button>
+            <div id="workingHoursStatusPill" class="working-hours-pill" title="Current shift status in Africa/Algiers (UTC+1)" style="margin-left:auto;">
+              <span id="workingHoursStatusDot" class="working-hours-dot"></span>
+              <span id="workingHoursStatusText">Shift: Loading…</span>
+            </div>
           </div>
           <p class="meta" id="deliveryMenMeta"></p>
           <div style="overflow-x: auto">
@@ -2589,6 +2684,7 @@
                   <th>Work phone</th>
                   <th>Available</th>
                   <th>Online</th>
+                  <th>Working hours</th>
                   <th>Has device token</th>
                   <th>Device</th>
                   <th>Delivered orders</th>
@@ -3401,6 +3497,94 @@
       </div>
     </div>
 
+    <!-- Courier Individual Working Hours Modal -->
+    <div id="courierWorkingHoursModal" class="modal-overlay hidden" role="dialog" aria-labelledby="cwhModalTitle" aria-modal="true">
+      <div class="modal-dialog" style="max-width:480px;">
+        <div class="mo-header" style="background:#026c3b;color:#fff;border-bottom:2px solid #FFC700;padding:12px 18px;">
+          <div>
+            <h3 id="cwhModalTitle" style="margin:0;font-size:1.1rem;font-weight:800;color:#fff;">🕒 Courier Working Hours</h3>
+            <p id="cwhModalSubtitle" style="margin:2px 0 0;font-size:0.8rem;color:#a7f3d0;"></p>
+          </div>
+          <button type="button" class="mo-close-btn" id="cwhCloseBtn" style="color:#fff;background:rgba(255,255,255,0.18);">✕</button>
+        </div>
+        <div style="padding:18px;display:flex;flex-direction:column;gap:14px;">
+          <input type="hidden" id="cwhCourierId" />
+          <input type="hidden" id="cwhUserId" />
+          
+          <label style="display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer;background:#f8fafc;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;">
+            <input type="checkbox" id="cwhCustomCheckbox" />
+            <span>Enable custom working hours for this courier</span>
+          </label>
+
+          <div id="cwhTimeFields" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label for="cwhStartTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Shift Start (وقت البداية)</label>
+              <input type="time" id="cwhStartTime" style="width:100%;height:38px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;" />
+            </div>
+            <div>
+              <label for="cwhEndTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Shift End (وقت النهاية)</label>
+              <input type="time" id="cwhEndTime" style="width:100%;height:38px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;" />
+            </div>
+          </div>
+
+          <p class="meta" style="margin:0;font-size:0.78rem;color:#64748b;">
+            💡 Timezone: <strong>Africa/Algiers (UTC+1)</strong>. Outside these hours, courier availability (<code>is_available</code>) is set to false. Courier is restored when shift starts.
+          </p>
+
+          <div id="cwhModalStatus" class="meta" style="min-height:18px;"></div>
+        </div>
+        <div class="modal-actions" style="padding:12px 18px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+          <button type="button" class="btn-ghost" id="cwhRevertBtn" style="color:#d97706;font-size:0.82rem;" title="Remove override and follow global default hours">Revert to default</button>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn-ghost" id="cwhDismissBtn">Cancel</button>
+            <button type="button" class="btn-refresh" id="cwhSaveBtn" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;padding:8px 16px;">Save hours</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Working Hours Configuration Modal -->
+    <div id="globalWorkingHoursModal" class="modal-overlay hidden" role="dialog" aria-labelledby="gwhModalTitle" aria-modal="true">
+      <div class="modal-dialog" style="max-width:480px;">
+        <div class="mo-header" style="background:#026c3b;color:#fff;border-bottom:2px solid #FFC700;padding:12px 18px;">
+          <div>
+            <h3 id="gwhModalTitle" style="margin:0;font-size:1.1rem;font-weight:800;color:#fff;">⚙️ System Default Working Hours</h3>
+            <p style="margin:2px 0 0;font-size:0.8rem;color:#a7f3d0;">Global courier schedule enforcement</p>
+          </div>
+          <button type="button" class="mo-close-btn" id="gwhCloseBtn" style="color:#fff;background:rgba(255,255,255,0.18);">✕</button>
+        </div>
+        <div style="padding:18px;display:flex;flex-direction:column;gap:14px;">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer;background:#f8fafc;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;">
+            <input type="checkbox" id="gwhEnabledCheckbox" />
+            <span>Enable automated working hours enforcement</span>
+          </label>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label for="gwhStartTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Default Start (وقت البداية)</label>
+              <input type="time" id="gwhStartTime" style="width:100%;height:38px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;" />
+            </div>
+            <div>
+              <label for="gwhEndTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Default End (وقت النهاية)</label>
+              <input type="time" id="gwhEndTime" style="width:100%;height:38px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;" />
+            </div>
+          </div>
+
+          <div style="background:#f1f5f9;border-radius:8px;padding:10px 12px;font-size:0.8rem;color:#475569;">
+            <div>🌐 <strong>Timezone:</strong> Africa/Algiers (UTC+1, constant year-round)</div>
+            <div id="gwhCurrentTimeInfo" style="margin-top:4px;">🕒 <strong>Current DZ Time:</strong> loading…</div>
+            <div id="gwhAutoClosedInfo" style="margin-top:4px;">🌙 <strong>Currently Auto-closed:</strong> 0 couriers</div>
+          </div>
+
+          <div id="gwhModalStatus" class="meta" style="min-height:18px;"></div>
+        </div>
+        <div class="modal-actions" style="padding:12px 18px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;">
+          <button type="button" class="btn-ghost" id="gwhDismissBtn">Cancel</button>
+          <button type="button" class="btn-refresh" id="gwhSaveBtn" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;padding:8px 16px;">Save Global Hours</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       const API = '/api/performance';
       /** Algeria — UTC+1 all year (no DST). All “today” filters and timestamps use this zone. */
@@ -3422,6 +3606,7 @@
             let cachedPinnedUserIds = null;
       let cachedDeliveryManNotes = {};
       let cachedDeliveryPersonnelRows = [];
+      let cachedWorkingHoursConfig = null;
       const deliveryManNoteSaveTimers = new Map();
 
       function readPinnedDeliveryMenLegacy() {
@@ -5984,11 +6169,64 @@
         btn.textContent = count > 0 ? 'Collect all (' + count + ')' : 'Collect all';
       }
 
+      function updateWorkingHoursToolbar(cfg) {
+        const pill = $('workingHoursStatusPill');
+        const text = $('workingHoursStatusText');
+        if (!pill || !text) return;
+
+        if (!cfg || cfg.enabled === false) {
+          pill.className = 'working-hours-pill';
+          text.textContent = 'Shift hours: Disabled';
+          return;
+        }
+
+        const isOpen = cfg.is_default_open === true;
+        pill.className = 'working-hours-pill ' + (isOpen ? 'is-open' : 'is-closed');
+        const timeStr = cfg.algiers_time ? ' (DZ ' + cfg.algiers_time + ')' : '';
+        const range = (cfg.default_start || '11:00') + ' - ' + (cfg.default_end || '22:00');
+        
+        if (isOpen) {
+          text.textContent = 'Shift: OPEN ' + range + timeStr;
+        } else {
+          const autoCloseInfo = cfg.auto_closed_count ? ' [' + cfg.auto_closed_count + ' auto-closed]' : '';
+          text.textContent = 'Shift: CLOSED (' + range + ')' + timeStr + autoCloseInfo;
+        }
+      }
+
+      function renderWorkingHoursCell(row) {
+        const wh = row.working_hours || {};
+        const start = wh.start || '11:00';
+        const end = wh.end || '22:00';
+        const isCustom = Boolean(wh.is_custom);
+        const isAutoClosed = Boolean(wh.is_auto_closed);
+        const courierId = String(row.id || '');
+        const userId = String(row.user_id || '');
+        const name = String(row.name || '');
+
+        let html = '<div class="wh-cell">';
+        html += '<span class="wh-time-badge' + (isCustom ? ' is-custom' : '') + '" title="' + (isCustom ? 'Custom schedule' : 'Default schedule') + '">';
+        html += esc(start) + ' - ' + esc(end);
+        if (isCustom) html += ' ★';
+        html += '</span>';
+
+        if (isAutoClosed) {
+          html += '<span class="wh-auto-closed-pill" title="Auto-closed outside working hours; will reopen when shift starts">🌙 Off-shift</span>';
+        }
+
+        html += '<button type="button" class="btn-wh-edit" data-wh-courier-id="' + esc(courierId) + '" data-wh-user-id="' + esc(userId) + '" data-wh-name="' + esc(name) + '" data-wh-start="' + esc(start) + '" data-wh-end="' + esc(end) + '" data-wh-custom="' + (isCustom ? '1' : '0') + '" title="Edit working hours for this courier">✏️</button>';
+        html += '</div>';
+        return html;
+      }
+
       async function loadDeliveryPersonnel() {
         try {
           const data = await api('/delivery-personnel');
           const personnel = data.personnel || [];
           cachedDeliveryPersonnelRows = personnel;
+          if (data.working_hours_config) {
+            cachedWorkingHoursConfig = data.working_hours_config;
+            updateWorkingHoursToolbar(data.working_hours_config);
+          }
           const [pinnedUserIds, notesMap] = await Promise.all([
             syncPinnedDeliveryMenFromServer(personnel),
             syncDeliveryManNotesFromServer(),
@@ -6000,7 +6238,7 @@
           if (dm) dm.innerHTML = '<span class="meta-error">⚠️ ' + esc(errMsg) + '</span>';
           const tb = $('deliveryMenBody');
           if (tb) {
-            tb.innerHTML = '<tr><td colspan="12" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load delivery personnel:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryPersonnel()">Retry</button></td></tr>';
+            tb.innerHTML = '<tr><td colspan="13" class="meta" style="color:#d32f2f;padding:24px;text-align:center;">⚠️ <strong>Failed to load delivery personnel:</strong> ' + esc(errMsg) + ' <br><button type="button" class="btn-refresh" style="margin-top:8px" onclick="loadDeliveryPersonnel()">Retry</button></td></tr>';
           }
         }
       }
@@ -6067,7 +6305,7 @@
         if (!rows.length) {
           const tr = document.createElement('tr');
           tr.innerHTML =
-            '<td colspan="12" class="meta">No delivery personnel match this filter.</td>';
+            '<td colspan="13" class="meta">No delivery personnel match this filter.</td>';
           tb.appendChild(tr);
           return;
         }
@@ -6100,6 +6338,8 @@
             '</td><td>' +
             deliveryStatusSelectCell(userId, 'is_online', row.is_online, isBlocked) +
             '</td><td>' +
+            renderWorkingHoursCell(row) +
+            '</td><td>' +
             boolCell(row.has_device_token) +
             '</td><td>' +
             devicePlatformCell(row) +
@@ -6126,6 +6366,11 @@
                 '">Block</button>') +
             '</div></td>';
           tb.appendChild(tr);
+        });
+        tb.querySelectorAll('[data-wh-courier-id]').forEach((btn) => {
+          btn.onclick = () => {
+            openCourierWorkingHoursModal(btn);
+          };
         });
         tb.querySelectorAll('[data-pin-delivery-user-id]').forEach((btn) => {
           btn.onclick = () => {
@@ -7473,6 +7718,157 @@
           cachedDeliveryManNotes || {},
         );
       };
+
+      function openCourierWorkingHoursModal(btn) {
+        const courierId = btn.getAttribute('data-wh-courier-id') || '';
+        const userId = btn.getAttribute('data-wh-user-id') || '';
+        const name = btn.getAttribute('data-wh-name') || 'Courier';
+        const start = btn.getAttribute('data-wh-start') || '11:00';
+        const end = btn.getAttribute('data-wh-end') || '22:00';
+        const isCustom = btn.getAttribute('data-wh-custom') === '1';
+
+        $('cwhCourierId').value = courierId;
+        $('cwhUserId').value = userId;
+        $('cwhModalSubtitle').textContent = name + (courierId ? ' (ID: ' + courierId.slice(0, 8) + '…)' : '');
+        $('cwhStartTime').value = start;
+        $('cwhEndTime').value = end;
+        $('cwhCustomCheckbox').checked = isCustom;
+        $('cwhModalStatus').innerHTML = '';
+
+        const updateFieldsState = () => {
+          const enabled = $('cwhCustomCheckbox').checked;
+          $('cwhStartTime').disabled = !enabled;
+          $('cwhEndTime').disabled = !enabled;
+        };
+        $('cwhCustomCheckbox').onchange = updateFieldsState;
+        updateFieldsState();
+
+        $('courierWorkingHoursModal').classList.remove('hidden');
+      }
+
+      function closeCourierWorkingHoursModal() {
+        $('courierWorkingHoursModal').classList.add('hidden');
+      }
+
+      $('cwhCloseBtn').onclick = closeCourierWorkingHoursModal;
+      $('cwhDismissBtn').onclick = closeCourierWorkingHoursModal;
+
+      $('cwhRevertBtn').onclick = async () => {
+        const courierId = $('cwhCourierId').value;
+        const userId = $('cwhUserId').value;
+        const statusEl = $('cwhModalStatus');
+        statusEl.innerHTML = '<span style="color:#026c3b;">Reverting to default…</span>';
+        try {
+          await api('/delivery-personnel-working-hours', {
+            method: 'PUT',
+            body: JSON.stringify({ courier_id: courierId, user_id: userId, schedule: null }),
+          });
+          closeCourierWorkingHoursModal();
+          await loadDeliveryPersonnel();
+        } catch (e) {
+          statusEl.innerHTML = '<span class="meta-error">⚠️ ' + esc(e.message || 'Revert failed') + '</span>';
+        }
+      };
+
+      $('cwhSaveBtn').onclick = async () => {
+        const courierId = $('cwhCourierId').value;
+        const userId = $('cwhUserId').value;
+        const isCustom = $('cwhCustomCheckbox').checked;
+        const start = ($('cwhStartTime').value || '11:00').trim();
+        const end = ($('cwhEndTime').value || '22:00').trim();
+        const statusEl = $('cwhModalStatus');
+
+        statusEl.innerHTML = '<span style="color:#026c3b;">Saving…</span>';
+        try {
+          if (!isCustom) {
+            await api('/delivery-personnel-working-hours', {
+              method: 'PUT',
+              body: JSON.stringify({ courier_id: courierId, user_id: userId, schedule: null }),
+            });
+          } else {
+            await api('/delivery-personnel-working-hours', {
+              method: 'PUT',
+              body: JSON.stringify({
+                courier_id: courierId,
+                user_id: userId,
+                schedule: { start, end, enabled: true },
+              }),
+            });
+          }
+          closeCourierWorkingHoursModal();
+          await loadDeliveryPersonnel();
+        } catch (e) {
+          statusEl.innerHTML = '<span class="meta-error">⚠️ ' + esc(e.message || 'Save failed') + '</span>';
+        }
+      };
+
+      function closeGlobalWorkingHoursModal() {
+        $('globalWorkingHoursModal').classList.add('hidden');
+      }
+      $('gwhCloseBtn').onclick = closeGlobalWorkingHoursModal;
+      $('gwhDismissBtn').onclick = closeGlobalWorkingHoursModal;
+
+      $('btnConfigWorkingHours').onclick = async () => {
+        const modal = $('globalWorkingHoursModal');
+        const statusEl = $('gwhModalStatus');
+        statusEl.innerHTML = '';
+        try {
+          const res = await api('/delivery-personnel-working-hours');
+          const cfg = res.config || {};
+          const now = res.algiers_now || {};
+          $('gwhEnabledCheckbox').checked = cfg.enabled !== false;
+          $('gwhStartTime').value = cfg.default_start || '11:00';
+          $('gwhEndTime').value = cfg.default_end || '22:00';
+          $('gwhCurrentTimeInfo').innerHTML = '🕒 <strong>Current DZ Time:</strong> ' + esc(now.time || '—') + (now.is_default_open ? ' <span style="color:#10b981;font-weight:700;">(Shift OPEN)</span>' : ' <span style="color:#f43f5e;font-weight:700;">(Shift CLOSED)</span>');
+          $('gwhAutoClosedInfo').innerHTML = '🌙 <strong>Currently Auto-closed:</strong> ' + (res.auto_closed_ids?.length || 0) + ' couriers';
+          modal.classList.remove('hidden');
+        } catch (e) {
+          alert('Failed to load working hours settings: ' + (e.message || String(e)));
+        }
+      };
+
+      $('gwhSaveBtn').onclick = async () => {
+        const enabled = $('gwhEnabledCheckbox').checked;
+        const default_start = ($('gwhStartTime').value || '11:00').trim();
+        const default_end = ($('gwhEndTime').value || '22:00').trim();
+        const statusEl = $('gwhModalStatus');
+        statusEl.innerHTML = '<span style="color:#026c3b;">Saving…</span>';
+        try {
+          await api('/delivery-personnel-working-hours', {
+            method: 'PUT',
+            body: JSON.stringify({ enabled, default_start, default_end }),
+          });
+          closeGlobalWorkingHoursModal();
+          await loadDeliveryPersonnel();
+        } catch (e) {
+          statusEl.innerHTML = '<span class="meta-error">⚠️ ' + esc(e.message || 'Save failed') + '</span>';
+        }
+      };
+
+      $('btnSyncWorkingHours').onclick = async () => {
+        const btn = $('btnSyncWorkingHours');
+        const prevText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ Syncing…';
+        try {
+          const res = await api('/delivery-personnel-working-hours/sync', { method: 'POST' });
+          const shiftState = res.is_default_shift_open ? 'OPEN' : 'CLOSED';
+          const msg = 'Sync Complete!\n\n' +
+            '• Algiers Time: ' + res.algiers_time + '\n' +
+            '• Shift Status: ' + shiftState + '\n' +
+            '• Couriers Auto-closed: ' + res.closed_count + '\n' +
+            '• Couriers Restored: ' + res.opened_count + '\n' +
+            '• In Auto-closed pool: ' + res.auto_closed_pool_count;
+          alert(msg);
+          await loadDeliveryPersonnel();
+        } catch (e) {
+          alert('Working hours sync failed: ' + (e.message || String(e)));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prevText;
+        }
+      };
+
       $('refreshDeliveryHistory').onclick = () => loadDeliveryHistory().catch(() => {});
       $('refreshCancelledOrders').onclick = () => loadCancelledOrders().catch(() => {});
       $('collectAllDeliveryHistory').onclick = () => collectAllPayments().catch((e) => {

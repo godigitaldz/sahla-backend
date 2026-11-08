@@ -11,6 +11,16 @@ import {
   getOnlineAvailableCourierUserIds,
 } from '../modules/notifications/orderRebroadcastRecipients.js';
 import { getActiveAdminUserIds } from '../services/adminRecipients.js';
+import {
+  getWorkingHoursConfig,
+  saveWorkingHoursConfig,
+  getAutoClosedCourierIds,
+  updateCourierSchedule,
+  syncWorkingHours,
+  getAlgiersTime,
+  parseTimeToMinutes,
+  isTimeInInterval,
+} from '../services/deliveryWorkingHoursService.js';
 
 const router = Router();
 
@@ -1525,26 +1535,40 @@ router.get('/delivery-personnel', requirePerformanceAuth, async (req, res) => {
     const list = personnelData || [];
     const userIds = [...new Set(list.map((p) => p.user_id).filter(Boolean))];
 
-    const tokensByUser = new Map();
-    if (userIds.length) {
-      const chunk = 200;
-      for (let i = 0; i < userIds.length; i += chunk) {
-        const slice = userIds.slice(i, i + chunk);
-        const { data: tokens, error: tErr } = await supabaseAdmin
-          .from('user_device_tokens')
-          .select('user_id, platform, is_active')
-          .in('user_id', slice);
-        if (!tErr && tokens) {
-          for (const t of tokens) {
-            const uid = String(t.user_id || '').trim();
-            if (!uid) continue;
-            const arr = tokensByUser.get(uid) || [];
-            arr.push(t);
-            tokensByUser.set(uid, arr);
+    const [tokensResult, workingHoursConfig, autoClosedIds] = await Promise.all([
+      (async () => {
+        const tokensByUser = new Map();
+        if (userIds.length) {
+          const chunk = 200;
+          for (let i = 0; i < userIds.length; i += chunk) {
+            const slice = userIds.slice(i, i + chunk);
+            const { data: tokens, error: tErr } = await supabaseAdmin
+              .from('user_device_tokens')
+              .select('user_id, platform, is_active')
+              .in('user_id', slice);
+            if (!tErr && tokens) {
+              for (const t of tokens) {
+                const uid = String(t.user_id || '').trim();
+                if (!uid) continue;
+                const arr = tokensByUser.get(uid) || [];
+                arr.push(t);
+                tokensByUser.set(uid, arr);
+              }
+            }
           }
         }
-      }
-    }
+        return tokensByUser;
+      })(),
+      getWorkingHoursConfig(),
+      getAutoClosedCourierIds(),
+    ]);
+
+    const tokensByUser = tokensResult;
+    const autoClosedSet = new Set(autoClosedIds);
+    const algiersTime = getAlgiersTime();
+    const defStartMin = parseTimeToMinutes(workingHoursConfig.default_start, 660);
+    const defEndMin = parseTimeToMinutes(workingHoursConfig.default_end, 1320);
+    const isDefOpen = isTimeInInterval(algiersTime.totalMinutes, defStartMin, defEndMin);
 
     const personnel = list.map((dp) => {
       const u = unwrapEmbed(dp.user);
@@ -1552,6 +1576,17 @@ router.get('/delivery-personnel', requirePerformanceAuth, async (req, res) => {
       const userTokens = tokensByUser.get(uid) || [];
       const platforms = [...new Set(userTokens.map((t) => t.platform).filter(Boolean))];
       const isBlocked = (u && u.role !== 'delivery_man');
+
+      const schedule = (dp.id && workingHoursConfig.courier_schedules?.[dp.id]) ||
+                       (uid && workingHoursConfig.courier_schedules?.[uid]) ||
+                       null;
+      const hasCustom = Boolean(schedule && schedule.enabled !== false);
+      const startStr = hasCustom ? (schedule.start || workingHoursConfig.default_start) : workingHoursConfig.default_start;
+      const endStr = hasCustom ? (schedule.end || workingHoursConfig.default_end) : workingHoursConfig.default_end;
+      const startMin = parseTimeToMinutes(startStr, defStartMin);
+      const endMin = parseTimeToMinutes(endStr, defEndMin);
+      const isShiftOpen = isTimeInInterval(algiersTime.totalMinutes, startMin, endMin);
+      const isAutoClosed = autoClosedSet.has(dp.id) || (uid && autoClosedSet.has(uid));
 
       return {
         id: dp.id,
@@ -1569,12 +1604,32 @@ router.get('/delivery-personnel', requirePerformanceAuth, async (req, res) => {
         has_device_token: userTokens.length > 0,
         device_platforms: platforms,
         device_platform: platforms[0] || null,
+        working_hours: {
+          start: startStr,
+          end: endStr,
+          is_custom: hasCustom,
+          is_auto_closed: isAutoClosed,
+          is_shift_open: isShiftOpen,
+        },
         created_at: dp.created_at,
         updated_at: dp.updated_at,
       };
     });
 
-    return res.json({ success: true, personnel });
+    return res.json({
+      success: true,
+      personnel,
+      working_hours_config: {
+        enabled: workingHoursConfig.enabled,
+        default_start: workingHoursConfig.default_start,
+        default_end: workingHoursConfig.default_end,
+        timezone: workingHoursConfig.timezone,
+        algiers_time: algiersTime.timeString,
+        algiers_full_time: algiersTime.fullTimeString,
+        is_default_open: isDefOpen,
+        auto_closed_count: autoClosedIds.length,
+      },
+    });
   } catch (e) {
     console.error('performance /delivery-personnel', e);
     return res.status(500).json({ success: false, error: e.message || 'Query failed' });
@@ -1908,6 +1963,88 @@ router.put('/delivery-personnel-notes', requirePerformanceAuth, async (req, res)
   } catch (e) {
     console.error('performance /delivery-personnel-notes PUT', e);
     return res.status(500).json({ success: false, error: e.message || 'Save failed' });
+  }
+});
+
+router.get('/delivery-personnel-working-hours', requirePerformanceAuth, async (req, res) => {
+  try {
+    const [config, autoClosedIds] = await Promise.all([
+      getWorkingHoursConfig(),
+      getAutoClosedCourierIds(),
+    ]);
+    const algiersTime = getAlgiersTime();
+    const defStartMin = parseTimeToMinutes(config.default_start, 660);
+    const defEndMin = parseTimeToMinutes(config.default_end, 1320);
+    const isDefOpen = isTimeInInterval(algiersTime.totalMinutes, defStartMin, defEndMin);
+
+    return res.json({
+      success: true,
+      config,
+      auto_closed_ids: autoClosedIds,
+      algiers_now: {
+        time: algiersTime.timeString,
+        full_time: algiersTime.fullTimeString,
+        date: algiersTime.dateString,
+        is_default_open: isDefOpen,
+      },
+    });
+  } catch (e) {
+    console.error('performance /delivery-personnel-working-hours GET', e);
+    return res.status(500).json({ success: false, error: e.message || 'Fetch failed' });
+  }
+});
+
+router.put('/delivery-personnel-working-hours', requirePerformanceAuth, async (req, res) => {
+  try {
+    const courierId = req.body?.courier_id || req.body?.user_id;
+
+    if (courierId) {
+      const identifier = String(courierId).trim();
+      const schedule = req.body?.schedule;
+
+      if (schedule === null || schedule?.revert_to_default === true) {
+        const updatedConfig = await updateCourierSchedule(identifier, null);
+        return res.json({ success: true, identifier, schedule: null, config: updatedConfig });
+      }
+
+      const updatedConfig = await updateCourierSchedule(identifier, {
+        start: schedule.start,
+        end: schedule.end,
+        enabled: schedule.enabled !== false,
+      });
+      return res.json({
+        success: true,
+        identifier,
+        schedule: updatedConfig.courier_schedules[identifier],
+        config: updatedConfig,
+      });
+    }
+
+    const currentConfig = await getWorkingHoursConfig();
+    const updates = {};
+    if (typeof req.body?.enabled === 'boolean') updates.enabled = req.body.enabled;
+    if (typeof req.body?.default_start === 'string' && req.body.default_start.trim()) {
+      updates.default_start = req.body.default_start.trim();
+    }
+    if (typeof req.body?.default_end === 'string' && req.body.default_end.trim()) {
+      updates.default_end = req.body.default_end.trim();
+    }
+
+    const saved = await saveWorkingHoursConfig({ ...currentConfig, ...updates });
+    return res.json({ success: true, config: saved });
+  } catch (e) {
+    console.error('performance /delivery-personnel-working-hours PUT', e);
+    return res.status(500).json({ success: false, error: e.message || 'Save failed' });
+  }
+});
+
+router.post('/delivery-personnel-working-hours/sync', requirePerformanceAuth, async (req, res) => {
+  try {
+    const result = await syncWorkingHours({ force: true, logger: console });
+    return res.json({ success: true, ...result });
+  } catch (e) {
+    console.error('performance /delivery-personnel-working-hours/sync POST', e);
+    return res.status(500).json({ success: false, error: e.message || 'Sync failed' });
   }
 });
 

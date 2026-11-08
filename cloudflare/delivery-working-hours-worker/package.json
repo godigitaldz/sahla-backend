@@ -1,0 +1,13 @@
+{
+  "name": "sahla-delivery-working-hours-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Cron Worker for automated delivery personnel working hours synchronization",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^3.107.0"
+  }
+}
