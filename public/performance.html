@@ -2662,6 +2662,7 @@
             <button type="button" class="btn-refresh" id="refreshDeliveryMen">Refresh</button>
             <button type="button" class="btn-refresh" id="btnSyncWorkingHours" title="Manually trigger working hours synchronization" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;">⚡ Sync hours</button>
             <button type="button" class="btn-refresh" id="btnConfigWorkingHours" title="Configure system default working hours">🕒 Default hours</button>
+            <button type="button" class="btn-refresh" id="btnSendMorningGreeting" title="Send morning greeting push notification to available couriers" style="background:#d97706;color:#fff;border-color:#d97706;font-weight:700;">☀️ Morning greeting</button>
             <div id="workingHoursStatusPill" class="working-hours-pill" title="Current shift status in Africa/Algiers (UTC+1)" style="margin-left:auto;">
               <span id="workingHoursStatusDot" class="working-hours-dot"></span>
               <span id="workingHoursStatusText">Shift: Loading…</span>
@@ -7857,6 +7858,40 @@
           await loadDeliveryPersonnel();
         } catch (e) {
           alert('Working hours sync failed: ' + (e.message || String(e)));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prevText;
+        }
+      };
+
+      $('btnSendMorningGreeting').onclick = async () => {
+        const confirmSend = confirm(
+          'Send morning greeting push notification to all currently available delivery men?\n\n' +
+          'Title: صباح الخير (اسمه) بداية نهار موفقة\n' +
+          'Body: اللهم ارزقنا رزقاً واسعاً حلالاً طيباً\n\n' +
+          'Note: Zero DB pressure guaranteed (persist_notification=false, in-memory deduplication).'
+        );
+        if (!confirmSend) return;
+
+        const btn = $('btnSendMorningGreeting');
+        const prevText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ Sending…';
+        try {
+          const res = await api('/delivery-personnel/send-morning-greeting', {
+            method: 'POST',
+            body: JSON.stringify({ force: false }),
+          });
+          alert(
+            '☀️ Morning Greeting Dispatch Results:\n\n' +
+            '• Sent successfully: ' + (res.sent_count ?? 0) + '\n' +
+            '• Eligible couriers: ' + (res.eligible_count ?? 0) + '\n' +
+            '• Already received today: ' + (res.already_sent_today ?? 0) + '\n' +
+            '• Failed/no token: ' + (res.failed_count ?? 0) + '\n' +
+            '• Date: ' + (res.date ?? '—')
+          );
+        } catch (e) {
+          alert('Morning greeting failed: ' + (e.message || String(e)));
         } finally {
           btn.disabled = false;
           btn.textContent = prevText;

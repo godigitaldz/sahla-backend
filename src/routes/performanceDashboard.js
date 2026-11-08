@@ -17,6 +17,7 @@ import {
   getAutoClosedCourierIds,
   updateCourierSchedule,
   syncWorkingHours,
+  sendMorningGreetingToAvailableCouriers,
   getAlgiersTime,
   parseTimeToMinutes,
   isTimeInInterval,
@@ -2045,6 +2046,21 @@ router.post('/delivery-personnel-working-hours/sync', requirePerformanceAuth, as
   } catch (e) {
     console.error('performance /delivery-personnel-working-hours/sync POST', e);
     return res.status(500).json({ success: false, error: e.message || 'Sync failed' });
+  }
+});
+
+router.post('/delivery-personnel/send-morning-greeting', requirePerformanceAuth, async (req, res) => {
+  try {
+    const { force = false, user_id = null } = req.body || {};
+    const result = await sendMorningGreetingToAvailableCouriers({
+      force: Boolean(force),
+      targetUserId: user_id ? String(user_id).trim() : null,
+      logger: console,
+    });
+    return res.json({ success: true, ...result });
+  } catch (e) {
+    console.error('performance /delivery-personnel/send-morning-greeting POST', e);
+    return res.status(500).json({ success: false, error: e.message || 'Send failed' });
   }
 });
 
