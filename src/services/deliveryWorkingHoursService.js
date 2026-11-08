@@ -668,7 +668,7 @@ export async function syncWorkingHours({ force = false, logger = console } = {})
   const remainingAutoClosedIds = [...autoClosedSet];
   await saveAutoClosedCourierIds(remainingAutoClosedIds);
 
-  // If shift is open, dispatch morning greeting to eligible available couriers
+  // If shift is open, dispatch morning greeting to eligible available couriers in background
   let morningGreeting = null;
   if (isDefaultOpen) {
     try {
@@ -680,10 +680,14 @@ export async function syncWorkingHours({ force = false, logger = console } = {})
           }
         }
       }
-      morningGreeting = await sendMorningGreetingToAvailableCouriers({
+      // Fire non-blocking in background so sync completes in <100ms
+      sendMorningGreetingToAvailableCouriers({
         couriers: list,
         logger,
+      }).catch((gErr) => {
+        logger.error?.('[WorkingHoursSync] Morning greeting background dispatch failed:', gErr);
       });
+      morningGreeting = { scheduled: true };
     } catch (gErr) {
       logger.error?.('[WorkingHoursSync] Morning greeting dispatch failed:', gErr);
     }

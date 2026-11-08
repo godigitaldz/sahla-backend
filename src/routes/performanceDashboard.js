@@ -1565,11 +1565,47 @@ router.get('/delivery-personnel', requirePerformanceAuth, async (req, res) => {
     ]);
 
     const tokensByUser = tokensResult;
-    const autoClosedSet = new Set(autoClosedIds);
+    let autoClosedSet = new Set(autoClosedIds);
     const algiersTime = getAlgiersTime();
     const defStartMin = parseTimeToMinutes(workingHoursConfig.default_start, 660);
     const defEndMin = parseTimeToMinutes(workingHoursConfig.default_end, 1320);
     const isDefOpen = isTimeInInterval(algiersTime.totalMinutes, defStartMin, defEndMin);
+
+    // Opportunistic Self-Healing:
+    // If shift is OPEN in Algiers but couriers are still in auto-closed pool (e.g. cron was delayed/offline),
+    // sync immediately so couriers are restored and the dashboard reflects available status!
+    if (isDefOpen && autoClosedIds.length > 0) {
+      try {
+        await syncWorkingHours({ force: true, logger: console });
+        const [refreshedList, refreshedAutoClosed] = await Promise.all([
+          supabaseAdmin
+            .from('delivery_personnel')
+            .select(`
+              id,
+              user_id,
+              delivery_name,
+              work_phone,
+              license_number,
+              vehicle_type,
+              vehicle_plate,
+              is_available,
+              is_online,
+              total_deliveries,
+              sahla_tax,
+              created_at,
+              updated_at,
+              user:user_id(id, email, phone, name, role)
+            `)
+            .order('created_at', { ascending: false }),
+          getAutoClosedCourierIds(),
+        ]);
+        if (refreshedList.data) list = refreshedList.data;
+        autoClosedIds = refreshedAutoClosed;
+        autoClosedSet = new Set(autoClosedIds);
+      } catch (syncErr) {
+        console.warn('Opportunistic syncWorkingHours failed in /delivery-personnel:', syncErr);
+      }
+    }
 
     const personnel = list.map((dp) => {
       const u = unwrapEmbed(dp.user);

@@ -50,6 +50,14 @@
     {
       "path": "/api/internal/pending-orders-poll",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/internal/delivery-personnel/sync-working-hours",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/internal/delivery-personnel/sync-working-hours",
+      "schedule": "0 21 * * *"
     }
   ]
 }

@@ -263,6 +263,14 @@ async function runCronTick(req, res) {
     elapsed_ms: 0,
   };
 
+  // Stage 0: Delivery working hours sync (Critical: fast ~50ms, run first so it is NEVER starved by heavy pollers)
+  try {
+    result.working_hours_sync = await syncWorkingHours({ logger: log });
+  } catch (e) {
+    result.errors.push({ stage: 'working_hours_sync', error: e?.message || String(e) });
+    log.error('cron working hours sync failed', { error: e?.message });
+  }
+
   try {
     const selfHealBudget = Math.min(20_000, remainingMs());
     result.self_heal = await runLifecycleSelfHealOnce({
@@ -338,17 +346,6 @@ async function runCronTick(req, res) {
     }
   } else {
     result.web_order_push_drainer = { skipped: true, reason: 'budget_exhausted' };
-  }
-
-  if (remainingMs() > 4_000) {
-    try {
-      result.working_hours_sync = await syncWorkingHours({ logger: log });
-    } catch (e) {
-      result.errors.push({ stage: 'working_hours_sync', error: e?.message || String(e) });
-      log.error('cron working hours sync failed', { error: e?.message });
-    }
-  } else {
-    result.working_hours_sync = { skipped: true, reason: 'budget_exhausted' };
   }
 
   result.elapsed_ms = Date.now() - tickStartedAt;
