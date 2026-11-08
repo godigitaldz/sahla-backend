@@ -604,16 +604,19 @@ export async function syncWorkingHours({ force = false, logger = console } = {})
       }
     } else {
       // Inside working hours:
-      // Re-open couriers who were auto-closed OR who are currently online and unblocked
-      if (!isCurrentlyAvailable && !isBlocked && (wasAutoClosed || courier.is_online === true)) {
-        toOpenIds.push(courierId);
-        details.push({
-          courier_id: courierId,
-          name: courier.delivery_name,
-          action: 'auto_opened',
-          reason: wasAutoClosed ? 'restored_on_shift_start' : 'restored_online_courier',
-          schedule_source: scheduleSource,
-        });
+      // ONLY re-open couriers who were auto-closed by the working hours schedule.
+      // Do NOT touch couriers who were already manually unavailable/off-duty.
+      if (wasAutoClosed) {
+        if (!isBlocked) {
+          toOpenIds.push(courierId);
+          details.push({
+            courier_id: courierId,
+            name: courier.delivery_name,
+            action: 'auto_opened',
+            reason: 'restored_on_shift_start',
+            schedule_source: scheduleSource,
+          });
+        }
         autoClosedSet.delete(courierId);
         if (userId) autoClosedSet.delete(userId);
       }
