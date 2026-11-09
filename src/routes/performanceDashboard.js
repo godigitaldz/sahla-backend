@@ -5,6 +5,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { runPendingOrdersPollOnce } from '../services/pendingOrdersPoller.js';
 import { runPickupDelayAdminAlertsOnce } from '../services/pickupDelayAdminAlertsPoller.js';
 import { runPreparingUnassignedRebroadcastOnce } from '../services/preparingUnassignedRebroadcastPoller.js';
+import { runPreparingAssignedDelayAdminAlertsOnce } from '../services/preparingAssignedDelayAdminAlertsPoller.js';
 import { supabasePushGateway } from '../modules/notifications/supabasePushGateway.js';
 import {
   getRestaurantOpsUserIds,
@@ -1293,6 +1294,15 @@ router.post('/orders/:id/unassign', requirePerformanceAuth, async (req, res) => 
       })
       .eq('id', id);
     if (error) throw error;
+
+    // Immediately trigger autonomous rebroadcast to all online couriers
+    setImmediate(async () => {
+      try {
+        await runPreparingUnassignedRebroadcastOnce({ logger: console });
+      } catch (rebroadcastErr) {
+        console.warn('Auto-rebroadcast after unassign failed:', rebroadcastErr?.message);
+      }
+    });
 
     return res.json({ success: true });
   } catch (e) {
@@ -3194,6 +3204,44 @@ router.get('/alerts', requirePerformanceAuth, async (req, res) => {
       ageMinutes: ageMinutes(o.picked_up_at || o.updated_at),
     })).filter((o) => o.ageMinutes != null && o.ageMinutes >= pickupDelayMin);
 
+    // Active alert for orders in preparing/ready with courier assigned but NOT picked up within threshold (20 min)
+    const preparingAssignedDelayMin = Number(process.env.PERFORMANCE_PREPARING_ASSIGNED_DELAY_MINUTES) || 20;
+    const preparingAssignedThresholdIso = new Date(Date.now() - preparingAssignedDelayMin * 60_000).toISOString();
+    const { data: delayedPreparingAssigned, error: paErr } = await supabaseAdmin
+      .from('orders')
+      .select(ORDER_SELECT)
+      .in('status', ['preparing', 'ready'])
+      .not('delivery_person_id', 'is', null)
+      .is('parcel_sender_id', null)
+      .or(`courier_assigned_at.lte.${preparingAssignedThresholdIso},and(courier_assigned_at.is.null,updated_at.lte.${preparingAssignedThresholdIso})`)
+      .order('created_at', { ascending: true })
+      .limit(300);
+    if (paErr) throw paErr;
+
+    const preparingAssignedDelayed = (delayedPreparingAssigned || []).map((o) => ({
+      ...enrichOrderCourier(o),
+      ageMinutes: ageMinutes(o.courier_assigned_at || o.updated_at),
+    })).filter((o) => o.ageMinutes != null && o.ageMinutes >= preparingAssignedDelayMin);
+
+    // Active alert for orders in preparing/ready with NO courier assigned within threshold (5 min)
+    const preparingUnassignedDelayMin = Number(process.env.PERFORMANCE_PREPARING_UNASSIGNED_DELAY_MINUTES) || 5;
+    const preparingUnassignedThresholdIso = new Date(Date.now() - preparingUnassignedDelayMin * 60_000).toISOString();
+    const { data: delayedPreparingUnassigned, error: puErr } = await supabaseAdmin
+      .from('orders')
+      .select(ORDER_SELECT)
+      .in('status', ['preparing', 'ready'])
+      .is('delivery_person_id', null)
+      .is('parcel_sender_id', null)
+      .lte('updated_at', preparingUnassignedThresholdIso)
+      .order('created_at', { ascending: true })
+      .limit(300);
+    if (puErr) throw puErr;
+
+    const preparingUnassignedDelayed = (delayedPreparingUnassigned || []).map((o) => ({
+      ...enrichOrderCourier(o),
+      ageMinutes: ageMinutes(o.courier_unassigned_episode_at || o.updated_at || o.created_at),
+    })).filter((o) => o.ageMinutes != null && o.ageMinutes >= preparingUnassignedDelayMin);
+
     const dashboardPollMs = Number(process.env.PERFORMANCE_OPEN_DASHBOARD_POLL_MS || 0);
     if (Number.isFinite(dashboardPollMs) && dashboardPollMs >= 30_000) {
       const now = Date.now();
@@ -3204,7 +3252,13 @@ router.get('/alerts', requirePerformanceAuth, async (req, res) => {
             const pending = await runPendingOrdersPollOnce({ logger: console });
             const pickup = await runPickupDelayAdminAlertsOnce({ logger: console });
             const preparingRebroadcast = await runPreparingUnassignedRebroadcastOnce({ logger: console }).catch(() => {});
-            console.info?.('[performance/alerts] background escalation poll', { pending, pickup, preparingRebroadcast });
+            const preparingAssignedAlerts = await runPreparingAssignedDelayAdminAlertsOnce({ logger: console }).catch(() => {});
+            console.info?.('[performance/alerts] background escalation poll', {
+              pending,
+              pickup,
+              preparingRebroadcast,
+              preparingAssignedAlerts,
+            });
           } catch (err) {
             console.error('[performance/alerts] background escalation poll failed', err);
           }
@@ -3216,21 +3270,38 @@ router.get('/alerts', requirePerformanceAuth, async (req, res) => {
       stalePendingOrdersWithItems,
       parcelWaitingOrdersWithItems,
       pickedUpDelayedWithItems,
+      preparingAssignedDelayedWithItems,
+      preparingUnassignedDelayedWithItems,
     ] = await Promise.all([
       attachOrderItemsSummary(stalePendingOrders),
       attachOrderItemsSummary(parcelWaitingOrders),
       attachOrderItemsSummary(pickedUpDeliveryDelayed),
+      attachOrderItemsSummary(preparingAssignedDelayed),
+      attachOrderItemsSummary(preparingUnassignedDelayed),
     ]);
+
+    const activeAlertOrderIds = [
+      ...stalePendingOrders.map((o) => o.id),
+      ...parcelWaitingOrders.map((o) => o.id),
+      ...pickedUpDeliveryDelayed.map((o) => o.id),
+      ...preparingAssignedDelayed.map((o) => o.id),
+      ...preparingUnassignedDelayed.map((o) => o.id),
+    ].filter(Boolean);
 
     return res.json({
       success: true,
       thresholdMinutes: minutes,
+      activeAlertOrderIds,
       stalePendingOrders: stalePendingOrdersWithItems,
       tasksWithoutOffers,
       parcelWaitingOrders: parcelWaitingOrdersWithItems,
       parcel_waiting_minutes: minutes,
       pickedUpDeliveryDelayed: pickedUpDelayedWithItems,
       picked_up_delay_minutes: pickupDelayMin,
+      preparingAssignedDelayed: preparingAssignedDelayedWithItems,
+      preparing_assigned_delay_minutes: preparingAssignedDelayMin,
+      preparingUnassignedDelayed: preparingUnassignedDelayedWithItems,
+      preparing_unassigned_delay_minutes: preparingUnassignedDelayMin,
       pending_delivery_man_requests: cDm.count ?? 0,
       pending_restaurant_requests: cR.count ?? 0,
       pending_parcel_sender_requests: cPs.count ?? 0,

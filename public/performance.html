@@ -2471,6 +2471,54 @@
               <tbody id="alertsPickedUpBody"></tbody>
             </table>
           </div>
+          <h3 class="alerts-head"><span class="head-icon">⏳</span> Preparing — Courier assigned not picked up (≥ 20 min)</h3>
+          <p class="meta" id="alertsPreparingAssignedMeta"></p>
+          <div class="order-box-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
+                  <th>Order</th>
+                  <th>Status</th>
+                  <th>Restaurant</th>
+                  <th>Courier</th>
+                  <th>Courier phone</th>
+                  <th>Customer phone</th>
+                  <th>Destination</th>
+                  <th>Del. FF (orig)</th>
+                  <th>Assigned</th>
+                  <th>Total</th>
+                  <th>Created</th>
+                  <th>Age (min)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="alertsPreparingAssignedBody"></tbody>
+            </table>
+          </div>
+          <h3 class="alerts-head"><span class="head-icon">📢</span> Preparing — Waiting for courier (≥ 5 min)</h3>
+          <p class="meta" id="alertsPreparingUnassignedMeta"></p>
+          <div class="order-box-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
+                  <th>Order</th>
+                  <th>Status</th>
+                  <th>Restaurant</th>
+                  <th>Customer phone</th>
+                  <th>Destination</th>
+                  <th>Del. FF (orig)</th>
+                  <th>Manual assign</th>
+                  <th>Total</th>
+                  <th>Created</th>
+                  <th>Age (min)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="alertsPreparingUnassignedBody"></tbody>
+            </table>
+          </div>
           <h3 class="alerts-head"><span class="head-icon">✨</span> New orders (without active alerts)</h3>
           <p class="meta" id="ordersMeta"></p>
           <div class="order-box-wrap">
@@ -5158,8 +5206,32 @@
         }
       }
 
+      let _lastAlertCount = -1;
+      function playAlertChime() {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.36);
+        } catch (_) {}
+      }
+
       function updateAlertsBadge(orderN, taskN) {
         const n = (orderN || 0) + (taskN || 0);
+        if (_lastAlertCount !== -1 && n > _lastAlertCount) {
+          playAlertChime();
+        }
+        _lastAlertCount = n;
         const label = n > 99 ? '99+' : String(n);
         const tabBadge = $('alertsBadge');
         if (n > 0) {
@@ -5215,8 +5287,12 @@
         const mp = data.pickedUpDeliveryDelayed || [];
         const mw = data.parcelWaitingOrders || [];
         const mt = data.tasksWithoutOffers || [];
+        const mpa = data.preparingAssignedDelayed || [];
+        const mpu = data.preparingUnassignedDelayed || [];
         const pickupDelayMin = data.picked_up_delay_minutes ?? 15;
         const parcelWaitMin = data.parcel_waiting_minutes ?? 5;
+        const prepAssignedMin = data.preparing_assigned_delay_minutes ?? 20;
+        const prepUnassignedMin = data.preparing_unassigned_delay_minutes ?? 5;
         const alertOrderIds = new Set();
         mo.forEach((o) => {
           if (o && o.id) alertOrderIds.add(String(o.id));
@@ -5225,6 +5301,12 @@
           if (o && o.id) alertOrderIds.add(String(o.id));
         });
         mw.forEach((o) => {
+          if (o && o.id) alertOrderIds.add(String(o.id));
+        });
+        mpa.forEach((o) => {
+          if (o && o.id) alertOrderIds.add(String(o.id));
+        });
+        mpu.forEach((o) => {
           if (o && o.id) alertOrderIds.add(String(o.id));
         });
         (data.activeAlertOrderIds || []).forEach((id) => {
@@ -5242,7 +5324,19 @@
         $('alertsTasksMeta').textContent = mt.length
           ? mt.length + ' task(s) need attention.'
           : 'No tasks waiting for first offer.';
-        updateAlertsBadge(mo.length + mp.length, mt.length);
+        const prepAssignedMetaEl = $('alertsPreparingAssignedMeta');
+        if (prepAssignedMetaEl) {
+          prepAssignedMetaEl.textContent = mpa.length
+            ? mpa.length + ' order(s) in preparing with courier assigned not picked up (≥ ' + prepAssignedMin + ' min).'
+            : 'No delayed preparing assigned alerts.';
+        }
+        const prepUnassignedMetaEl = $('alertsPreparingUnassignedMeta');
+        if (prepUnassignedMetaEl) {
+          prepUnassignedMetaEl.textContent = mpu.length
+            ? mpu.length + ' order(s) in preparing waiting for courier (≥ ' + prepUnassignedMin + ' min).'
+            : 'No preparing unassigned alerts.';
+        }
+        updateAlertsBadge(mo.length + mp.length + mpa.length + mpu.length, mt.length);
         parcelAlertCount = mw.length;
         updateParcelAlertsBadge();
         $('alertsParcelMeta').textContent = mw.length
@@ -5407,6 +5501,146 @@
           const tr = document.createElement('tr');
           tr.innerHTML = '<td colspan="14" class="meta">None</td>';
           pb.appendChild(tr);
+        }
+
+        const pab = $('alertsPreparingAssignedBody');
+        if (pab) {
+          pab.innerHTML = '';
+          mpa.forEach((o) => {
+            const tr = document.createElement('tr');
+            tr.className = 'row-warn';
+            const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
+            let assignedCell = '—';
+            if (o.courier_assigned_ago_label) {
+              assignedCell =
+                esc(o.courier_assigned_ago_label) +
+                (o.courier_assigned_time_exact === false
+                  ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                  : '');
+            }
+            tr.innerHTML =
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
+              '<td>' +
+              esc(o.order_number || o.id) +
+              '<span class="order-summary-inline">Items: ' +
+              esc(o.order_items_summary || 'No items') +
+              '</span>' +
+              '</td><td data-status-cell></td><td>' +
+              esc(rest || o.restaurant_id || '—') +
+              '</td><td>' +
+              esc(o.courier_display_name || '—') +
+              '</td><td>' +
+              esc(o.courier_display_phone || '—') +
+              '</td><td>' +
+              esc(o.customer_display_phone || '—') +
+              '</td><td class="destination-cell">' +
+              destinationCellHtml(o) +
+              '</td><td class="num">' +
+              esc(fmtOrigDeliveryFf(o)) +
+              '</td><td>' +
+              assignedCell +
+              '</td><td class="num">' +
+              esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
+              '</td><td>' +
+              esc(fmtDate(o.created_at)) +
+              '</td><td class="num"><strong>' +
+              esc(o.ageMinutes != null ? o.ageMinutes : '—') +
+              '</strong></td>';
+            appendOrderStatusSelect(tr.querySelector('[data-status-cell]'), o);
+            const tdAct = document.createElement('td');
+            const btnRow = document.createElement('span');
+            btnRow.className = 'btn-row';
+            const pickupBtn = document.createElement('button');
+            pickupBtn.type = 'button';
+            pickupBtn.className = 'btn-pickup-order';
+            pickupBtn.textContent = 'Pick-up';
+            pickupBtn.title = 'Mark this assigned order as picked up';
+            pickupBtn.addEventListener('click', () => markPickedUp(o.id, pickupBtn));
+            btnRow.appendChild(pickupBtn);
+            appendDropAssignmentButton(btnRow, o);
+            if (orderCanCancelFromDashboard(o)) {
+              const cancelBtn = document.createElement('button');
+              cancelBtn.type = 'button';
+              cancelBtn.className = 'btn-cancel-order';
+              cancelBtn.textContent = 'Cancel';
+              cancelBtn.title = 'Cancel order and notify customer (push)';
+              cancelBtn.addEventListener('click', () =>
+                openCancelOrderModal(o.id, o.order_number || o.id),
+              );
+              btnRow.appendChild(cancelBtn);
+            }
+            tdAct.appendChild(btnRow);
+            tr.appendChild(tdAct);
+            pab.appendChild(tr);
+          });
+          if (!mpa.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="14" class="meta">None</td>';
+            pab.appendChild(tr);
+          }
+        }
+
+        const pub = $('alertsPreparingUnassignedBody');
+        if (pub) {
+          pub.innerHTML = '';
+          mpu.forEach((o) => {
+            const tr = document.createElement('tr');
+            tr.className = 'row-warn';
+            const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
+            tr.innerHTML =
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
+              '<td>' +
+              esc(o.order_number || o.id) +
+              '<span class="order-summary-inline">Items: ' +
+              esc(o.order_items_summary || 'No items') +
+              '</span>' +
+              '</td><td data-status-cell></td><td>' +
+              esc(rest || o.restaurant_id || '—') +
+              '</td><td>' +
+              esc(o.customer_display_phone || '—') +
+              '</td><td class="destination-cell">' +
+              destinationCellHtml(o) +
+              '</td><td class="num">' +
+              esc(fmtOrigDeliveryFf(o)) +
+              '</td><td data-manual-assign></td><td class="num">' +
+              esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') +
+              '</td><td>' +
+              esc(fmtDate(o.created_at)) +
+              '</td><td class="num"><strong>' +
+              esc(o.ageMinutes != null ? o.ageMinutes : '—') +
+              '</strong></td>';
+            appendOrderStatusSelect(tr.querySelector('[data-status-cell]'), o);
+            appendManualAssignSelect(tr.querySelector('[data-manual-assign]'), o);
+            const tdAct = document.createElement('td');
+            const btnRow = document.createElement('span');
+            btnRow.className = 'btn-row';
+            const rbBtn = document.createElement('button');
+            rbBtn.type = 'button';
+            rbBtn.className = 'btn-rebroadcast';
+            rbBtn.textContent = 'Re-broadcast';
+            rbBtn.title = 'Notify all online couriers — order available (push)';
+            rbBtn.addEventListener('click', () => rebroadcastOrder(o.id, rbBtn));
+            btnRow.appendChild(rbBtn);
+            if (orderCanCancelFromDashboard(o)) {
+              const cancelBtn = document.createElement('button');
+              cancelBtn.type = 'button';
+              cancelBtn.className = 'btn-cancel-order';
+              cancelBtn.textContent = 'Cancel';
+              cancelBtn.title = 'Cancel order and notify customer (push)';
+              cancelBtn.addEventListener('click', () =>
+                openCancelOrderModal(o.id, o.order_number || o.id),
+              );
+              btnRow.appendChild(cancelBtn);
+            }
+            tdAct.appendChild(btnRow);
+            tr.appendChild(tdAct);
+            pub.appendChild(tr);
+          });
+          if (!mpu.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="12" class="meta">None</td>';
+            pub.appendChild(tr);
+          }
         }
 
         const wb = $('alertsParcelBody');

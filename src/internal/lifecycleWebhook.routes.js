@@ -13,6 +13,7 @@ import { runWebOrderPushOutboxDrainerOnce } from '../services/webOrderPushOutbox
 import { runLifecycleSelfHealOnce } from '../services/lifecycleSelfHealService.js';
 import { runLifecycleBootstrapOnce } from '../services/lifecycleBootstrapService.js';
 import { runPreparingUnassignedRebroadcastOnce } from '../services/preparingUnassignedRebroadcastPoller.js';
+import { runPreparingAssignedDelayAdminAlertsOnce } from '../services/preparingAssignedDelayAdminAlertsPoller.js';
 import { acquireWindowLock } from '../services/distributedLockService.js';
 import { syncWorkingHours } from '../services/deliveryWorkingHoursService.js';
 
@@ -255,6 +256,7 @@ async function runCronTick(req, res) {
     lifecycle_bootstrap: null,
     pending_poll: null,
     preparing_unassigned_rebroadcast: null,
+    preparing_assigned_alerts: null,
     pickup_alerts: null,
     parcel_alerts: null,
     web_order_push_drainer: null,
@@ -313,6 +315,17 @@ async function runCronTick(req, res) {
     }
   } else {
     result.preparing_unassigned_rebroadcast = { skipped: true, reason: 'budget_exhausted' };
+  }
+
+  if (remainingMs() > 5_000) {
+    try {
+      result.preparing_assigned_alerts = await runPreparingAssignedDelayAdminAlertsOnce({ logger: log });
+    } catch (e) {
+      result.errors.push({ stage: 'preparing_assigned_alerts', error: e?.message || String(e) });
+      log.error('cron preparing assigned alerts failed', { error: e?.message });
+    }
+  } else {
+    result.preparing_assigned_alerts = { skipped: true, reason: 'budget_exhausted' };
   }
 
   if (remainingMs() > 5_000) {

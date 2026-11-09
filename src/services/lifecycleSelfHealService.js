@@ -30,7 +30,7 @@ export async function runLifecycleSelfHealOnce({ budgetMs = 15_000, logger = con
   try {
     const { data: activeOrders, error: queryErr } = await supabaseAdmin
       .from('orders')
-      .select('id, status, delivery_person_id, lifecycle_version, created_at, updated_at, courier_unassigned_episode_at')
+      .select('id, status, delivery_person_id, courier_assigned_at, lifecycle_version, created_at, updated_at, courier_unassigned_episode_at')
       .in('status', ['pending', 'preparing', 'ready'])
       .gte('created_at', safeIsoAgo)
       .order('created_at', { ascending: false })
