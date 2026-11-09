@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import './landing.css';
@@ -16,14 +16,186 @@ const WHATSAPP_URL = 'https://wa.me/qr/QLW7CVMHUBNAA1';
 
 type Language = 'ar' | 'fr' | 'en';
 
+interface RestaurantItem {
+  id: string;
+  name: string;
+  tagAr: string;
+  tagFr: string;
+  tagEn: string;
+  rating: number;
+  deliveryTime: string;
+  deliveryTimeEn: string;
+  logo: string;
+  cover: string;
+  slug: string | null;
+}
+
+const FEATURED_RESTAURANTS: RestaurantItem[] = [
+  {
+    id: 'brothers-food',
+    name: 'Brothers Food',
+    tagAr: 'برغر • طاكوس • بيتزا • ملفوف',
+    tagFr: 'Burgers • Tacos • Pizzas • Malfouf',
+    tagEn: 'Burgers • Tacos • Pizza • Malfouf',
+    rating: 4.9,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/brothers%20food.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/brothera%20food.jpg',
+    slug: 'brothers-food',
+  },
+  {
+    id: 'mr-burger',
+    name: 'Mr Burger',
+    tagAr: 'برغر وسريع • مطلوع تونيزيا',
+    tagFr: 'Burgers & Fast Food',
+    tagEn: 'Burgers & Fast Food',
+    rating: 4.9,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/mr%20burger.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/mr%20burger.jpg',
+    slug: 'mr-burger',
+  },
+  {
+    id: 'cleopatra-food',
+    name: 'Cleopatra Food',
+    tagAr: 'برغر شيكن • تاكوس بيراميد',
+    tagFr: 'Poulet & Spécialités',
+    tagEn: 'Crispy Chicken & Tacos',
+    rating: 4.7,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/cleobatra.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/cleopatrea.jpg',
+    slug: 'cleopatra-food',
+  },
+  {
+    id: 'chees-up',
+    name: 'Chees-Up',
+    tagAr: 'برغر الجبن الذائب • كريسبي',
+    tagFr: 'Burgers Gourmet au Fromage',
+    tagEn: 'Melty Cheese Burgers',
+    rating: 5.0,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/Chees-Up.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/Cheeseup.jpg',
+    slug: 'chees-up',
+  },
+  {
+    id: 'dar-djeddi',
+    name: 'دار جدي للمأكولات التقليدية',
+    tagAr: 'طواجن جزائرية • شخشوخة ومشاوي',
+    tagFr: 'Plats Traditionnels Algériens',
+    tagEn: 'Traditional Algerian Dishes',
+    rating: 5.0,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://wtowqpejzxlsmgywkjvn.supabase.co/storage/v1/object/public/restaurant-logos/4132efc9-eab0-4f73-93ac-d85ff026fc3b_restaurant-logos_1777266444275.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/dar%20djeddi.jpg',
+    slug: 'dar-djeddi',
+  },
+  {
+    id: 'savini-07',
+    name: 'SAVINI 07',
+    tagAr: 'بيتزا إيطالية • غراتان وباستا',
+    tagFr: 'Pizzas & Saveurs Italiennes',
+    tagEn: 'Italian Pizza & Pasta',
+    rating: 5.0,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/SAVINI%2007.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/savini.png',
+    slug: 'savini-07',
+  },
+  {
+    id: 'unlock-food',
+    name: 'Unlock Food',
+    tagAr: 'بوكسات عائلية • كريسبي وبرغر',
+    tagFr: 'Family Boxes & Crispy',
+    tagEn: 'Family Boxes & Crispy',
+    rating: 4.8,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/unlock.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/unlock.jpg',
+    slug: 'unlock-food',
+  },
+  {
+    id: 'diety-food-biskra',
+    name: 'Diety Food Biskra',
+    tagAr: 'أكل صحي • وجبات دايت وسلطات',
+    tagFr: 'Healthy & Diet Food',
+    tagEn: 'Healthy & Diet Meals',
+    rating: 5.0,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/Diety%20Food%20Biskra.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/diety.png',
+    slug: 'diety-food-biskra',
+  },
+  {
+    id: 'seven-eleven',
+    name: 'Seven Eleven',
+    tagAr: 'بيتزا بولي • كالزون وشاورما',
+    tagFr: 'Pizzas, Calzone & Shawarma',
+    tagEn: 'Pizza, Calzone & Shawarma',
+    rating: 5.0,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/Seven%20Eleven.jpg',
+    cover: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/Seven%20Eleven.jpg',
+    slug: null,
+  },
+  {
+    id: 'islam-diet',
+    name: 'Islam Diet',
+    tagAr: 'شاورما صحي • وجبات رياضيين',
+    tagFr: 'Fitness & Healthy Diet',
+    tagEn: 'Fitness & Diet Shawarma',
+    rating: 5.0,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/islam%20diet.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/islam%20diet.png',
+    slug: 'islam-diet',
+  },
+  {
+    id: 'morphine-food',
+    name: 'Morphine Food',
+    tagAr: 'وجبات سريعة • سندويتشات مشكلة',
+    tagFr: 'Fast Food & Sandwiches',
+    tagEn: 'Fast Food & Sandwiches',
+    rating: 5.0,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/Morphine.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/Morphine.jpg',
+    slug: 'morphine-food',
+  },
+  {
+    id: 'daily-dose',
+    name: 'Daily Dose',
+    tagAr: 'قهوة مختصة • حلويات ومشروبات',
+    tagFr: 'Café & Desserts',
+    tagEn: 'Specialty Coffee & Desserts',
+    rating: 4.9,
+    deliveryTime: '30-45 دقيقة',
+    deliveryTimeEn: '30-45 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/Daily%20Dose.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/daily.jpg',
+    slug: 'daily-dose',
+  },
+];
+
 const CONTENT = {
   ar: {
     nav: {
-      services: 'أصناف الطعام',
+      services: 'أشهر المطاعم',
       whySahla: 'علاش ساهلة؟',
       howItWorks: 'كيف تطلب',
       partners: 'انضم إلينا',
-      download: 'حمّل التطبيق',
       call: 'اتصل بنا',
     },
     hero: {
@@ -38,25 +210,12 @@ const CONTENT = {
       downloadAppStore: 'App Store',
       downloadGooglePlay: 'Google Play',
     },
-    services: {
-      eyebrow: 'ساهلة فود (Sahla Food)',
-      title: 'كل ما تشتهيه من أفضل مطاعم مدينتك',
-      lead: 'سواء كنت جيعان وتستنى في برغر مقرمش، بيتزا سخونة، أو طبق تقليدي أصيل، ساهلة فود توصلك كل أطباقك المفضلة لباب دارك.',
-      c1Title: 'البرغر والوجبات السريعة',
-      c1Tag: 'الأكثر طلباً',
-      c1Desc:
-        'ساندويتشات برغر شهية، تاكوس، شاورما، وبطاطا مقرمشة من أشهر المطاعم المعتمدة والأعلى تقييماً في منطقتك.',
-      c1Action: 'استكشف الوجبات السريعة',
-      c2Title: 'البيتزا والمأكولات الإيطالية',
-      c2Tag: 'ساخنة ومقرمشة',
-      c2Desc:
-        'تشكيلة واسعة من البيتزا الإيطالية بالجبن الذائب والصلصات الخاصة، تُعد فور طلبك وتصلك بحرارتها.',
-      c2Action: 'اطلب بيتزا الآن',
-      c3Title: 'الأطباق التقليدية والمشاوي',
-      c3Tag: 'نكهة أصيلة',
-      c3Desc:
-        'مشاوي مشكلة ساخنة، طواجن جزائرية عريقة، وأطباق شعبية غنية بالنكهات والبهارات الأصلية التي تحبها.',
-      c3Action: 'تذوق المشاوي والأطباق',
+    restaurants: {
+      eyebrow: 'شركاؤنا المميزون',
+      title: 'أفضل وأشهر مطاعم مدينتك في مكان واحد',
+      lead: 'اسحب وتصفح أشهر المطاعم المعتمدة والشريكة مع ساهلة. اطلب وجبتك المفضلة لتصلك ساخنة وطازجة لباب دارك.',
+      viewMenu: 'تصفح المنيو',
+      openApp: 'اطلب الآن',
     },
     whySahla: {
       eyebrow: 'لماذا يفضلنا المئات؟',
@@ -107,25 +266,21 @@ const CONTENT = {
     footer: {
       desc: 'ساهلة — تطبيق توصيل الطعام الجزائري الرائد. خليك في بلاصتك.. حنا نجيو لعندك!',
       company: 'الشركة',
-      services: 'المأكولات',
+      services: 'أشهر المطاعم',
       legal: 'الشروط والسياسات',
       privacy: 'سياسة الخصوصية',
       terms: 'شروط الخدمة',
       deleteAccount: 'حذف الحساب',
-      foodDelivery: 'ساهلة فود (Sahla Food)',
-      fastFood: 'وجبات سريعة وبرغر',
-      traditionalFood: 'أطباق تقليدية ومشاوي',
       contact: 'اتصل بنا',
       copyright: '© 2026 ساهلة (Sahla Delivery). جميع الحقوق محفوظة.',
     },
   },
   fr: {
     nav: {
-      services: 'Plats & Menus',
+      services: 'Restaurants',
       whySahla: 'Pourquoi Sahla ?',
       howItWorks: 'Comment ça marche',
       partners: 'Partenaires',
-      download: "L'application",
       call: 'Appelez-nous',
     },
     hero: {
@@ -140,25 +295,12 @@ const CONTENT = {
       downloadAppStore: 'App Store',
       downloadGooglePlay: 'Google Play',
     },
-    services: {
-      eyebrow: 'Sahla Food',
-      title: 'Tous vos plats préférés des meilleurs restaurants',
-      lead: 'Envie d’un bon burger croustillant, d’une pizza au fromage fondant ou d’un plat traditionnel réconfortant ? Sahla Food vous livre tout à domicile.',
-      c1Title: 'Burgers & Fast Food',
-      c1Tag: 'Les plus demandés',
-      c1Desc:
-        'Burgers gourmets, tacos, shawarma et frites dorées des restaurants les plus réputés de votre secteur.',
-      c1Action: 'Découvrir le fast-food',
-      c2Title: 'Pizzas & Saveurs Italiennes',
-      c2Tag: 'Chaudes & croustillantes',
-      c2Desc:
-        'Large choix de pizzas cuites à la commande avec garnitures généreuses et livraison express.',
-      c2Action: 'Commander une pizza',
-      c3Title: 'Plats Traditionnels & Grillades',
-      c3Tag: 'Recettes authentiques',
-      c3Desc:
-        'Tajines savoureux, grillades au feu de bois et spécialités locales riches en épices et traditions.',
-      c3Action: 'Goûter les grillades',
+    restaurants: {
+      eyebrow: 'Nos Partenaires d’Excellence',
+      title: 'Les Meilleurs Restaurants de Votre Ville',
+      lead: 'Faites défiler et découvrez les établissements partenaires officiels. Commandez vos repas préférés livrés chez vous.',
+      viewMenu: 'Voir le menu',
+      openApp: 'Commander',
     },
     whySahla: {
       eyebrow: 'Pourquoi des centaines nous font confiance ?',
@@ -209,25 +351,21 @@ const CONTENT = {
     footer: {
       desc: 'Sahla — L’application algérienne de référence pour la livraison de repas à domicile. Restez chez vous, on vient chez vous !',
       company: 'Entreprise',
-      services: 'Menu',
+      services: 'Restaurants',
       legal: 'Légal',
       privacy: 'Politique de confidentialité',
       terms: 'Conditions d’utilisation',
       deleteAccount: 'Supprimer mon compte',
-      foodDelivery: 'Sahla Food',
-      fastFood: 'Fast Food & Burgers',
-      traditionalFood: 'Plats traditionnels & Grillades',
       contact: 'Contactez-nous',
       copyright: '© 2026 Sahla Delivery. Tous droits réservés.',
     },
   },
   en: {
     nav: {
-      services: 'Food & Menus',
+      services: 'Restaurants',
       whySahla: 'Why Sahla?',
       howItWorks: 'How It Works',
       partners: 'Partners',
-      download: 'Get the App',
       call: 'Call Us',
     },
     hero: {
@@ -242,25 +380,12 @@ const CONTENT = {
       downloadAppStore: 'App Store',
       downloadGooglePlay: 'Google Play',
     },
-    services: {
-      eyebrow: 'Sahla Food',
-      title: 'All Your Food Cravings from the Best Restaurants',
-      lead: 'Whether you crave a juicy gourmet burger, a steaming cheesy pizza, or authentic grilled specialties, Sahla Food brings it warm and fresh to your door.',
-      c1Title: 'Burgers & Fast Food',
-      c1Tag: 'Most Popular',
-      c1Desc:
-        'Mouthwatering burgers, tacos, shawarma, and crispy fries from the most loved spots in your area.',
-      c1Action: 'Explore Burgers & Fast Food',
-      c2Title: 'Pizza & Italian Delights',
-      c2Tag: 'Hot & Crispy',
-      c2Desc:
-        'Crispy crust pizzas baked fresh upon ordering, loaded with premium toppings and melted cheese.',
-      c2Action: 'Order Pizza Now',
-      c3Title: 'Traditional Dishes & Grills',
-      c3Tag: 'Authentic Flavor',
-      c3Desc:
-        'Sizzling mixed grills, traditional slow-cooked tajines, and savory heritage dishes packed with flavor.',
-      c3Action: 'Taste Traditional Dishes',
+    restaurants: {
+      eyebrow: 'Featured Partner Restaurants',
+      title: 'Top Rated Eateries in Your City',
+      lead: 'Swipe and browse popular verified partner eateries on Sahla. Order your favorite meals delivered fresh to your door.',
+      viewMenu: 'View Menu',
+      openApp: 'Order Now',
     },
     whySahla: {
       eyebrow: 'Why Hundreds Choose Us',
@@ -311,14 +436,11 @@ const CONTENT = {
     footer: {
       desc: 'Sahla — Algeria’s leading food delivery app. Stay where you are, we come to you!',
       company: 'Company',
-      services: 'Food Services',
+      services: 'Restaurants',
       legal: 'Legal',
       privacy: 'Privacy Policy',
       terms: 'Terms of Service',
       deleteAccount: 'Delete Account',
-      foodDelivery: 'Sahla Food',
-      fastFood: 'Fast Food & Burgers',
-      traditionalFood: 'Traditional & Grills',
       contact: 'Contact Us',
       copyright: '© 2026 Sahla Delivery. All rights reserved.',
     },
@@ -327,6 +449,7 @@ const CONTENT = {
 
 export default function HomePage() {
   const [lang, setLang] = useState<Language>('ar');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('sahla_user_lang') as Language;
@@ -338,6 +461,13 @@ export default function HomePage() {
   const handleLanguageChange = (newLang: Language) => {
     setLang(newLang);
     localStorage.setItem('sahla_user_lang', newLang);
+  };
+
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -310 : 310;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
   };
 
   const t = CONTENT[lang];
@@ -373,19 +503,6 @@ export default function HomePage() {
 
           {/* Header Actions */}
           <div className="header-actions">
-            {/* Quick Phone Call Pill */}
-            <a
-              href={`tel:${PHONE_NUMBER}`}
-              className="header-call-pill"
-              aria-label={t.contact.callUs}
-              title={PHONE_DISPLAY}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
-              <span className="header-call-text" dir="ltr">{PHONE_DISPLAY}</span>
-            </a>
-
             {/* Sleek Segmented Language Pill */}
             <div className="lang-segmented-control" role="group" aria-label="Language Selector">
               <button
@@ -414,11 +531,17 @@ export default function HomePage() {
               </button>
             </div>
 
-            <a href="#download-app" className="header-cta-btn" aria-label={t.nav.download}>
-              <span>{t.nav.download}</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M19 12l-7 7-7-7" />
+            {/* CALL US Primary CTA Button */}
+            <a
+              href={`tel:${PHONE_NUMBER}`}
+              className="header-cta-btn header-call-cta"
+              aria-label={t.contact.callUs}
+              title={PHONE_DISPLAY}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
+              <span>{t.nav.call}</span>
             </a>
           </div>
         </div>
@@ -492,56 +615,110 @@ export default function HomePage() {
       </section>
 
       {/* ----------------------------------------
-          SAHLA FOOD SECTION (Food Only)
+          FEATURED PARTNER RESTAURANTS (HORIZONTAL SWIPE)
           ---------------------------------------- */}
-      <section className="services-section" id="services">
-        <div className="section-head-center">
-          <span className="section-eyebrow">{t.services.eyebrow}</span>
-          <h2 className="section-main-title">{t.services.title}</h2>
-          <p className="section-lead">{t.services.lead}</p>
-        </div>
-
-        <div className="services-grid">
-          {/* Category 1: Burgers & Fast Food */}
-          <div className="service-card">
-            <div className="service-icon-box" aria-hidden="true">
-              🍔
+      <section className="partners-showcase-section" id="services">
+        <div className="partners-showcase-container">
+          <div className="section-head-with-controls">
+            <div className="section-head-text">
+              <span className="section-eyebrow">{t.restaurants.eyebrow}</span>
+              <h2 className="section-main-title">{t.restaurants.title}</h2>
+              <p className="section-lead">{t.restaurants.lead}</p>
             </div>
-            <span className="service-tag">{t.services.c1Tag}</span>
-            <h3 className="service-name">{t.services.c1Title}</h3>
-            <p className="service-desc">{t.services.c1Desc}</p>
-            <a href="#download-app" className="service-action-link">
-              <span>{t.services.c1Action}</span>
-              <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
-            </a>
+
+            {/* Desktop Navigation Arrows */}
+            <div className="carousel-nav-controls" aria-label="Carousel Navigation">
+              <button
+                type="button"
+                className="carousel-nav-btn"
+                onClick={() => scrollCarousel(isRtl ? 'right' : 'left')}
+                aria-label="Previous"
+                title="Previous"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={isRtl ? "M9 18l6-6-6-6" : "M15 18l-6-6 6-6"} />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="carousel-nav-btn"
+                onClick={() => scrollCarousel(isRtl ? 'left' : 'right')}
+                aria-label="Next"
+                title="Next"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={isRtl ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} />
+                </svg>
+              </button>
+            </div>
           </div>
 
-          {/* Category 2: Pizza & Italian */}
-          <div className="service-card">
-            <div className="service-icon-box" aria-hidden="true">
-              🍕
-            </div>
-            <span className="service-tag">{t.services.c2Tag}</span>
-            <h3 className="service-name">{t.services.c2Title}</h3>
-            <p className="service-desc">{t.services.c2Desc}</p>
-            <a href="#download-app" className="service-action-link">
-              <span>{t.services.c2Action}</span>
-              <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
-            </a>
-          </div>
+          {/* Horizontal Scroll / Swipe Track */}
+          <div className="restaurants-swipe-wrapper">
+            <div
+              ref={scrollRef}
+              className="restaurants-swipe-track"
+              role="region"
+              aria-label="Featured Restaurants"
+            >
+              {FEATURED_RESTAURANTS.map((resto) => {
+                const tag = lang === 'ar' ? resto.tagAr : lang === 'fr' ? resto.tagFr : resto.tagEn;
+                const time = lang === 'ar' ? resto.deliveryTime : resto.deliveryTimeEn;
+                const linkHref = resto.slug ? `/restaurants/${resto.slug}` : '#download-app';
 
-          {/* Category 3: Traditional & Grills */}
-          <div className="service-card">
-            <div className="service-icon-box" aria-hidden="true">
-              🥩
+                return (
+                  <div key={resto.id} className="restaurant-swipe-card">
+                    {/* Cover Image */}
+                    <div className="restaurant-card-cover">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={resto.cover}
+                        alt={resto.name}
+                        loading="lazy"
+                        className="restaurant-cover-img"
+                      />
+                      <div className="restaurant-cover-overlay" />
+
+                      {/* Time Badge */}
+                      <div className="restaurant-badge-time">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        </svg>
+                        <span>{time}</span>
+                      </div>
+
+                      {/* Rating Badge */}
+                      <div className="restaurant-badge-rating">
+                        <span className="rating-star">★</span>
+                        <span>{resto.rating.toFixed(1)}</span>
+                      </div>
+                    </div>
+
+                    {/* Overlapping Floating Logo */}
+                    <div className="restaurant-logo-holder">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={resto.logo}
+                        alt={`${resto.name} Logo`}
+                        loading="lazy"
+                        className="restaurant-logo-img"
+                      />
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="restaurant-card-body">
+                      <h3 className="restaurant-name">{resto.name}</h3>
+                      <p className="restaurant-tags">{tag}</p>
+
+                      <Link href={linkHref} className="restaurant-action-btn">
+                        <span>{resto.slug ? t.restaurants.viewMenu : t.restaurants.openApp}</span>
+                        <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <span className="service-tag">{t.services.c3Tag}</span>
-            <h3 className="service-name">{t.services.c3Title}</h3>
-            <p className="service-desc">{t.services.c3Desc}</p>
-            <a href="#download-app" className="service-action-link">
-              <span>{t.services.c3Action}</span>
-              <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
-            </a>
           </div>
         </div>
       </section>
@@ -811,24 +988,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Services Column */}
-          <div className="footer-column">
-            <h4>{t.footer.services}</h4>
-            <ul className="footer-links-list">
-              <li><a href="#services">{t.footer.foodDelivery}</a></li>
-              <li><a href="#services">{t.footer.fastFood}</a></li>
-              <li><a href="#services">{t.footer.traditionalFood}</a></li>
-            </ul>
-          </div>
-
-          {/* Company Column */}
+          {/* Quick Links Column */}
           <div className="footer-column">
             <h4>{t.footer.company}</h4>
             <ul className="footer-links-list">
+              <li><a href="#services">{t.nav.services}</a></li>
               <li><a href="#why-sahla">{t.nav.whySahla}</a></li>
               <li><a href="#how-it-works">{t.nav.howItWorks}</a></li>
               <li><a href="#partners">{t.nav.partners}</a></li>
-              <li><a href="mailto:support@sahla-delivery.com">{t.footer.contact}</a></li>
             </ul>
           </div>
 
