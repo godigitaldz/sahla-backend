@@ -39,10 +39,33 @@ async function getActiveStaffUserIdsByRestaurant(restaurantIds, logger = console
 
 /**
  * Restaurant owner + active staff for push rebroadcast (`new_order`).
+ * Aligned with Flutter app RestaurantService.getRestaurantNotificationRecipients:
+ * 1. RPC get_restaurant_notification_recipient_ids
+ * 2. Fallback to restaurants.owner_id + restaurant_staff_members
  */
 export async function getRestaurantOpsUserIds(restaurantId, logger = console) {
   const rid = String(restaurantId ?? '').trim();
   if (!rid) return [];
+
+  try {
+    const { data: rpcRows, error: rpcErr } = await supabaseAdmin.rpc(
+      'get_restaurant_notification_recipient_ids',
+      { p_restaurant_id: rid }
+    );
+    if (!rpcErr && Array.isArray(rpcRows) && rpcRows.length > 0) {
+      const ids = new Set();
+      for (const item of rpcRows) {
+        const id = item?.user_id ?? item?.id ?? item?.userId;
+        if (id) ids.add(String(id).trim());
+        else if (typeof item === 'string' && item.trim()) ids.add(item.trim());
+      }
+      if (ids.size > 0) {
+        return [...ids];
+      }
+    }
+  } catch (err) {
+    logger.warn?.('[order-rebroadcast-recipients] rpc get_restaurant_notification_recipient_ids failed, falling back:', err?.message);
+  }
 
   const [{ data: rest, error: rErr }, staffMap] = await Promise.all([
     supabaseAdmin
@@ -68,26 +91,29 @@ export async function getRestaurantOpsUserIds(restaurantId, logger = console) {
 
 /**
  * Online + available delivery personnel user ids.
+ * Aligned with Flutter app AdminAlertsScreen._loadAvailableCourierIds.
  */
 export async function getOnlineAvailableCourierUserIds(logger = console) {
   const { data: couriers, error } = await supabaseAdmin
     .from('delivery_personnel')
-    .select('user_id')
+    .select('user_id, is_online, is_available')
     .eq('is_online', true)
-    .eq('is_available', 'true');
+    .limit(1200);
 
   if (error) {
     logger.error?.('[order-rebroadcast-recipients] delivery_personnel query failed:', error.message);
     return [];
   }
 
-  return [
-    ...new Set(
-      (couriers ?? [])
-        .map((r) => String(r?.user_id ?? '').trim())
-        .filter((id) => id.length > 0),
-    ),
-  ];
+  const ids = new Set();
+  for (const row of couriers ?? []) {
+    const userId = String(row?.user_id ?? '').trim();
+    if (!userId) continue;
+    const isAvail = row?.is_available === true || String(row?.is_available).toLowerCase().trim() === 'true';
+    if (isAvail) ids.add(userId);
+  }
+
+  return [...ids];
 }
 
 export function isCourierDeliverableOrder(order) {

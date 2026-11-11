@@ -219,8 +219,8 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
           const rbInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
             body: {
               user_ids: restOps,
-              title: 'طلب جديد بانتظار التأكيد',
-              body: `الطلب #${orderNumber} ما زال بانتظار التأكيد.`,
+              title: 'طلب جديد',
+              body: `الطلب #${orderNumber} لا يزال معلقاً.`,
               data: {
                 type: 'new_order',
                 flow: `pending_restaurant_rebroadcast_${stage}`,

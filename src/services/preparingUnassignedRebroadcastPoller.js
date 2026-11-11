@@ -40,7 +40,7 @@ export async function runPreparingUnassignedRebroadcastOnce({ logger = console }
     const lookbackIso = safeIsoDate(PREPARING_UNASSIGNED_EPISODE_MAX_SECONDS * 1000);
     const { data: unassignedOrders, error: queryError } = await supabaseAdmin
       .from('orders')
-      .select('id, order_number, status, delivery_person_id, fulfillment_type, parcel_sender_id, created_at, updated_at, courier_unassigned_episode_at')
+      .select('id, order_number, status, restaurant_id, delivery_person_id, fulfillment_type, parcel_sender_id, created_at, updated_at, courier_unassigned_episode_at')
       .in('status', ['preparing', 'ready'])
       .is('delivery_person_id', null)
       .gte('updated_at', lookbackIso)
@@ -94,9 +94,16 @@ export async function runPreparingUnassignedRebroadcastOnce({ logger = console }
         continue;
       }
 
-      // Check last courier rebroadcast time for this order
+      // Check last courier rebroadcast time for this order (scheduled or manual)
       const lastCourierPush = logs
-        .filter((l) => l?.data?.order_id === orderId && l?.data?.flow === COURIER_UNASSIGNED_FLOW)
+        .filter(
+          (l) =>
+            l?.data?.order_id === orderId &&
+            (l?.data?.flow === COURIER_UNASSIGNED_FLOW ||
+              l?.data?.flow === 'admin_track_manual_preparing_unassigned_rebroadcast' ||
+              l?.data?.type === 'order_available' ||
+              l?.data?.type === 'courier_order_available'),
+        )
         .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
 
       const lastPushAgeMs = lastCourierPush ? now - Date.parse(lastCourierPush.created_at) : Number.POSITIVE_INFINITY;
@@ -105,14 +112,15 @@ export async function runPreparingUnassignedRebroadcastOnce({ logger = console }
         const invokeRes = await supabaseAdmin.functions.invoke('send-push-notification', {
           body: {
             user_ids: courierIds,
-            title: 'طلب متاح للتوصيل',
-            body: `الطلب #${orderNumber} جاهز أو قيد التحضير وبانتظار مندوب توصيل.`,
+            title: 'طلب متاح',
+            body: `الطلب #${orderNumber} جاهز لتعيين سائق.`,
             data: {
-              type: 'courier_order_available',
+              type: 'order_available',
               stage: 'preparing_unassigned',
               flow: COURIER_UNASSIGNED_FLOW,
               order_id: orderId,
               order_number: orderNumber,
+              restaurant_id: String(order.restaurant_id || ''),
               source: 'backend_preparing_unassigned_rebroadcast',
             },
             force_activate_inactive_tokens: true,

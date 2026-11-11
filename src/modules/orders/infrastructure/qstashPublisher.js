@@ -3,8 +3,10 @@ import { Client } from '@upstash/qstash';
 function parseBaseUrl() {
   const primary = String(process.env.ORDER_LIFECYCLE_WEBHOOK_URL || '').trim();
   const legacy = String(process.env.QSTASH_LIFECYCLE_CALLBACK_URL || '').trim();
-  const value = primary || legacy;
-  if (!value) return '';
+  let value = primary || legacy;
+  if (!value || value.includes('sahla-delivery.com')) {
+    value = 'https://sahla-backend.vercel.app';
+  }
   return value.replace(/\/+$/, '');
 }
 

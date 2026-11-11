@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="/performance-i18n.js"></script>
     <style>
       :root {
         --bg: #f8fafc;
@@ -39,6 +40,80 @@
       }
       * {
         box-sizing: border-box;
+      }
+      /* RTL & Internationalization Styles */
+      [dir="rtl"], body.rtl {
+        font-family: 'Cairo', 'Plus Jakarta Sans', var(--font-sans);
+        direction: rtl;
+        text-align: right;
+      }
+      [dir="rtl"] th, [dir="rtl"] td {
+        text-align: right;
+      }
+      [dir="rtl"] .num, [dir="rtl"] input[type="tel"] {
+        text-align: left;
+        direction: ltr;
+      }
+      [dir="rtl"] .destination-cell, [dir="rtl"] .order-summary-inline {
+        text-align: right;
+      }
+      [dir="rtl"] .tab-icon {
+        margin-right: 0;
+        margin-left: 6px;
+      }
+      [dir="rtl"] .tab-badge {
+        margin-left: 0;
+        margin-right: 6px;
+      }
+      [dir="rtl"] .field label {
+        text-align: right;
+      }
+      [dir="rtl"] .field input, [dir="rtl"] .field select, [dir="rtl"] .field textarea {
+        text-align: right;
+      }
+      [dir="rtl"] .sahla-brand-time {
+        direction: ltr;
+      }
+      [dir="rtl"] .working-hours-pill {
+        margin-left: 0 !important;
+        margin-right: auto !important;
+      }
+      [dir="rtl"] .mo-header, [dir="rtl"] .modal-actions {
+        flex-direction: row-reverse;
+      }
+
+      /* Language Switcher Button Styling */
+      .sahla-lang-switcher {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 2px 3px;
+        gap: 2px;
+      }
+      .sahla-lang-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 4px 8px;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        font-family: 'Cairo', var(--font-sans);
+        line-height: 1.2;
+      }
+      .sahla-lang-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.18);
+      }
+      .sahla-lang-btn.active {
+        background: var(--sahla-yellow);
+        color: #064E3B;
+        font-weight: 900;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
       }
       body {
         margin: 0;
@@ -2260,11 +2335,11 @@
           </div>
           <span style="font-family:'Cairo',sans-serif;font-size:1.35rem;font-weight:900;color:#064E3B;margin-top:6px;line-height:1;">ساهلة</span>
         </div>
-        <h2>Performance dashboard</h2>
-        <p>Enter the access password to load live orders and tasks from the database.</p>
-        <label for="pw">Password</label>
+        <h2 data-i18n="gate_title">Performance dashboard</h2>
+        <p data-i18n="gate_desc">Enter the access password to load live orders and tasks from the database.</p>
+        <label for="pw" data-i18n="gate_label_pw">Password</label>
         <input id="pw" type="password" autocomplete="current-password" />
-        <button class="btn-primary" type="button" id="unlockBtn">Unlock</button>
+        <button class="btn-primary" type="button" id="unlockBtn" data-i18n="gate_btn_unlock">Unlock</button>
         <div class="err hidden" id="gateErr"></div>
       </div>
     </div>
@@ -2280,30 +2355,36 @@
               <span class="sahla-arabic-brand">ساهلة</span>
               <span class="sahla-brand-sep">•</span>
               <span class="sahla-latin-brand">Sahla Delivery</span>
-              <span class="sahla-badge-ops">Console</span>
+              <span class="sahla-badge-ops" data-i18n="badge_console">Console</span>
             </div>
           </div>
         </div>
         <div class="sahla-brand-right">
           <div class="sahla-brand-actions">
-            <button type="button" class="sahla-hdr-btn sahla-hdr-btn-order" id="openManualOrderModalBtn" title="Create manual order on behalf of customer">
+            <!-- Language Switcher in Header -->
+            <div class="sahla-lang-switcher" id="sahlaLangSwitcher" data-i18n-title="lang_switcher_title">
+              <button type="button" class="sahla-lang-btn" data-lang="ar" onclick="setSahlaLanguage('ar')">عربي</button>
+              <button type="button" class="sahla-lang-btn" data-lang="fr" onclick="setSahlaLanguage('fr')">FR</button>
+              <button type="button" class="sahla-lang-btn" data-lang="en" onclick="setSahlaLanguage('en')">EN</button>
+            </div>
+            <button type="button" class="sahla-hdr-btn sahla-hdr-btn-order" id="openManualOrderModalBtn" data-i18n-title="hdr_manual_order_title">
               <span class="hdr-btn-icon">➕</span>
-              <span>Manual Order</span>
+              <span data-i18n="hdr_manual_order">Manual Order</span>
             </button>
-            <button type="button" class="tab sahla-hdr-btn sahla-hdr-btn-push" data-tab="force-push" id="forcePushTabBtn" title="Send targeted or broadcast push notifications">
+            <button type="button" class="tab sahla-hdr-btn sahla-hdr-btn-push" data-tab="force-push" id="forcePushTabBtn" data-i18n-title="hdr_push_notif_title">
               <span class="hdr-btn-icon">🔔</span>
-              <span>Push Notification</span>
+              <span data-i18n="hdr_push_notif">Push Notification</span>
             </button>
           </div>
           <div class="sahla-live-status-pill">
             <span class="pulse-beacon"><span class="pulse-core"></span></span>
-            <span>LIVE SYSTEM</span>
+            <span data-i18n="hdr_live_system">LIVE SYSTEM</span>
           </div>
-          <div class="sahla-brand-metric" id="headerActiveOrdersPill" title="Orders needing attention or active dispatch">
-            <span class="sahla-metric-label">Alerts</span>
+          <div class="sahla-brand-metric" id="headerActiveOrdersPill" data-i18n-title="hdr_alerts_title">
+            <span class="sahla-metric-label" data-i18n="hdr_alerts">Alerts</span>
             <span class="sahla-metric-val" id="headerActiveOrdersCount">0</span>
           </div>
-          <div class="sahla-brand-time" id="sahlaBrandClock" title="Algerian Local Time (UTC+1)">--:--:--</div>
+          <div class="sahla-brand-time" id="sahlaBrandClock" data-i18n-title="hdr_clock_title">--:--:--</div>
         </div>
       </header>
 
@@ -2317,90 +2398,90 @@
         </div>
         <div class="tabs">
           <button type="button" class="tab active" data-tab="alerts" id="alertsTabBtn">
-            <span class="tab-icon">⚡</span> Orders + alerts<span id="alertsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">⚡</span> <span data-i18n="tab_alerts">Orders + alerts</span><span id="alertsBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="delivery-history">
-            <span class="tab-icon">📋</span> Delivered history
+            <span class="tab-icon">📋</span> <span data-i18n="tab_delivery_history">Delivered history</span>
           </button>
           <button type="button" class="tab" data-tab="delivery-men">
-            <span class="tab-icon">🛵</span> Delivery man
+            <span class="tab-icon">🛵</span> <span data-i18n="tab_delivery_men">Delivery man</span>
           </button>
           <button type="button" class="tab" data-tab="sahla-payments" id="sahlaPaymentsTabBtn">
-            <span class="tab-icon">💰</span> Sahla Payments<span id="sahlaPaymentsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">💰</span> <span data-i18n="tab_sahla_payments">Sahla Payments</span><span id="sahlaPaymentsBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="parcel-alerts" id="parcelAlertsTabBtn">
-            <span class="tab-icon">📦</span> Parcel + alerts<span id="parcelAlertsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">📦</span> <span data-i18n="tab_parcel_alerts">Parcel + alerts</span><span id="parcelAlertsBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="reviews" id="reviewsTabBtn">
-            <span class="tab-icon">⭐</span> Restaurant reviews<span id="reviewsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">⭐</span> <span data-i18n="tab_reviews">Restaurant reviews</span><span id="reviewsBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="delivery-reviews" id="deliveryReviewsTabBtn">
-            <span class="tab-icon">📬</span> Delivery reviews<span id="deliveryReviewsBadge" class="tab-badge">0</span>
+            <span class="tab-icon">📬</span> <span data-i18n="tab_delivery_reviews">Delivery reviews</span><span id="deliveryReviewsBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="partner-requests" id="partnerReqTabBtn">
-            <span class="tab-icon">🤝</span> Sahla Partner Requests<span id="partnerReqBadge" class="tab-badge">0</span>
+            <span class="tab-icon">🤝</span> <span data-i18n="tab_partner_requests">Sahla Partner Requests</span><span id="partnerReqBadge" class="tab-badge">0</span>
           </button>
           <button type="button" class="tab" data-tab="restaurant-tables">
-            <span class="tab-icon">🍽️</span> Restaurant tables
+            <span class="tab-icon">🍽️</span> <span data-i18n="tab_restaurant_tables">Restaurant tables</span>
           </button>
           <button type="button" class="tab" data-tab="tasks">
-            <span class="tab-icon">📑</span> Tasks
+            <span class="tab-icon">📑</span> <span data-i18n="tab_tasks">Tasks</span>
           </button>
         </div>
 
         <section id="panel-force-push" class="hidden">
           <div class="force-push-grid">
             <div class="form-card">
-              <h2>Forced Push Notification</h2>
-              <p class="meta" id="forcePushModeHint">
+              <h2 data-i18n="fp_title">Forced Push Notification</h2>
+              <p class="meta" id="forcePushModeHint" data-i18n="fp_hint">
                 Targets one exact device token and can reactivate inactive rows.
               </p>
 
               <label class="checkbox-row" for="forcePushSendAll">
                 <input id="forcePushSendAll" type="checkbox" />
-                Send to all devices
+                <span data-i18n="fp_send_all">Send to all devices</span>
               </label>
 
               <div id="forcePushTargetFields">
-                <label for="forcePushUserId">User ID *</label>
-                <input id="forcePushUserId" type="text" autocomplete="off" placeholder="Enter target user ID" />
-                <label for="forcePushDeviceToken">Device Token *</label>
-                <textarea id="forcePushDeviceToken" rows="3" placeholder="Paste exact FCM token"></textarea>
+                <label for="forcePushUserId" data-i18n="fp_user_id">User ID *</label>
+                <input id="forcePushUserId" type="text" autocomplete="off" data-i18n-placeholder="fp_user_id_ph" placeholder="Enter target user ID" />
+                <label for="forcePushDeviceToken" data-i18n="fp_device_token">Device Token *</label>
+                <textarea id="forcePushDeviceToken" rows="3" data-i18n-placeholder="fp_device_token_ph" placeholder="Paste exact FCM token"></textarea>
               </div>
 
               <label class="checkbox-row" for="forcePushActivate">
                 <input id="forcePushActivate" type="checkbox" checked />
-                Force activate inactive tokens
+                <span data-i18n="fp_force_activate">Force activate inactive tokens</span>
               </label>
 
               <label class="checkbox-row" for="forcePushSchedule">
                 <input id="forcePushSchedule" type="checkbox" />
-                Schedule send
+                <span data-i18n="fp_schedule">Schedule send</span>
               </label>
               <div id="forcePushScheduleFields" class="hidden">
-                <label for="forcePushScheduledAt">Send at (your local time)</label>
+                <label for="forcePushScheduledAt" data-i18n="fp_scheduled_at">Send at (your local time)</label>
                 <input id="forcePushScheduledAt" type="datetime-local" />
               </div>
               <p class="meta hidden" id="forcePushBatchHint">
                 Broadcasts are queued and delivered in background batches (avoids Edge timeouts).
               </p>
 
-              <label for="forcePushTitle">Title *</label>
-              <input id="forcePushTitle" type="text" maxlength="100" autocomplete="off" placeholder="Enter notification title" />
-              <label for="forcePushBody">Message *</label>
-              <textarea id="forcePushBody" maxlength="500" rows="4" placeholder="Enter notification message"></textarea>
+              <label for="forcePushTitle" data-i18n="fp_title_lbl">Title *</label>
+              <input id="forcePushTitle" type="text" maxlength="100" autocomplete="off" data-i18n-placeholder="fp_title_ph" placeholder="Enter notification title" />
+              <label for="forcePushBody" data-i18n="fp_body_lbl">Message *</label>
+              <textarea id="forcePushBody" maxlength="500" rows="4" data-i18n-placeholder="fp_body_ph" placeholder="Enter notification message"></textarea>
 
               <div id="forcePushResult" class="force-push-result hidden"></div>
-              <button type="button" class="btn-force-send" id="forcePushSend">Force Send</button>
+              <button type="button" class="btn-force-send" id="forcePushSend" data-i18n="fp_send_btn">Force Send</button>
             </div>
 
             <div class="form-card">
-              <h2>Availability Reminder</h2>
-              <p class="meta">
+              <h2 data-i18n="ar_card_title">Availability Reminder</h2>
+              <p class="meta" data-i18n="ar_card_hint">
                 Sends a reminder to delivery men currently marked as unavailable.
               </p>
 
-              <label for="availabilityReminderTitle">Suggested title</label>
+              <label for="availabilityReminderTitle" data-i18n="ar_title_lbl">Suggested title</label>
               <input
                 id="availabilityReminderTitle"
                 type="text"
@@ -2408,11 +2489,11 @@
                 autocomplete="off"
                 value="أنت غير متاح حالياً"
               />
-              <label for="availabilityReminderBody">Suggested message</label>
+              <label for="availabilityReminderBody" data-i18n="ar_body_lbl">Suggested message</label>
               <textarea id="availabilityReminderBody" maxlength="500" rows="4">فعّل التوفر لاستقبال الطلبات.</textarea>
 
               <div id="availabilityReminderResult" class="force-push-result hidden"></div>
-              <button type="button" class="btn-force-send" id="availabilityReminderSend">
+              <button type="button" class="btn-force-send" id="availabilityReminderSend" data-i18n="ar_send_btn">
                 Send Availability Reminder
               </button>
             </div>
@@ -2420,185 +2501,185 @@
         </section>
 
         <section id="panel-alerts">
-          <h3 class="alerts-head"><span class="head-icon">⏳</span> Orders stuck in pending (≥ threshold)</h3>
+          <h3 class="alerts-head"><span class="head-icon">⏳</span> <span data-i18n="sec_pending_stuck">Orders stuck in pending (≥ threshold)</span></h3>
           <p class="meta" id="alertsOrdersMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
-                  <th>Order</th>
-                  <th>Status</th>
-                  <th>Restaurant</th>
-                  <th>Courier</th>
-                  <th>Courier phone</th>
-                  <th>Customer phone</th>
-                  <th>Destination</th>
-                  <th>Del. FF (orig)</th>
-                  <th>Assigned</th>
-                  <th>Manual assign</th>
-                  <th>Total</th>
-                  <th>Created</th>
-                  <th>Age (min)</th>
-                  <th>Actions</th>
+                  <th style="width:36px;text-align:center;" data-i18n-title="th_eye_title">👁️</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_courier_phone">Courier phone</th>
+                  <th data-i18n="th_customer_phone">Customer phone</th>
+                  <th data-i18n="th_destination">Destination</th>
+                  <th data-i18n="th_del_fee">Del. FF (orig)</th>
+                  <th data-i18n="th_assigned">Assigned</th>
+                  <th data-i18n="th_manual_assign">Manual assign</th>
+                  <th data-i18n="th_total">Total</th>
+                  <th data-i18n="th_created">Created</th>
+                  <th data-i18n="th_age_min">Age (min)</th>
+                  <th data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="alertsOrdersBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head"><span class="head-icon">🛵</span> Picked up — not delivered (≥ delay)</h3>
+          <h3 class="alerts-head"><span class="head-icon">🛵</span> <span data-i18n="sec_picked_up_delayed">Picked up — not delivered (≥ delay)</span></h3>
           <p class="meta" id="alertsPickedUpMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
-                  <th>Order</th>
-                  <th>Status</th>
-                  <th>Restaurant</th>
-                  <th>Courier</th>
-                  <th>Courier phone</th>
-                  <th>Customer phone</th>
-                  <th>Destination</th>
-                  <th>Del. FF (orig)</th>
-                  <th>Assigned</th>
-                  <th>Total</th>
-                  <th>Pickup ref.</th>
-                  <th>Min since ref.</th>
-                  <th>Actions</th>
+                  <th style="width:36px;text-align:center;" data-i18n-title="th_eye_title">👁️</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_courier_phone">Courier phone</th>
+                  <th data-i18n="th_customer_phone">Customer phone</th>
+                  <th data-i18n="th_destination">Destination</th>
+                  <th data-i18n="th_del_fee">Del. FF (orig)</th>
+                  <th data-i18n="th_assigned">Assigned</th>
+                  <th data-i18n="th_total">Total</th>
+                  <th data-i18n="th_pickup_ref">Pickup ref.</th>
+                  <th data-i18n="th_min_since_ref">Min since ref.</th>
+                  <th data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="alertsPickedUpBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head"><span class="head-icon">⏳</span> Preparing — Courier assigned not picked up (≥ 20 min)</h3>
+          <h3 class="alerts-head"><span class="head-icon">⏳</span> <span data-i18n="sec_prep_assigned">Preparing — Courier assigned not picked up (≥ 20 min)</span></h3>
           <p class="meta" id="alertsPreparingAssignedMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
-                  <th>Order</th>
-                  <th>Status</th>
-                  <th>Restaurant</th>
-                  <th>Courier</th>
-                  <th>Courier phone</th>
-                  <th>Customer phone</th>
-                  <th>Destination</th>
-                  <th>Del. FF (orig)</th>
-                  <th>Assigned</th>
-                  <th>Total</th>
-                  <th>Created</th>
-                  <th>Age (min)</th>
-                  <th>Actions</th>
+                  <th style="width:36px;text-align:center;" data-i18n-title="th_eye_title">👁️</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_courier_phone">Courier phone</th>
+                  <th data-i18n="th_customer_phone">Customer phone</th>
+                  <th data-i18n="th_destination">Destination</th>
+                  <th data-i18n="th_del_fee">Del. FF (orig)</th>
+                  <th data-i18n="th_assigned">Assigned</th>
+                  <th data-i18n="th_total">Total</th>
+                  <th data-i18n="th_created">Created</th>
+                  <th data-i18n="th_age_min">Age (min)</th>
+                  <th data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="alertsPreparingAssignedBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head"><span class="head-icon">📢</span> Preparing — Waiting for courier (≥ 5 min)</h3>
+          <h3 class="alerts-head"><span class="head-icon">📢</span> <span data-i18n="sec_prep_unassigned">Preparing — Waiting for courier (≥ 5 min)</span></h3>
           <p class="meta" id="alertsPreparingUnassignedMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
-                  <th>Order</th>
-                  <th>Status</th>
-                  <th>Restaurant</th>
-                  <th>Customer phone</th>
-                  <th>Destination</th>
-                  <th>Del. FF (orig)</th>
-                  <th>Manual assign</th>
-                  <th>Total</th>
-                  <th>Created</th>
-                  <th>Age (min)</th>
-                  <th>Actions</th>
+                  <th style="width:36px;text-align:center;" data-i18n-title="th_eye_title">👁️</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_customer_phone">Customer phone</th>
+                  <th data-i18n="th_destination">Destination</th>
+                  <th data-i18n="th_del_fee">Del. FF (orig)</th>
+                  <th data-i18n="th_manual_assign">Manual assign</th>
+                  <th data-i18n="th_total">Total</th>
+                  <th data-i18n="th_created">Created</th>
+                  <th data-i18n="th_age_min">Age (min)</th>
+                  <th data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="alertsPreparingUnassignedBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head"><span class="head-icon">✨</span> New orders (without active alerts)</h3>
+          <h3 class="alerts-head"><span class="head-icon">✨</span> <span data-i18n="sec_new_orders">New orders (without active alerts)</span></h3>
           <p class="meta" id="ordersMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
-                  <th>#</th>
-                  <th>Order</th>
-                  <th>Status</th>
-                  <th>Restaurant</th>
-                  <th>Courier</th>
-                  <th>Courier phone</th>
-                  <th>Customer phone</th>
-                  <th>Destination</th>
-                  <th>Del. FF (orig)</th>
-                  <th>Assigned</th>
-                  <th>Manual assign</th>
-                  <th>Total</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                  <th style="width:36px;text-align:center;" data-i18n-title="th_eye_title">👁️</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_courier_phone">Courier phone</th>
+                  <th data-i18n="th_customer_phone">Customer phone</th>
+                  <th data-i18n="th_destination">Destination</th>
+                  <th data-i18n="th_del_fee">Del. FF (orig)</th>
+                  <th data-i18n="th_assigned">Assigned</th>
+                  <th data-i18n="th_manual_assign">Manual assign</th>
+                  <th data-i18n="th_total">Total</th>
+                  <th data-i18n="th_created">Created</th>
+                  <th data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="ordersBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head"><span class="head-icon">🚫</span> Cancelled orders</h3>
+          <h3 class="alerts-head"><span class="head-icon">🚫</span> <span data-i18n="sec_cancelled_orders">Cancelled orders</span></h3>
           <div class="toolbar">
             <div class="field">
-              <label for="cancelledOrdersDatePreset">Date filter</label>
+              <label for="cancelledOrdersDatePreset" data-i18n="filter_date_preset">Date filter</label>
               <select id="cancelledOrdersDatePreset">
-                <option value="today" selected>Today</option>
-                <option value="all">All</option>
-                <option value="custom">Custom date</option>
+                <option value="today" selected data-i18n="filter_today">Today</option>
+                <option value="all" data-i18n="filter_all">All</option>
+                <option value="custom" data-i18n="filter_custom">Custom date</option>
               </select>
             </div>
             <div class="field">
-              <label for="cancelledOrdersDate">Date</label>
+              <label for="cancelledOrdersDate" data-i18n="filter_date">Date</label>
               <input id="cancelledOrdersDate" type="date" />
             </div>
-            <button type="button" class="btn-refresh" id="refreshCancelledOrders">Refresh</button>
+            <button type="button" class="btn-refresh" id="refreshCancelledOrders" data-i18n="btn_refresh">Refresh</button>
           </div>
           <p class="meta" id="cancelledOrdersMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
-                  <th>#</th>
-                  <th>Order</th>
-                  <th>Status</th>
-                  <th>Restaurant</th>
-                  <th>Courier</th>
-                  <th>Courier phone</th>
-                  <th>Customer phone</th>
-                  <th>Del. FF (orig)</th>
-                  <th>Assigned</th>
-                  <th>Total</th>
-                  <th>Cancelled by</th>
-                  <th>Reason</th>
-                  <th>Cancelled at</th>
+                  <th style="width:36px;text-align:center;" data-i18n-title="th_eye_title">👁️</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_courier_phone">Courier phone</th>
+                  <th data-i18n="th_customer_phone">Customer phone</th>
+                  <th data-i18n="th_del_fee">Del. FF (orig)</th>
+                  <th data-i18n="th_assigned">Assigned</th>
+                  <th data-i18n="th_total">Total</th>
+                  <th data-i18n="th_cancelled_by">Cancelled by</th>
+                  <th data-i18n="th_reason">Reason</th>
+                  <th data-i18n="th_cancelled_at">Cancelled at</th>
                 </tr>
               </thead>
               <tbody id="cancelledOrdersBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head"><span class="head-icon">📋</span> Open tasks with no cost offers (≥ threshold)</h3>
+          <h3 class="alerts-head"><span class="head-icon">📋</span> <span data-i18n="sec_tasks_no_offers">Open tasks with no cost offers (≥ threshold)</span></h3>
           <p class="meta" id="alertsTasksMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Task</th>
-                  <th>Status</th>
-                  <th>Courier</th>
-                  <th>Phone</th>
-                  <th>Assigned</th>
-                  <th>Location</th>
-                  <th>Created</th>
-                  <th>Age (min)</th>
+                  <th data-i18n="th_task">Task</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_phone">Phone</th>
+                  <th data-i18n="th_assigned">Assigned</th>
+                  <th data-i18n="th_location">Location</th>
+                  <th data-i18n="th_created">Created</th>
+                  <th data-i18n="th_age_min">Age (min)</th>
                 </tr>
               </thead>
               <tbody id="alertsTasksBody"></tbody>
@@ -2607,45 +2688,45 @@
         </section>
 
         <section id="panel-parcel-alerts" class="hidden">
-          <h3 class="alerts-head"><span class="head-icon">📦</span> Parcel waiting alerts (≥ 5 min)</h3>
+          <h3 class="alerts-head"><span class="head-icon">📦</span> <span data-i18n="tab_parcel_alerts">Parcel waiting alerts (≥ 5 min)</span></h3>
           <p class="meta" id="alertsParcelMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
-                  <th>Order</th>
-                  <th>Parcel sender</th>
-                  <th>Status</th>
-                  <th>Courier</th>
-                  <th>Courier phone</th>
-                  <th>Customer phone</th>
-                  <th>Del. FF (orig)</th>
-                  <th>Total</th>
-                  <th>Waiting ref.</th>
-                  <th>Min waiting</th>
+                  <th style="width:36px;text-align:center;" data-i18n-title="th_eye_title">👁️</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_parcel_sender">Parcel sender</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_courier_phone">Courier phone</th>
+                  <th data-i18n="th_customer_phone">Customer phone</th>
+                  <th data-i18n="th_del_fee">Del. FF (orig)</th>
+                  <th data-i18n="th_total">Total</th>
+                  <th data-i18n="th_waiting_ref">Waiting ref.</th>
+                  <th data-i18n="th_min_waiting">Min waiting</th>
                 </tr>
               </thead>
               <tbody id="alertsParcelBody"></tbody>
             </table>
           </div>
-          <h3 class="alerts-head"><span class="head-icon">🚚</span> Parcel orders</h3>
+          <h3 class="alerts-head"><span class="head-icon">🚚</span> <span>Parcel orders</span></h3>
           <p class="meta" id="parcelOrdersMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
-                  <th>#</th>
-                  <th>Order</th>
-                  <th>Status</th>
-                  <th>Parcel sender</th>
-                  <th>Courier</th>
-                  <th>Courier phone</th>
-                  <th>Customer phone</th>
-                  <th>Del. FF (orig)</th>
-                  <th>Total</th>
-                  <th>Created</th>
+                  <th style="width:36px;text-align:center;" data-i18n-title="th_eye_title">👁️</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_parcel_sender">Parcel sender</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_courier_phone">Courier phone</th>
+                  <th data-i18n="th_customer_phone">Customer phone</th>
+                  <th data-i18n="th_del_fee">Del. FF (orig)</th>
+                  <th data-i18n="th_total">Total</th>
+                  <th data-i18n="th_created">Created</th>
                 </tr>
               </thead>
               <tbody id="parcelOrdersBody"></tbody>
@@ -2656,32 +2737,32 @@
         <section id="panel-tasks" class="hidden">
           <div class="toolbar">
             <div class="field">
-              <label for="taskStatus">Status</label>
+              <label for="taskStatus" data-i18n="th_status">Status</label>
               <select id="taskStatus">
-                <option value="">All statuses</option>
+                <option value="" data-i18n="filter_all">All statuses</option>
               </select>
             </div>
             <div class="field">
-              <label for="taskCourier">Delivery person</label>
+              <label for="taskCourier" data-i18n="th_courier">Delivery person</label>
               <select id="taskCourier">
-                <option value="">All couriers</option>
+                <option value="" data-i18n="filter_all">All couriers</option>
               </select>
             </div>
-            <button type="button" class="btn-refresh" id="refreshTasks">Refresh</button>
+            <button type="button" class="btn-refresh" id="refreshTasks" data-i18n="btn_refresh">Refresh</button>
           </div>
           <p class="meta" id="tasksMeta"></p>
           <div style="overflow-x: auto">
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Task</th>
-                  <th>Status</th>
-                  <th>Courier</th>
-                  <th>Phone</th>
-                  <th>Assigned</th>
-                  <th>Location</th>
-                  <th>Created</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_task">Task</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_phone">Phone</th>
+                  <th data-i18n="th_assigned">Assigned</th>
+                  <th data-i18n="th_location">Location</th>
+                  <th data-i18n="th_created">Created</th>
                 </tr>
               </thead>
               <tbody id="tasksBody"></tbody>
@@ -2689,29 +2770,29 @@
           </div>
         </section>
 
-                <section id="panel-delivery-men" class="hidden">
+        <section id="panel-delivery-men" class="hidden">
           <div class="toolbar">
             <div class="field" style="flex:1;max-width:320px;">
-              <label for="deliveryMenSearchInput">Search</label>
-              <input type="text" id="deliveryMenSearchInput" placeholder="Search by name, phone, notes..." autocomplete="off" />
+              <label for="deliveryMenSearchInput" data-i18n="th_notes">Search</label>
+              <input type="text" id="deliveryMenSearchInput" data-i18n-placeholder="dm_search_placeholder" placeholder="Search by name, phone, notes..." autocomplete="off" />
             </div>
             <div class="field">
-              <label for="deliveryMenAvailableFilter">Available</label>
+              <label for="deliveryMenAvailableFilter" data-i18n="th_available">Available</label>
               <select id="deliveryMenAvailableFilter">
-                <option value="all" selected>All</option>
-                <option value="yes">Available only</option>
-                <option value="no">Not available</option>
+                <option value="all" selected data-i18n="dm_filter_available_all">All</option>
+                <option value="yes" data-i18n="dm_filter_available_yes">Available only</option>
+                <option value="no" data-i18n="dm_filter_available_no">Not available</option>
               </select>
             </div>
             <label class="field" style="flex-direction: row; align-items: center; gap: 8px; padding-top: 18px">
               <input type="checkbox" id="deliveryMenShowBlocked" />
-              <span>Show blocked</span>
+              <span data-i18n="dm_show_blocked">Show blocked</span>
             </label>
-            <button type="button" class="btn-refresh" id="refreshDeliveryMen">Refresh</button>
-            <button type="button" class="btn-refresh" id="btnSyncWorkingHours" title="Manually trigger working hours synchronization" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;">⚡ Sync hours</button>
-            <button type="button" class="btn-refresh" id="btnConfigWorkingHours" title="Configure system default working hours">🕒 Default hours</button>
-            <button type="button" class="btn-refresh" id="btnSendMorningGreeting" title="Send morning greeting push notification to available couriers" style="background:#d97706;color:#fff;border-color:#d97706;font-weight:700;">☀️ Morning greeting</button>
-            <div id="workingHoursStatusPill" class="working-hours-pill" title="Current shift status in Africa/Algiers (UTC+1)" style="margin-left:auto;">
+            <button type="button" class="btn-refresh" id="refreshDeliveryMen" data-i18n="btn_refresh">Refresh</button>
+            <button type="button" class="btn-refresh" id="btnSyncWorkingHours" data-i18n-title="btn_sync_hours_title" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;"><span data-i18n="btn_sync_hours">⚡ Sync hours</span></button>
+            <button type="button" class="btn-refresh" id="btnConfigWorkingHours" data-i18n-title="btn_default_hours_title"><span data-i18n="btn_default_hours">🕒 Default hours</span></button>
+            <button type="button" class="btn-refresh" id="btnSendMorningGreeting" data-i18n-title="btn_morning_greeting_title" style="background:#d97706;color:#fff;border-color:#d97706;font-weight:700;"><span data-i18n="btn_morning_greeting">☀️ Morning greeting</span></button>
+            <div id="workingHoursStatusPill" class="working-hours-pill" data-i18n-title="hdr_clock_title" style="margin-left:auto;">
               <span id="workingHoursStatusDot" class="working-hours-dot"></span>
               <span id="workingHoursStatusText">Shift: Loading…</span>
             </div>
@@ -2721,19 +2802,19 @@
             <table>
               <thead>
                 <tr>
-                  <th title="Pin to top">★</th>
-                  <th>#</th>
-                  <th>Name</th>
-                  <th>Work phone</th>
-                  <th>Available</th>
-                  <th>Online</th>
-                  <th>Working hours</th>
-                  <th>Has device token</th>
-                  <th>Device</th>
-                  <th>Delivered orders</th>
-                  <th>Sahla tax</th>
-                  <th>Notes</th>
-                  <th>Action</th>
+                  <th data-i18n-title="th_eye_title">★</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_courier">Name</th>
+                  <th data-i18n="th_work_phone">Work phone</th>
+                  <th data-i18n="th_available">Available</th>
+                  <th data-i18n="th_online">Online</th>
+                  <th data-i18n="th_working_hours">Working hours</th>
+                  <th data-i18n="th_has_token">Has device token</th>
+                  <th data-i18n="th_device">Device</th>
+                  <th data-i18n="th_delivered_orders">Delivered orders</th>
+                  <th data-i18n="th_sahla_tax">Sahla tax</th>
+                  <th data-i18n="th_notes">Notes</th>
+                  <th data-i18n="th_actions">Action</th>
                 </tr>
               </thead>
               <tbody id="deliveryMenBody"></tbody>
@@ -2744,40 +2825,40 @@
         <section id="panel-delivery-history" class="hidden">
           <div class="toolbar">
             <div class="field">
-              <label for="deliveryHistoryDatePreset">Date filter</label>
+              <label for="deliveryHistoryDatePreset" data-i18n="filter_date_preset">Date filter</label>
               <select id="deliveryHistoryDatePreset">
-                <option value="today" selected>Today</option>
-                <option value="all">All</option>
-                <option value="custom">Custom date</option>
+                <option value="today" selected data-i18n="filter_today">Today</option>
+                <option value="all" data-i18n="filter_all">All</option>
+                <option value="custom" data-i18n="filter_custom">Custom date</option>
               </select>
             </div>
             <div class="field">
-              <label for="deliveryHistoryDate">Date</label>
+              <label for="deliveryHistoryDate" data-i18n="filter_date">Date</label>
               <input id="deliveryHistoryDate" type="date" />
             </div>
-            <button type="button" class="btn-refresh" id="refreshDeliveryHistory">Refresh</button>
-            <button type="button" class="btn-collect-all" id="collectAllDeliveryHistory" disabled>Collect all</button>
+            <button type="button" class="btn-refresh" id="refreshDeliveryHistory" data-i18n="btn_refresh">Refresh</button>
+            <button type="button" class="btn-collect-all" id="collectAllDeliveryHistory" disabled data-i18n="btn_collect_all">Collect all</button>
           </div>
           <p class="meta" id="deliveryHistoryMeta"></p>
           <div class="order-box-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;" title="View order details">👁️</th>
-                  <th>#</th>
-                  <th>Order</th>
-                  <th>Status</th>
-                  <th>Restaurant</th>
-                  <th>Courier</th>
-                  <th>Courier phone</th>
-                  <th>Customer phone</th>
-                  <th>Del. FF (orig)</th>
-                  <th>Assigned</th>
-                  <th>Total</th>
-                  <th>Payment method</th>
-                  <th>Payment status</th>
-                  <th>Collect payment</th>
-                  <th>Delivered at</th>
+                  <th style="width:36px;text-align:center;" data-i18n-title="th_eye_title">👁️</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_courier">Courier</th>
+                  <th data-i18n="th_courier_phone">Courier phone</th>
+                  <th data-i18n="th_customer_phone">Customer phone</th>
+                  <th data-i18n="th_del_fee">Del. FF (orig)</th>
+                  <th data-i18n="th_assigned">Assigned</th>
+                  <th data-i18n="th_total">Total</th>
+                  <th data-i18n="th_payment_method">Payment method</th>
+                  <th data-i18n="th_payment_status">Payment status</th>
+                  <th data-i18n="th_collect_payment">Collect payment</th>
+                  <th data-i18n="th_delivered_at">Delivered at</th>
                 </tr>
               </thead>
               <tbody id="deliveryHistoryBody"></tbody>
@@ -2788,45 +2869,46 @@
         <section id="panel-restaurant-tables" class="hidden">
           <div class="toolbar" style="padding: 0 16px">
             <div class="field" style="min-width: 280px">
-              <label for="tableRestSelect">Restaurant</label>
+              <label for="tableRestSelect" data-i18n="label_restaurant">Restaurant</label>
               <select id="tableRestSelect">
-                <option value="">— Select restaurant —</option>
+                <option value="" data-i18n="ph_select_restaurant">— Select restaurant —</option>
               </select>
             </div>
             <div class="field">
-              <label for="tableOrderingEnabled">Table ordering</label>
+              <label for="tableOrderingEnabled" data-i18n="label_table_ordering">Table ordering</label>
               <select id="tableOrderingEnabled">
-                <option value="false">Disabled</option>
-                <option value="true">Enabled</option>
+                <option value="false" data-i18n="val_disabled">Disabled</option>
+                <option value="true" data-i18n="val_enabled">Enabled</option>
               </select>
             </div>
-            <button type="button" class="btn-refresh" id="saveTableOrderingFlag">Save flag</button>
-            <button type="button" class="btn-refresh" id="refreshRestaurantTables">Refresh</button>
+            <button type="button" class="btn-refresh" id="saveTableOrderingFlag" data-i18n="btn_save_flag">Save flag</button>
+            <button type="button" class="btn-refresh" id="refreshRestaurantTables" data-i18n="btn_refresh">Refresh</button>
           </div>
           <div class="portal-card hidden" id="tablePortalCard">
-            <h3>Staff portal — manage table orders in the restaurant</h3>
+            <h3 data-i18n="tbl_portal_title">Staff portal — manage table orders in the restaurant</h3>
             <div class="toolbar" style="margin-bottom: 0">
               <div class="field" style="min-width: 160px">
-                <label for="tablePortalCodeDisplay">Portal code</label>
+                <label for="tablePortalCodeDisplay" data-i18n="label_portal_code">Portal code</label>
                 <input id="tablePortalCodeDisplay" type="text" readonly placeholder="—" />
               </div>
               <div class="field" style="min-width: 280px; flex: 1">
-                <label for="tablePortalUrlDisplay">Staff URL</label>
-                <input id="tablePortalUrlDisplay" type="text" readonly placeholder="Enable table ordering first" />
+                <label for="tablePortalUrlDisplay" data-i18n="label_staff_url">Staff URL</label>
+                <input id="tablePortalUrlDisplay" type="text" readonly placeholder="Enable table ordering first" data-i18n-placeholder="ph_enable_table_ordering_first" />
               </div>
               <div class="field" style="min-width: 200px">
-                <label for="tablePortalPassword">Portal password</label>
+                <label for="tablePortalPassword" data-i18n="label_portal_pw">Portal password</label>
                 <input
                   id="tablePortalPassword"
                   type="password"
                   autocomplete="new-password"
                   placeholder="Min 6 characters"
+                  data-i18n-placeholder="ph_min_6_chars"
                 />
               </div>
-              <button type="button" class="btn-primary" id="saveTablePortalPassword" style="width: auto">
+              <button type="button" class="btn-primary" id="saveTablePortalPassword" style="width: auto" data-i18n="btn_save_pw">
                 Save password
               </button>
-              <button type="button" class="btn-ghost" id="regenerateTablePortalCode">New portal code</button>
+              <button type="button" class="btn-ghost" id="regenerateTablePortalCode" data-i18n="btn_new_portal_code">New portal code</button>
             </div>
             <p class="meta" id="tablePortalStatus" style="margin: 10px 0 0"></p>
           </div>
@@ -2836,14 +2918,14 @@
           </p>
           <div class="toolbar" style="padding: 0 16px">
             <div class="field">
-              <label for="newTableNumber">Table number</label>
-              <input id="newTableNumber" type="text" placeholder="e.g. 12" maxlength="32" />
+              <label for="newTableNumber" data-i18n="label_table_number">Table number</label>
+              <input id="newTableNumber" type="text" placeholder="e.g. 12" maxlength="32" data-i18n-placeholder="ph_table_example" />
             </div>
             <div class="field">
-              <label for="newTableLabel">Label (optional)</label>
-              <input id="newTableLabel" type="text" placeholder="Terrace" maxlength="64" />
+              <label for="newTableLabel" data-i18n="label_table_label">Label (optional)</label>
+              <input id="newTableLabel" type="text" placeholder="Terrace" maxlength="64" data-i18n-placeholder="ph_table_terrace" />
             </div>
-            <button type="button" class="btn-primary" id="addRestaurantTable" style="width: auto; margin-top: 22px">
+            <button type="button" class="btn-primary" id="addRestaurantTable" style="width: auto; margin-top: 22px" data-i18n="btn_add_table_qr">
               Add table + QR
             </button>
           </div>
@@ -2852,12 +2934,12 @@
             <table>
               <thead>
                 <tr>
-                  <th>Table</th>
-                  <th>Label</th>
-                  <th>QR URL</th>
-                  <th>Active</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                  <th data-i18n="th_table">Table</th>
+                  <th data-i18n="th_label">Label</th>
+                  <th data-i18n="th_qr_url">QR URL</th>
+                  <th data-i18n="th_active">Active</th>
+                  <th data-i18n="th_created">Created</th>
+                  <th data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="restaurantTablesBody"></tbody>
@@ -2868,33 +2950,33 @@
         <section id="panel-partner-requests" class="hidden">
           <div class="partner-stats" id="partnerReqStats">
             <button type="button" class="partner-stat-card" data-partner-type-card="delivery">
-              <span class="partner-stat-label">Pending delivery requests</span>
+              <span class="partner-stat-label" data-i18n="pr_pending_delivery">Pending delivery requests</span>
               <span class="partner-stat-value" id="partnerDeliveryPending">0</span>
             </button>
             <button type="button" class="partner-stat-card" data-partner-type-card="restaurant">
-              <span class="partner-stat-label">Pending restaurant requests</span>
+              <span class="partner-stat-label" data-i18n="pr_pending_restaurant">Pending restaurant requests</span>
               <span class="partner-stat-value" id="partnerRestaurantPending">0</span>
             </button>
             <button type="button" class="partner-stat-card" data-partner-type-card="parcel">
-              <span class="partner-stat-label">Pending parcel sender requests</span>
+              <span class="partner-stat-label" data-i18n="pr_pending_parcel">Pending parcel sender requests</span>
               <span class="partner-stat-value" id="partnerParcelPending">0</span>
             </button>
           </div>
           <input id="partnerReqType" type="hidden" value="delivery" />
           <div id="partnerDeliverySection">
-            <h3 class="alerts-head"><span class="head-icon">🛵</span> Delivery man requests</h3>
+            <h3 class="alerts-head"><span class="head-icon">🛵</span> <span data-i18n="pr_head_delivery">Delivery man requests</span></h3>
           <div class="toolbar">
             <div class="field">
-              <label for="dmReqStatus">Status</label>
+              <label for="dmReqStatus" data-i18n="th_status">Status</label>
               <select id="dmReqStatus">
-                <option value="pending">Pending</option>
-                <option value="all">All</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
+                <option value="pending" data-i18n="status_pending">Pending</option>
+                <option value="all" data-i18n="filter_all">All</option>
+                <option value="approved" data-i18n="status_approved">Approved</option>
+                <option value="rejected" data-i18n="status_rejected">Rejected</option>
               </select>
             </div>
-            <button type="button" class="btn-refresh" id="refreshDeliveryReq">Refresh</button>
-            <a class="btn-ghost" id="deliveryQueueLink" href="/admin-requests" style="text-decoration: none; display: inline-block"
+            <button type="button" class="btn-refresh" id="refreshDeliveryReq" data-i18n="btn_refresh">Refresh</button>
+            <a class="btn-ghost" id="deliveryQueueLink" href="/admin-requests" style="text-decoration: none; display: inline-block" data-i18n="pr_shareable_link"
               >Shareable queue link</a
             >
           </div>
@@ -2903,13 +2985,13 @@
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Applicant</th>
-                  <th>Phone</th>
-                  <th>Vehicle</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_applicant">Applicant</th>
+                  <th data-i18n="th_phone">Phone</th>
+                  <th data-i18n="th_vehicle">Vehicle</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_created">Created</th>
+                  <th data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="deliveryReqBody"></tbody>
@@ -2917,22 +2999,23 @@
           </div>
           </div>
           <div id="partnerRestaurantSection" class="hidden">
-            <h3 class="alerts-head"><span class="head-icon">🍽️</span> Restaurant requests</h3>
+            <h3 class="alerts-head"><span class="head-icon">🍽️</span> <span data-i18n="pr_head_restaurant">Restaurant requests</span></h3>
           <div class="toolbar">
             <div class="field">
-              <label for="restReqStatus">Status</label>
+              <label for="restReqStatus" data-i18n="th_status">Status</label>
               <select id="restReqStatus">
-                <option value="pending">Pending</option>
-                <option value="all">All</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
+                <option value="pending" data-i18n="status_pending">Pending</option>
+                <option value="all" data-i18n="filter_all">All</option>
+                <option value="approved" data-i18n="status_approved">Approved</option>
+                <option value="rejected" data-i18n="status_rejected">Rejected</option>
               </select>
             </div>
-            <button type="button" class="btn-refresh" id="refreshRestaurantReq">Refresh</button>
+            <button type="button" class="btn-refresh" id="refreshRestaurantReq" data-i18n="btn_refresh">Refresh</button>
             <a
               class="btn-ghost"
               href="/performance?view=partner-requests"
               style="text-decoration: none; display: inline-block"
+              data-i18n="pr_partner_url"
               >Partner requests URL</a
             >
           </div>
@@ -2941,14 +3024,14 @@
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Restaurant</th>
-                  <th>Owner</th>
-                  <th>Phone</th>
-                  <th>Wilaya</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_owner">Owner</th>
+                  <th data-i18n="th_phone">Phone</th>
+                  <th data-i18n="th_wilaya">Wilaya</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_created">Created</th>
+                  <th data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="restaurantReqBody"></tbody>
@@ -2956,32 +3039,32 @@
           </div>
           </div>
           <div id="partnerParcelSection" class="hidden">
-            <h3 class="alerts-head"><span class="head-icon">📦</span> Parcel sender requests</h3>
+            <h3 class="alerts-head"><span class="head-icon">📦</span> <span data-i18n="pr_head_parcel">Parcel sender requests</span></h3>
           <div class="toolbar">
             <div class="field">
-              <label for="parcelSenderReqStatus">Status</label>
+              <label for="parcelSenderReqStatus" data-i18n="th_status">Status</label>
               <select id="parcelSenderReqStatus">
-                <option value="pending">Pending</option>
-                <option value="all">All</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
+                <option value="pending" data-i18n="status_pending">Pending</option>
+                <option value="all" data-i18n="filter_all">All</option>
+                <option value="approved" data-i18n="status_approved">Approved</option>
+                <option value="rejected" data-i18n="status_rejected">Rejected</option>
               </select>
             </div>
-            <button type="button" class="btn-refresh" id="refreshParcelSenderReq">Refresh</button>
+            <button type="button" class="btn-refresh" id="refreshParcelSenderReq" data-i18n="btn_refresh">Refresh</button>
           </div>
           <p class="meta" id="parcelSenderReqMeta"></p>
           <div style="overflow-x: auto">
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Parcel sender</th>
-                  <th>Owner</th>
-                  <th>Phone</th>
-                  <th>Wilaya</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_parcel_sender">Parcel sender</th>
+                  <th data-i18n="th_owner">Owner</th>
+                  <th data-i18n="th_phone">Phone</th>
+                  <th data-i18n="th_wilaya">Wilaya</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th data-i18n="th_created">Created</th>
+                  <th data-i18n="th_actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="parcelSenderReqBody"></tbody>
@@ -2993,25 +3076,25 @@
         <section id="panel-reviews" class="hidden">
           <div class="toolbar">
             <div class="field">
-              <label for="reviewRestaurant">Restaurant</label>
+              <label for="reviewRestaurant" data-i18n="th_restaurant">Restaurant</label>
               <select id="reviewRestaurant">
-                <option value="">All restaurants</option>
+                <option value="" data-i18n="label_all_restaurants">All restaurants</option>
               </select>
             </div>
-            <button type="button" class="btn-refresh" id="refreshReviews">Refresh</button>
+            <button type="button" class="btn-refresh" id="refreshReviews" data-i18n="btn_refresh">Refresh</button>
           </div>
           <p class="meta" id="reviewsMeta"></p>
           <div style="overflow-x: auto">
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Restaurant</th>
-                  <th>Customer</th>
-                  <th>Rating</th>
-                  <th>Comment</th>
-                  <th>Order</th>
-                  <th>Created</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_customer">Customer</th>
+                  <th data-i18n="th_rating">Rating</th>
+                  <th data-i18n="th_comment">Comment</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_created">Created</th>
                 </tr>
               </thead>
               <tbody id="reviewsBody"></tbody>
@@ -3022,25 +3105,25 @@
         <section id="panel-delivery-reviews" class="hidden">
           <div class="toolbar">
             <div class="field">
-              <label for="reviewDeliveryPerson">Delivery person</label>
+              <label for="reviewDeliveryPerson" data-i18n="th_courier">Delivery person</label>
               <select id="reviewDeliveryPerson">
-                <option value="">All delivery personnel</option>
+                <option value="" data-i18n="label_all_delivery_personnel">All delivery personnel</option>
               </select>
             </div>
-            <button type="button" class="btn-refresh" id="refreshDeliveryReviews">Refresh</button>
+            <button type="button" class="btn-refresh" id="refreshDeliveryReviews" data-i18n="btn_refresh">Refresh</button>
           </div>
           <p class="meta" id="deliveryReviewsMeta"></p>
           <div style="overflow-x: auto">
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Delivery person</th>
-                  <th>Customer</th>
-                  <th>Rating</th>
-                  <th>Comment</th>
-                  <th>Order</th>
-                  <th>Created</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_courier">Delivery person</th>
+                  <th data-i18n="th_customer">Customer</th>
+                  <th data-i18n="th_rating">Rating</th>
+                  <th data-i18n="th_comment">Comment</th>
+                  <th data-i18n="th_order">Order</th>
+                  <th data-i18n="th_created">Created</th>
                 </tr>
               </thead>
               <tbody id="deliveryReviewsBody"></tbody>
@@ -3052,26 +3135,25 @@
         <section id="panel-sahla-payments" class="hidden">
           <div class="toolbar" style="margin-bottom: 16px;">
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-              <h2 style="margin:0;font-size:1.25rem;font-weight:800;color:var(--text);">💰 Sahla Payments Management</h2>
-              <span class="meta" style="margin:0;">(إدارة مدفوعات وضرائب سهلة)</span>
+              <h2 style="margin:0;font-size:1.25rem;font-weight:800;color:var(--text);" data-i18n="sp_title">💰 Sahla Payments Management</h2>
             </div>
             <div class="field" style="margin-left:auto;min-width:260px;">
-              <label for="sahlaSearchInput">Search</label>
-              <input id="sahlaSearchInput" type="text" placeholder="Filter courier name or phone..." style="width:100%;" />
+              <label for="sahlaSearchInput" data-i18n="filter_search">Search</label>
+              <input id="sahlaSearchInput" type="text" placeholder="Filter courier name or phone..." data-i18n-placeholder="sp_search_ph" style="width:100%;" />
             </div>
-            <button type="button" class="btn-refresh" id="refreshSahlaPaymentsBtn">Refresh</button>
+            <button type="button" class="btn-refresh" id="refreshSahlaPaymentsBtn" data-i18n="btn_refresh">Refresh</button>
           </div>
 
           <div class="sahla-payments-container">
             <!-- Summary Bar -->
             <div class="sahla-summary-bar">
               <div class="sahla-stat-card">
-                <span class="sahla-stat-label">Total Unpaid Sahla Tax</span>
+                <span class="sahla-stat-label" data-i18n="sp_total_unpaid_tax">Total Unpaid Sahla Tax</span>
                 <div class="sahla-stat-value unpaid" id="sahlaSumUnpaidTax">0.00 DA</div>
                 <span class="meta" id="sahlaSumUnpaidCouriers">0 couriers</span>
               </div>
               <div class="sahla-stat-card">
-                <span class="sahla-stat-label">Ongoing Payments</span>
+                <span class="sahla-stat-label" data-i18n="sp_ongoing_payments">Ongoing Payments</span>
                 <div class="sahla-stat-value ongoing" id="sahlaSumOngoingAmount">0.00 DA</div>
                 <span class="meta" id="sahlaSumOngoingCount">0 pending approvals</span>
               </div>
@@ -3083,9 +3165,9 @@
                 <div class="sahla-field-title-wrap">
                   <div>
                     <h3 class="sahla-field-title">
-                      <span>🔴 Non Paid Sahla Taxs</span>
+                      <span data-i18n="sp_unpaid_section_title">🔴 Non Paid Sahla Taxs</span>
                     </h3>
-                    <p class="sahla-field-subtitle">ضرائب سهلة غير مدفوعة للمناديب</p>
+                    <p class="sahla-field-subtitle" data-i18n="sp_unpaid_section_sub">ضرائب سهلة غير مدفوعة للمناديب</p>
                   </div>
                   <span class="sahla-field-badge unpaid" id="sahlaUnpaidBadgeCount">0 Couriers</span>
                 </div>
@@ -3094,17 +3176,17 @@
                 <table>
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Delivery Man</th>
-                      <th>Phone</th>
-                      <th>Sahla Tax Due</th>
-                      <th>Orders Count</th>
-                      <th>Orders Details</th>
-                      <th>Action</th>
+                      <th data-i18n="th_hash">#</th>
+                      <th data-i18n="th_courier">Delivery Man</th>
+                      <th data-i18n="th_phone">Phone</th>
+                      <th data-i18n="th_tax_due">Sahla Tax Due</th>
+                      <th data-i18n="th_orders_count">Orders Count</th>
+                      <th data-i18n="th_orders_details">Orders Details</th>
+                      <th data-i18n="th_actions">Action</th>
                     </tr>
                   </thead>
                   <tbody id="sahlaUnpaidBody">
-                    <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">Loading unpaid taxes...</td></tr>
+                    <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);" data-i18n="sp_loading_unpaid">Loading unpaid taxes...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -3116,9 +3198,9 @@
                 <div class="sahla-field-title-wrap">
                   <div>
                     <h3 class="sahla-field-title">
-                      <span>🟡 Ongoing Sahla Tax Payments</span>
+                      <span data-i18n="sp_ongoing_section_title">🟡 Ongoing Sahla Tax Payments</span>
                     </h3>
-                    <p class="sahla-field-subtitle">دفعات ضرائب سهلة قيد المعالجة والموافقة</p>
+                    <p class="sahla-field-subtitle" data-i18n="sp_ongoing_section_sub">دفعات ضرائب سهلة قيد المعالجة والموافقة</p>
                   </div>
                   <span class="sahla-field-badge ongoing" id="sahlaOngoingBadgeCount">0 Payments</span>
                 </div>
@@ -3127,19 +3209,19 @@
                 <table>
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Delivery Man</th>
-                      <th>Phone</th>
-                      <th>Payment</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Receipt</th>
-                      <th>Orders Details</th>
-                      <th>Actions</th>
+                      <th data-i18n="th_hash">#</th>
+                      <th data-i18n="th_courier">Delivery Man</th>
+                      <th data-i18n="th_phone">Phone</th>
+                      <th data-i18n="th_payment">Payment</th>
+                      <th data-i18n="th_status">Status</th>
+                      <th data-i18n="th_date">Date</th>
+                      <th data-i18n="th_receipt">Receipt</th>
+                      <th data-i18n="th_orders_details">Orders Details</th>
+                      <th data-i18n="th_actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="sahlaOngoingBody">
-                    <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">Loading ongoing payments...</td></tr>
+                    <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);" data-i18n="sp_loading_ongoing">Loading ongoing payments...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -3154,50 +3236,50 @@
       <div class="modal-dialog sahla-orders-modal-dialog">
         <div class="mo-header">
           <div>
-            <h3 id="sahlaOrdersModalTitle" style="margin:0;font-size:1.15rem;font-weight:800;">📦 Orders Details (تفاصيل الطلبات)</h3>
+            <h3 id="sahlaOrdersModalTitle" style="margin:0;font-size:1.15rem;font-weight:800;" data-i18n="sp_modal_title">📦 Orders Details (تفاصيل الطلبات)</h3>
             <p id="sahlaOrdersModalSubtitle" class="meta" style="margin:2px 0 0;font-size:0.82rem;"></p>
           </div>
-          <button type="button" class="mo-close-btn" id="sahlaOrdersModalCloseBtn" title="Close">✕</button>
+          <button type="button" class="mo-close-btn" id="sahlaOrdersModalCloseBtn" title="Close" data-i18n-title="btn_close">✕</button>
         </div>
 
         <div class="mo-body" style="padding:16px 20px;overflow-y:auto;max-height:calc(90vh - 130px);">
           <!-- Summary Cards -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;margin-bottom:14px;">
             <div class="sahla-stat-card" style="padding:10px 14px;">
-              <span class="sahla-stat-label">Orders Count</span>
+              <span class="sahla-stat-label" data-i18n="sp_stat_orders_count">Orders Count</span>
               <div class="sahla-stat-value" id="modalOrdersCount" style="font-size:1.2rem;">0</div>
             </div>
             <div class="sahla-stat-card" style="padding:10px 14px;">
-              <span class="sahla-stat-label">Orders Subtotal</span>
+              <span class="sahla-stat-label" data-i18n="sp_modal_subtotal">Orders Subtotal</span>
               <div class="sahla-stat-value" id="modalOrdersSubtotal" style="font-size:1.2rem;">0 DA</div>
             </div>
             <div class="sahla-stat-card" style="padding:10px 14px;">
-              <span class="sahla-stat-label">Delivery Fees</span>
+              <span class="sahla-stat-label" data-i18n="sp_modal_del_fees">Delivery Fees</span>
               <div class="sahla-stat-value" id="modalOrdersDeliveryFees" style="font-size:1.2rem;">0 DA</div>
             </div>
             <div class="sahla-stat-card" style="padding:10px 14px;">
-              <span class="sahla-stat-label">Sahla Tax / Share</span>
+              <span class="sahla-stat-label" data-i18n="sp_modal_tax_share">Sahla Tax / Share</span>
               <div class="sahla-stat-value unpaid" id="modalOrdersSahlaTax" style="font-size:1.2rem;">0 DA</div>
             </div>
           </div>
 
           <!-- Orders Table -->
-          <h4 style="margin:10px 0 8px;font-size:0.92rem;font-weight:700;">Delivered Orders Breakdown</h4>
+          <h4 style="margin:10px 0 8px;font-size:0.92rem;font-weight:700;" data-i18n="sp_modal_breakdown_orders">Delivered Orders Breakdown</h4>
           <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;margin-bottom:16px;">
             <table style="margin:0;">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Order #</th>
-                  <th>Restaurant</th>
-                  <th>Customer</th>
-                  <th>Subtotal</th>
-                  <th>Delivery Fee</th>
-                  <th>Rest. Tax</th>
-                  <th>Deliv. Tax</th>
-                  <th>Service Fee</th>
-                  <th>Sahla Line</th>
-                  <th>Delivered At</th>
+                  <th data-i18n="th_hash">#</th>
+                  <th data-i18n="th_order">Order #</th>
+                  <th data-i18n="th_restaurant">Restaurant</th>
+                  <th data-i18n="th_customer">Customer</th>
+                  <th data-i18n="od_subtotal">Subtotal</th>
+                  <th data-i18n="od_delivery_fee">Delivery Fee</th>
+                  <th data-i18n="th_rest_tax">Rest. Tax</th>
+                  <th data-i18n="th_deliv_tax">Deliv. Tax</th>
+                  <th data-i18n="th_service_fee">Service Fee</th>
+                  <th data-i18n="th_sahla_line">Sahla Line</th>
+                  <th data-i18n="th_delivered_at">Delivered At</th>
                 </tr>
               </thead>
               <tbody id="sahlaModalOrdersBody"></tbody>
@@ -3206,15 +3288,15 @@
 
           <!-- Tasks Table (if any) -->
           <div id="sahlaModalTasksContainer" class="hidden">
-            <h4 style="margin:14px 0 8px;font-size:0.92rem;font-weight:700;">Completed Tasks Breakdown</h4>
+            <h4 style="margin:14px 0 8px;font-size:0.92rem;font-weight:700;" data-i18n="sp_modal_breakdown_tasks">Completed Tasks Breakdown</h4>
             <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;">
               <table style="margin:0;">
                 <thead>
                   <tr>
-                    <th>#</th>
-                    <th>Task ID</th>
-                    <th>Description</th>
-                    <th>Delivery Tax</th>
+                    <th data-i18n="th_hash">#</th>
+                    <th data-i18n="th_task">Task ID</th>
+                    <th data-i18n="th_reason">Description</th>
+                    <th data-i18n="th_deliv_tax">Delivery Tax</th>
                   </tr>
                 </thead>
                 <tbody id="sahlaModalTasksBody"></tbody>
@@ -3224,7 +3306,7 @@
         </div>
 
         <div class="mo-footer" style="padding:14px 20px;border-top:1px solid var(--border);background:#fafafa;display:flex;justify-content:flex-end;gap:10px;">
-          <button type="button" class="btn-ghost" id="sahlaOrdersModalDismissBtn">Close</button>
+          <button type="button" class="btn-ghost" id="sahlaOrdersModalDismissBtn" data-i18n="btn_close">Close</button>
           <div id="sahlaModalActionButtons" style="display:inline-flex;gap:8px;"></div>
         </div>
       </div>
@@ -3232,18 +3314,18 @@
 
     <div id="cancelOrderModal" class="modal-overlay hidden" role="dialog" aria-labelledby="cancelModalTitle" aria-modal="true">
       <div class="modal-dialog">
-        <h3 id="cancelModalTitle">Cancel order</h3>
+        <h3 id="cancelModalTitle" data-i18n="cancel_title">Cancel order</h3>
         <p class="meta" id="cancelModalHint" style="margin: 0 0 8px"></p>
-        <p class="meta" style="margin: 0 0 12px">
+        <p class="meta" style="margin: 0 0 12px" data-i18n="cancel_modal_hint_1">
           The customer receives a push notification with the title and message below.
         </p>
-        <label for="cancelNotifTitle">Notification title</label>
+        <label for="cancelNotifTitle" data-i18n="cancel_notif_title_lbl">Notification title</label>
         <input id="cancelNotifTitle" type="text" maxlength="200" autocomplete="off" />
-        <label for="cancelNotifBody">Notification body</label>
+        <label for="cancelNotifBody" data-i18n="cancel_notif_body_lbl">Notification body</label>
         <textarea id="cancelNotifBody" maxlength="4000" rows="4"></textarea>
         <div class="modal-actions">
-          <button type="button" class="btn-ghost" id="cancelModalDismiss">Close</button>
-          <button type="button" class="btn-modal-danger" id="cancelModalConfirm">Cancel order &amp; send</button>
+          <button type="button" class="btn-ghost" id="cancelModalDismiss" data-i18n="btn_close">Close</button>
+          <button type="button" class="btn-modal-danger" id="cancelModalConfirm" data-i18n="cancel_modal_btn">Cancel order &amp; send</button>
         </div>
       </div>
     </div>
@@ -3255,13 +3337,13 @@
           <div style="display:flex;align-items:center;gap:12px;">
             <span style="font-size:1.3rem;">👁️</span>
             <div>
-              <h3 id="odModalTitle" style="margin:0;font-size:1.15rem;font-weight:800;color:#fff;">Order Details</h3>
+              <h3 id="odModalTitle" style="margin:0;font-size:1.15rem;font-weight:800;color:#fff;" data-i18n="od_modal_title">Order Details</h3>
               <p id="odModalSubtitle" style="margin:2px 0 0;font-size:0.8rem;color:#a7f3d0;"></p>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
             <span id="odStatusBadge" class="status-pill" style="font-size:0.85rem;padding:4px 10px;font-weight:700;"></span>
-            <button type="button" class="mo-close-btn" id="odCloseBtn" title="Close" style="color:#fff;background:rgba(255,255,255,0.18);">✕</button>
+            <button type="button" class="mo-close-btn" id="odCloseBtn" title="Close" style="color:#fff;background:rgba(255,255,255,0.18);" data-i18n-title="btn_close">✕</button>
           </div>
         </div>
 
@@ -3271,7 +3353,7 @@
 
         <div class="mo-footer" style="padding:12px 20px;border-top:1px solid #e2e8f0;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;">
           <div id="odFooterSummary" style="font-size:0.85rem;color:#475569;font-weight:600;"></div>
-          <button type="button" class="btn-ghost" id="odDismissBtn" style="padding:7px 18px;">Close</button>
+          <button type="button" class="btn-ghost" id="odDismissBtn" style="padding:7px 18px;" data-i18n="btn_close">Close</button>
         </div>
       </div>
     </div>
@@ -3280,8 +3362,8 @@
     <div id="manualOrderModal" class="modal-overlay hidden" role="dialog" aria-labelledby="moModalTitle" aria-modal="true">
       <div class="modal-dialog mo-modal-dialog">
         <div class="mo-header">
-          <h3 id="moModalTitle">📋 Create Manual Order (طلب يدوي)</h3>
-          <button type="button" class="mo-close-btn" id="moCloseBtn" title="Close">✕</button>
+          <h3 id="moModalTitle" data-i18n="mo_modal_header">📋 Create Manual Order (طلب يدوي)</h3>
+          <button type="button" class="mo-close-btn" id="moCloseBtn" title="Close" data-i18n-title="btn_close">✕</button>
         </div>
 
         <div class="mo-body">
@@ -3290,21 +3372,21 @@
             <div class="mo-left-col" style="display:flex;flex-direction:column;gap:10px;">
               <!-- Restaurant & Customer Details -->
               <div class="mo-card">
-                <div class="mo-card-title">🏪 Restaurant Selection &amp; 👤 Customer</div>
+                <div class="mo-card-title" data-i18n="mo_card_restaurant_customer">🏪 Restaurant Selection &amp; 👤 Customer</div>
                 <div class="mo-field">
-                  <label for="moRestaurantSelect">Select Restaurant *</label>
+                  <label for="moRestaurantSelect" data-i18n="mo_select_restaurant">Select Restaurant *</label>
                   <select id="moRestaurantSelect">
-                    <option value="">-- Choose a restaurant --</option>
+                    <option value="" data-i18n="mo_select_restaurant_ph">-- Choose a restaurant --</option>
                   </select>
                 </div>
                 <div id="moRestaurantInfo" class="mo-chip hidden"></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
                   <div class="mo-field">
-                    <label for="moCustomerPhone">Phone * <span style="font-size:0.7rem;font-weight:400;color:#64748b;">(auto-lookup)</span></label>
+                    <label for="moCustomerPhone" data-i18n="mo_customer_phone">Phone * <span style="font-size:0.7rem;font-weight:400;color:#64748b;">(auto-lookup)</span></label>
                     <input id="moCustomerPhone" type="text" placeholder="0770 12 34 56" autocomplete="off" />
                   </div>
                   <div class="mo-field">
-                    <label for="moCustomerName">Customer Name</label>
+                    <label for="moCustomerName" data-i18n="mo_customer_name">Customer Name</label>
                     <input id="moCustomerName" type="text" placeholder="Customer name..." autocomplete="off" />
                   </div>
                 </div>
@@ -3313,13 +3395,13 @@
 
               <!-- Delivery Location -->
               <div class="mo-card">
-                <div class="mo-card-title">📍 Delivery Location</div>
+                <div class="mo-card-title" data-i18n="mo_card_delivery_location">📍 Delivery Location</div>
                 <div class="mo-field">
-                  <label for="moDeliveryAddress">Street / Neighborhood / Address *</label>
-                  <input id="moDeliveryAddress" type="text" placeholder="e.g. حي النصر قرب مسجد السلام, طابق 2" />
+                  <label for="moDeliveryAddress" data-i18n="mo_destination_address">Street / Neighborhood / Address *</label>
+                  <input id="moDeliveryAddress" type="text" placeholder="e.g. حي النصر قرب مسجد السلام, طابق 2" data-i18n-placeholder="mo_destination_ph" />
                 </div>
                 <div class="mo-field" style="margin-top:6px;">
-                  <label for="moCoordinates">GPS Coordinates or Google Maps Link</label>
+                  <label for="moCoordinates" data-i18n="mo_destination_coords">GPS Coordinates or Google Maps Link</label>
                   <input id="moCoordinates" type="text" placeholder="Paste Maps URL or lat, lng (e.g. 34.8512, 5.7289)" />
                 </div>
                 <div id="moDistanceChip" class="mo-chip info hidden" style="margin-top:4px;"></div>
@@ -3327,29 +3409,29 @@
 
               <!-- Fees, Payment & Promo Code -->
               <div class="mo-card">
-                <div class="mo-card-title">💵 Fees, Payment &amp; 🎟️ Promo Code</div>
+                <div class="mo-card-title" data-i18n="mo_card_fees_payment">💵 Fees, Payment &amp; 🎟️ Promo Code</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                   <div class="mo-field">
-                    <label for="moDeliveryFee">Delivery Fee (DA)</label>
+                    <label for="moDeliveryFee" data-i18n="mo_delivery_fee">Delivery Fee (DA)</label>
                     <input id="moDeliveryFee" type="number" min="0" step="10" value="150" />
                   </div>
                   <div class="mo-field">
-                    <label for="moServiceFee">Service Fee (DA)</label>
+                    <label for="moServiceFee" data-i18n="th_service_fee">Service Fee (DA)</label>
                     <input id="moServiceFee" type="number" min="0" step="10" value="0" />
                   </div>
                 </div>
                 <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-top:6px;">
                   <div class="mo-field">
-                    <label for="moPaymentMethod">Payment Method</label>
+                    <label for="moPaymentMethod" data-i18n="th_payment_method">Payment Method</label>
                     <select id="moPaymentMethod">
                       <option value="cash_on_delivery">Cash on delivery (الدفع عند الاستلام)</option>
                     </select>
                   </div>
                   <div class="mo-field">
-                    <label for="moPromoCode">Promo Code</label>
+                    <label for="moPromoCode" data-i18n="mo_promo_code">Promo Code</label>
                     <div style="display:flex;gap:4px;">
                       <input id="moPromoCode" type="text" placeholder="CODE" style="text-transform:uppercase;" />
-                      <button type="button" class="btn-ghost" id="moApplyPromoBtn" style="white-space:nowrap;padding:4px 8px;font-size:0.75rem;">Apply</button>
+                      <button type="button" class="btn-ghost" id="moApplyPromoBtn" style="white-space:nowrap;padding:4px 8px;font-size:0.75rem;" data-i18n="btn_apply">Apply</button>
                     </div>
                   </div>
                 </div>
@@ -3358,8 +3440,8 @@
 
               <!-- General Order Notes -->
               <div class="mo-card">
-                <div class="mo-card-title">📝 General Order Notes</div>
-                <textarea id="moOrderNotes" rows="2" placeholder="Delivery instructions, customer notes, call upon arrival..."></textarea>
+                <div class="mo-card-title" data-i18n="mo_card_general_notes">📝 General Order Notes</div>
+                <textarea id="moOrderNotes" rows="2" placeholder="Delivery instructions, customer notes, call upon arrival..." data-i18n-placeholder="mo_notes_ph"></textarea>
               </div>
             </div>
 
@@ -3367,8 +3449,8 @@
             <div class="mo-right-col" style="display:flex;flex-direction:column;gap:10px;">
               <div class="mo-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                  <div class="mo-card-title" style="margin:0;">🍽️ Menu Items &amp; Customizations</div>
-                  <button type="button" class="btn-ghost" id="moToggleCustomItemBtn" style="font-size:0.78rem;padding:4px 8px;">
+                  <div class="mo-card-title" style="margin:0;" data-i18n="mo_card_menu_items">🍽️ Menu Items &amp; Customizations</div>
+                  <button type="button" class="btn-ghost" id="moToggleCustomItemBtn" style="font-size:0.78rem;padding:4px 8px;" data-i18n="mo_btn_add_custom_item">
                     ➕ Add Custom Off-Menu Item
                   </button>
                 </div>
@@ -3377,13 +3459,13 @@
                 <div id="moStandardItemSection">
                   <div class="mo-item-picker-row" style="margin-bottom:8px;">
                     <div style="flex:1;min-width:180px;">
-                      <label for="moItemSearch" style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Filter Menu</label>
-                      <input id="moItemSearch" type="text" placeholder="Search item by name..." style="padding:5px 8px;font-size:0.82rem;" />
+                      <label for="moItemSearch" style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;" data-i18n="mo_filter_menu">Filter Menu</label>
+                      <input id="moItemSearch" type="text" placeholder="Search item by name..." data-i18n-placeholder="mo_search_menu" style="padding:5px 8px;font-size:0.82rem;" />
                     </div>
                     <div style="flex:2;min-width:220px;">
-                      <label for="moItemSelect" style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Select Item</label>
+                      <label for="moItemSelect" style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;" data-i18n="mo_select_item">Select Item</label>
                       <select id="moItemSelect" style="padding:5px 8px;font-size:0.82rem;">
-                        <option value="">-- Select a restaurant first --</option>
+                        <option value="" data-i18n="mo_select_rest_first">-- Select a restaurant first --</option>
                       </select>
                     </div>
                   </div>
@@ -3397,26 +3479,26 @@
 
                     <!-- Sizes / Pricing Options -->
                     <div id="moSizesGroup" class="mo-options-group hidden">
-                      <div class="mo-options-title">Size / Portion (الحجم)</div>
+                      <div class="mo-options-title" data-i18n="mo_opt_size">Size / Portion (الحجم)</div>
                       <div id="moSizesPills" class="mo-pills"></div>
                     </div>
 
                     <!-- Variants -->
                     <div id="moVariantsGroup" class="mo-options-group hidden">
-                      <div class="mo-options-title">Variant / Flavor (النوع)</div>
+                      <div class="mo-options-title" data-i18n="mo_opt_variant">Variant / Flavor (النوع)</div>
                       <div id="moVariantsPills" class="mo-pills"></div>
                     </div>
 
                     <!-- Supplements -->
                     <div id="moSupplementsGroup" class="mo-options-group hidden">
-                      <div class="mo-options-title">Supplements &amp; Extras (إضافات)</div>
+                      <div class="mo-options-title" data-i18n="mo_opt_supplements">Supplements &amp; Extras (إضافات)</div>
                       <div id="moSupplementsList" class="mo-supplements-list"></div>
                     </div>
 
                     <!-- Item Quantity & Special Instructions -->
                     <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;margin-top:8px;align-items:flex-end;">
                       <div>
-                        <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Quantity</label>
+                        <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;" data-i18n="mo_opt_qty">Quantity</label>
                         <div class="mo-qty-control">
                           <button type="button" class="mo-btn-qty" id="moConfigQtyMinus">-</button>
                           <input id="moConfigQty" type="number" value="1" min="1" max="99" style="width:40px;text-align:center;padding:3px;" />
@@ -3424,14 +3506,14 @@
                         </div>
                       </div>
                       <div>
-                        <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Item Notes / Special Instructions</label>
+                        <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;" data-i18n="mo_opt_item_notes">Item Notes / Special Instructions</label>
                         <input id="moConfigNotes" type="text" placeholder="e.g. Extra sauce, no onions..." style="padding:5px 8px;font-size:0.82rem;" />
                       </div>
                     </div>
 
                     <div style="margin-top:10px;text-align:right;">
                       <button type="button" class="btn-primary" id="moAddItemBtn" style="padding:6px 14px;font-size:0.84rem;">
-                        ➕ Add Item to Cart (<span id="moConfigTotalBadge">0</span> DA)
+                        <span data-i18n="mo_btn_add_to_cart">➕ Add Item to Cart</span> (<span id="moConfigTotalBadge">0</span> DA)
                       </button>
                     </div>
                   </div>
@@ -3439,26 +3521,26 @@
 
                 <!-- Custom Off-Menu Item Form -->
                 <div id="moCustomItemSection" class="mo-item-config-box hidden" style="background:#fff8e1;border-color:#ffe082;">
-                  <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;color:#b45309;">
+                  <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;color:#b45309;" data-i18n="mo_custom_title">
                     Custom Off-Menu Line Item (بند خاص)
                   </div>
                   <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:6px;">
                     <div>
-                      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Item Description *</label>
+                      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;" data-i18n="mo_custom_desc">Item Description *</label>
                       <input id="moCustomName" type="text" placeholder="e.g. Custom Family Platter" style="padding:5px 8px;font-size:0.82rem;" />
                     </div>
                     <div>
-                      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Unit Price (DA) *</label>
+                      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;" data-i18n="mo_custom_unit_price">Unit Price (DA) *</label>
                       <input id="moCustomPrice" type="number" min="0" step="50" placeholder="0" style="padding:5px 8px;font-size:0.82rem;" />
                     </div>
                     <div>
-                      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;">Quantity</label>
+                      <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:3px;" data-i18n="mo_opt_qty">Quantity</label>
                       <input id="moCustomQty" type="number" min="1" value="1" style="padding:5px 8px;font-size:0.82rem;" />
                     </div>
                   </div>
                   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
                     <input id="moCustomNotes" type="text" placeholder="Special note for custom item..." style="flex:1;padding:5px 8px;font-size:0.82rem;" />
-                    <button type="button" class="btn-primary" id="moAddCustomItemBtn" style="padding:6px 12px;font-size:0.82rem;white-space:nowrap;">
+                    <button type="button" class="btn-primary" id="moAddCustomItemBtn" style="padding:6px 12px;font-size:0.82rem;white-space:nowrap;" data-i18n="mo_custom_btn_add">
                       Add Custom Item
                     </button>
                   </div>
@@ -3467,23 +3549,23 @@
                 <!-- Order Cart Table -->
                 <div style="margin-top:10px;">
                   <div style="font-size:0.82rem;font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between;">
-                    <span>Selected Items Cart (<span id="moCartCount">0</span>)</span>
+                    <span><span data-i18n="mo_cart_header">Selected Items Cart</span> (<span id="moCartCount">0</span>)</span>
                     <span id="moLiveSubtotal" style="color:#e65100;">Subtotal: 0 DA</span>
                   </div>
                   <div style="max-height:180px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
                     <table class="mo-cart-table" style="margin:0;">
                       <thead>
                         <tr>
-                          <th style="min-width:160px;">Item Details</th>
-                          <th style="width:80px;">Unit Price</th>
-                          <th style="width:100px;">Qty</th>
-                          <th style="width:80px;">Total</th>
+                          <th style="min-width:160px;" data-i18n="mo_th_item_details">Item Details</th>
+                          <th style="width:80px;" data-i18n="mo_th_unit_price">Unit Price</th>
+                          <th style="width:100px;" data-i18n="mo_th_qty">Qty</th>
+                          <th style="width:80px;" data-i18n="mo_th_total">Total</th>
                           <th style="width:36px;"></th>
                         </tr>
                       </thead>
                       <tbody id="moCartTbody">
                         <tr>
-                          <td colspan="5" style="text-align:center;color:#9ca3af;padding:12px;">
+                          <td colspan="5" style="text-align:center;color:#9ca3af;padding:12px;" data-i18n="mo_empty_cart">
                             No items added yet. Select items above to add to cart.
                           </td>
                         </tr>
@@ -3496,27 +3578,27 @@
               <!-- Financial Summary Box -->
               <div class="mo-summary-box" style="padding:10px 14px;gap:8px;">
                 <div class="mo-summary-item">
-                  <div class="label">Subtotal</div>
+                  <div class="label" data-i18n="mo_sum_subtotal">Subtotal</div>
                   <div class="value" id="moSumSubtotal">0 DA</div>
                 </div>
                 <div class="mo-summary-item">
-                  <div class="label">Delivery Fee</div>
+                  <div class="label" data-i18n="mo_sum_delivery">Delivery Fee</div>
                   <div class="value" id="moSumDelivery">0 DA</div>
                 </div>
                 <div class="mo-summary-item">
-                  <div class="label">Service Fee</div>
+                  <div class="label" data-i18n="mo_sum_service">Service Fee</div>
                   <div class="value" id="moSumService">0 DA</div>
                 </div>
                 <div class="mo-summary-item">
-                  <div class="label">Discount</div>
+                  <div class="label" data-i18n="mo_sum_discount">Discount</div>
                   <div class="value" id="moSumDiscount" style="color:#ef5350;">-0 DA</div>
                 </div>
                 <div class="mo-summary-item total">
-                  <div class="label">Total Amount</div>
+                  <div class="label" data-i18n="mo_sum_total">Total Amount</div>
                   <div class="value" id="moSumTotal">0 DA</div>
                 </div>
                 <div class="mo-summary-item cash">
-                  <div class="label">Cash to Collect</div>
+                  <div class="label" data-i18n="mo_sum_cash">Cash to Collect</div>
                   <div class="value" id="moSumCash">0 DA</div>
                 </div>
               </div>
@@ -3529,11 +3611,11 @@
 
         <!-- Step 6: Dual Action Execution Footer -->
         <div class="mo-actions-footer">
-          <button type="button" class="btn-mo-cancel" id="moCancelBtn">Cancel</button>
-          <button type="button" class="btn-mo-send-restaurant" id="moSendRestaurantBtn" title="Sends pending order to restaurant to accept &amp; prepare">
+          <button type="button" class="btn-mo-cancel" id="moCancelBtn" data-i18n="btn_cancel">Cancel</button>
+          <button type="button" class="btn-mo-send-restaurant" id="moSendRestaurantBtn" title="Sends pending order to restaurant to accept &amp; prepare" data-i18n="mo_btn_send_restaurant">
             🛎️ Send Order to Restaurant (Pending)
           </button>
-          <button type="button" class="btn-mo-broadcast-couriers" id="moBroadcastCouriersBtn" title="Creates preparing order and broadcasts immediately to couriers">
+          <button type="button" class="btn-mo-broadcast-couriers" id="moBroadcastCouriersBtn" title="Creates preparing order and broadcasts immediately to couriers" data-i18n="mo_btn_broadcast_couriers">
             🛵 Direct Broadcast to Delivery Men (Preparing)
           </button>
         </div>
@@ -3545,10 +3627,10 @@
       <div class="modal-dialog" style="max-width:480px;">
         <div class="mo-header" style="background:#026c3b;color:#fff;border-bottom:2px solid #FFC700;padding:12px 18px;">
           <div>
-            <h3 id="cwhModalTitle" style="margin:0;font-size:1.1rem;font-weight:800;color:#fff;">🕒 Courier Working Hours</h3>
+            <h3 id="cwhModalTitle" style="margin:0;font-size:1.1rem;font-weight:800;color:#fff;" data-i18n="cwh_title">🕒 Courier Working Hours</h3>
             <p id="cwhModalSubtitle" style="margin:2px 0 0;font-size:0.8rem;color:#a7f3d0;"></p>
           </div>
-          <button type="button" class="mo-close-btn" id="cwhCloseBtn" style="color:#fff;background:rgba(255,255,255,0.18);">✕</button>
+          <button type="button" class="mo-close-btn" id="cwhCloseBtn" style="color:#fff;background:rgba(255,255,255,0.18);" data-i18n-title="btn_close">✕</button>
         </div>
         <div style="padding:18px;display:flex;flex-direction:column;gap:14px;">
           <input type="hidden" id="cwhCourierId" />
@@ -3556,16 +3638,16 @@
           
           <label style="display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer;background:#f8fafc;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;">
             <input type="checkbox" id="cwhCustomCheckbox" />
-            <span>Enable custom working hours for this courier</span>
+            <span data-i18n="cwh_enable_custom">Enable custom working hours for this courier</span>
           </label>
 
           <div id="cwhTimeFields" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div>
-              <label for="cwhStartTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Shift Start (وقت البداية)</label>
+              <label for="cwhStartTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;" data-i18n="cwh_shift_start">Shift Start (وقت البداية)</label>
               <input type="time" id="cwhStartTime" style="width:100%;height:38px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;" />
             </div>
             <div>
-              <label for="cwhEndTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Shift End (وقت النهاية)</label>
+              <label for="cwhEndTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;" data-i18n="cwh_shift_end">Shift End (وقت النهاية)</label>
               <input type="time" id="cwhEndTime" style="width:100%;height:38px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;" />
             </div>
           </div>
@@ -3577,10 +3659,10 @@
           <div id="cwhModalStatus" class="meta" style="min-height:18px;"></div>
         </div>
         <div class="modal-actions" style="padding:12px 18px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
-          <button type="button" class="btn-ghost" id="cwhRevertBtn" style="color:#d97706;font-size:0.82rem;" title="Remove override and follow global default hours">Revert to default</button>
+          <button type="button" class="btn-ghost" id="cwhRevertBtn" style="color:#d97706;font-size:0.82rem;" title="Remove override and follow global default hours" data-i18n="cwh_btn_revert">Revert to default</button>
           <div style="display:flex;gap:8px;">
-            <button type="button" class="btn-ghost" id="cwhDismissBtn">Cancel</button>
-            <button type="button" class="btn-refresh" id="cwhSaveBtn" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;padding:8px 16px;">Save hours</button>
+            <button type="button" class="btn-ghost" id="cwhDismissBtn" data-i18n="btn_cancel">Cancel</button>
+            <button type="button" class="btn-refresh" id="cwhSaveBtn" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;padding:8px 16px;" data-i18n="cwh_btn_save_hours">Save hours</button>
           </div>
         </div>
       </div>
@@ -3591,24 +3673,24 @@
       <div class="modal-dialog" style="max-width:480px;">
         <div class="mo-header" style="background:#026c3b;color:#fff;border-bottom:2px solid #FFC700;padding:12px 18px;">
           <div>
-            <h3 id="gwhModalTitle" style="margin:0;font-size:1.1rem;font-weight:800;color:#fff;">⚙️ System Default Working Hours</h3>
-            <p style="margin:2px 0 0;font-size:0.8rem;color:#a7f3d0;">Global courier schedule enforcement</p>
+            <h3 id="gwhModalTitle" style="margin:0;font-size:1.1rem;font-weight:800;color:#fff;" data-i18n="gwh_title">⚙️ System Default Working Hours</h3>
+            <p style="margin:2px 0 0;font-size:0.8rem;color:#a7f3d0;" data-i18n="gwh_sub">Global courier schedule enforcement</p>
           </div>
-          <button type="button" class="mo-close-btn" id="gwhCloseBtn" style="color:#fff;background:rgba(255,255,255,0.18);">✕</button>
+          <button type="button" class="mo-close-btn" id="gwhCloseBtn" style="color:#fff;background:rgba(255,255,255,0.18);" data-i18n-title="btn_close">✕</button>
         </div>
         <div style="padding:18px;display:flex;flex-direction:column;gap:14px;">
           <label style="display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer;background:#f8fafc;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;">
             <input type="checkbox" id="gwhEnabledCheckbox" />
-            <span>Enable automated working hours enforcement</span>
+            <span data-i18n="gwh_enable_auto">Enable automated working hours enforcement</span>
           </label>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div>
-              <label for="gwhStartTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Default Start (وقت البداية)</label>
+              <label for="gwhStartTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;" data-i18n="gwh_default_start">Default Start (وقت البداية)</label>
               <input type="time" id="gwhStartTime" style="width:100%;height:38px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;" />
             </div>
             <div>
-              <label for="gwhEndTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Default End (وقت النهاية)</label>
+              <label for="gwhEndTime" style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:4px;" data-i18n="gwh_default_end">Default End (وقت النهاية)</label>
               <input type="time" id="gwhEndTime" style="width:100%;height:38px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;" />
             </div>
           </div>
@@ -3622,8 +3704,8 @@
           <div id="gwhModalStatus" class="meta" style="min-height:18px;"></div>
         </div>
         <div class="modal-actions" style="padding:12px 18px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;">
-          <button type="button" class="btn-ghost" id="gwhDismissBtn">Cancel</button>
-          <button type="button" class="btn-refresh" id="gwhSaveBtn" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;padding:8px 16px;">Save Global Hours</button>
+          <button type="button" class="btn-ghost" id="gwhDismissBtn" data-i18n="btn_cancel">Cancel</button>
+          <button type="button" class="btn-refresh" id="gwhSaveBtn" style="background:#026c3b;color:#fff;border-color:#026c3b;font-weight:700;padding:8px 16px;" data-i18n="gwh_btn_save_global">Save Global Hours</button>
         </div>
       </div>
     </div>
@@ -4256,6 +4338,9 @@
       ];
 
       function orderStatusLabel(status) {
+        if (typeof localizedStatusLabel === 'function') {
+          return localizedStatusLabel(status);
+        }
         const s = String(status || '').trim();
         if (!s) return '—';
         return s.replace(/_/g, ' ');
@@ -4320,13 +4405,17 @@
       }
 
       function boolCell(v) {
-        if (v === true) return '<span class="status-pill">Yes</span>';
-        if (v === false) return '<span class="status-pill">No</span>';
+        const yesText = typeof t === 'function' ? t('val_yes', 'Yes') : 'Yes';
+        const noText = typeof t === 'function' ? t('val_no', 'No') : 'No';
+        if (v === true) return '<span class="status-pill">' + esc(yesText) + '</span>';
+        if (v === false) return '<span class="status-pill">' + esc(noText) + '</span>';
         return '—';
       }
 
       function deliveryStatusSelectCell(userId, field, value, disabled) {
         const selected = value === true ? 'true' : 'false';
+        const yesText = typeof t === 'function' ? t('val_yes', 'Yes') : 'Yes';
+        const noText = typeof t === 'function' ? t('val_no', 'No') : 'No';
         return (
           '<select class="delivery-man-status-select" data-delivery-status-user-id="' +
           esc(userId) +
@@ -4337,10 +4426,10 @@
           '>' +
           '<option value="true"' +
           (selected === 'true' ? ' selected' : '') +
-          '>Yes</option>' +
+          '>' + esc(yesText) + '</option>' +
           '<option value="false"' +
           (selected === 'false' ? ' selected' : '') +
-          '>No</option>' +
+          '>' + esc(noText) + '</option>' +
           '</select>'
         );
       }
@@ -5368,16 +5457,14 @@
             assignedCell =
               esc(o.courier_assigned_ago_label) +
               (o.courier_assigned_time_exact === false
-                ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                ? ' <span class="meta" title="From order updated_at">' + esc(typeof t === 'function' ? t('time_approx', '(approx.)') : '(approx.)') + '</span>'
                 : '');
           }
           tr.innerHTML =
-            '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
+            '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="' + esc(typeof t === 'function' ? t('th_eye_title', 'View order details') : 'View order details') + '">👁️</button></td>' +
             '<td>' +
             esc(o.order_number || o.id) +
-            '<span class="order-summary-inline">Items: ' +
-            esc(o.order_items_summary || 'No items') +
-            '</span>' +
+            renderOrderSummaryInlineHtml(o.order_items_summary) +
             '</td><td data-status-cell></td><td>' +
             esc(rest || o.restaurant_id || '—') +
             '</td><td>' +
@@ -5408,23 +5495,23 @@
           const acceptBtn = document.createElement('button');
           acceptBtn.type = 'button';
           acceptBtn.className = 'btn-accept-order';
-          acceptBtn.textContent = 'Accept order';
-          acceptBtn.title = 'Confirm this pending order (same fallback flow)';
+          acceptBtn.textContent = typeof t === 'function' ? t('btn_accept_order', 'Accept order') : 'Accept order';
+          acceptBtn.title = typeof t === 'function' ? t('btn_accept_order_title', 'Confirm this pending order (same fallback flow)') : 'Confirm this pending order (same fallback flow)';
           acceptBtn.addEventListener('click', () => acceptOrder(oid, acceptBtn));
           btnRow.appendChild(acceptBtn);
           const rbBtn = document.createElement('button');
           rbBtn.type = 'button';
           rbBtn.className = 'btn-rebroadcast';
-          rbBtn.textContent = 'Re-broadcast';
-          rbBtn.title = 'Notify restaurant owner and admin team (push)';
+          rbBtn.textContent = typeof t === 'function' ? t('btn_rebroadcast', 'Re-broadcast') : 'Re-broadcast';
+          rbBtn.title = typeof t === 'function' ? t('btn_rebroadcast_title', 'Notify restaurant and couriers of pending order (Push)') : 'إعادة إشعار طاقم المطعم بالطلب المعلق (Push)';
           rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
           btnRow.appendChild(rbBtn);
           appendDropAssignmentButton(btnRow, o);
           const cancelBtn = document.createElement('button');
           cancelBtn.type = 'button';
           cancelBtn.className = 'btn-cancel-order';
-          cancelBtn.textContent = 'Cancel';
-          cancelBtn.title = 'Cancel order and notify customer (push)';
+          cancelBtn.textContent = typeof t === 'function' ? t('btn_cancel', 'Cancel') : 'Cancel';
+          cancelBtn.title = typeof t === 'function' ? t('btn_cancel_title', 'Cancel order and notify customer (push)') : 'Cancel order and notify customer (push)';
           cancelBtn.addEventListener('click', () =>
             openCancelOrderModal(oid, o.order_number || o.id),
           );
@@ -5434,9 +5521,7 @@
           ob.appendChild(tr);
         });
         if (!mo.length) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="15" class="meta">None</td>';
-          ob.appendChild(tr);
+          ob.innerHTML = renderEmptyRow(15);
         }
 
         const pb = $('alertsPickedUpBody');
@@ -5450,16 +5535,14 @@
             assignedCell =
               esc(o.courier_assigned_ago_label) +
               (o.courier_assigned_time_exact === false
-                ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                ? ' <span class="meta" title="From order updated_at">' + esc(typeof t === 'function' ? t('time_approx', '(approx.)') : '(approx.)') + '</span>'
                 : '');
           }
           tr.innerHTML =
-            '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
+            '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="' + esc(typeof t === 'function' ? t('th_eye_title', 'View order details') : 'View order details') + '">👁️</button></td>' +
             '<td>' +
             esc(o.order_number || o.id) +
-            '<span class="order-summary-inline">Items: ' +
-            esc(o.order_items_summary || 'No items') +
-            '</span>' +
+            renderOrderSummaryInlineHtml(o.order_items_summary) +
             '</td><td data-status-cell></td><td>' +
             esc(rest || o.restaurant_id || '—') +
             '</td><td>' +
@@ -5488,7 +5571,7 @@
           const doneBtn = document.createElement('button');
           doneBtn.type = 'button';
           doneBtn.className = 'btn-delivered-order';
-          doneBtn.textContent = 'Delivered';
+          doneBtn.textContent = typeof t === 'function' ? t('btn_mark_delivered', 'Delivered') : 'Delivered';
           doneBtn.title = 'Mark this picked-up order as delivered';
           doneBtn.addEventListener('click', () => markDelivered(o.id, doneBtn));
           btnRow.appendChild(doneBtn);
@@ -5498,9 +5581,7 @@
           pb.appendChild(tr);
         });
         if (!mp.length) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="14" class="meta">None</td>';
-          pb.appendChild(tr);
+          pb.innerHTML = renderEmptyRow(14);
         }
 
         const pab = $('alertsPreparingAssignedBody');
@@ -5515,16 +5596,14 @@
               assignedCell =
                 esc(o.courier_assigned_ago_label) +
                 (o.courier_assigned_time_exact === false
-                  ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                  ? ' <span class="meta" title="From order updated_at">' + esc(typeof t === 'function' ? t('time_approx', '(approx.)') : '(approx.)') + '</span>'
                   : '');
             }
             tr.innerHTML =
-              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="' + esc(typeof t === 'function' ? t('th_eye_title', 'View order details') : 'View order details') + '">👁️</button></td>' +
               '<td>' +
               esc(o.order_number || o.id) +
-              '<span class="order-summary-inline">Items: ' +
-              esc(o.order_items_summary || 'No items') +
-              '</span>' +
+              renderOrderSummaryInlineHtml(o.order_items_summary) +
               '</td><td data-status-cell></td><td>' +
               esc(rest || o.restaurant_id || '—') +
               '</td><td>' +
@@ -5553,7 +5632,7 @@
             const pickupBtn = document.createElement('button');
             pickupBtn.type = 'button';
             pickupBtn.className = 'btn-pickup-order';
-            pickupBtn.textContent = 'Pick-up';
+            pickupBtn.textContent = typeof t === 'function' ? t('btn_mark_pickup', 'Pick-up') : 'Pick-up';
             pickupBtn.title = 'Mark this assigned order as picked up';
             pickupBtn.addEventListener('click', () => markPickedUp(o.id, pickupBtn));
             btnRow.appendChild(pickupBtn);
@@ -5562,8 +5641,8 @@
               const cancelBtn = document.createElement('button');
               cancelBtn.type = 'button';
               cancelBtn.className = 'btn-cancel-order';
-              cancelBtn.textContent = 'Cancel';
-              cancelBtn.title = 'Cancel order and notify customer (push)';
+              cancelBtn.textContent = typeof t === 'function' ? t('btn_cancel', 'Cancel') : 'Cancel';
+              cancelBtn.title = typeof t === 'function' ? t('btn_cancel_title', 'Cancel order and notify customer (push)') : 'Cancel order and notify customer (push)';
               cancelBtn.addEventListener('click', () =>
                 openCancelOrderModal(o.id, o.order_number || o.id),
               );
@@ -5574,9 +5653,7 @@
             pab.appendChild(tr);
           });
           if (!mpa.length) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="14" class="meta">None</td>';
-            pab.appendChild(tr);
+            pab.innerHTML = renderEmptyRow(14);
           }
         }
 
@@ -5588,12 +5665,10 @@
             tr.className = 'row-warn';
             const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
             tr.innerHTML =
-              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="' + esc(typeof t === 'function' ? t('th_eye_title', 'View order details') : 'View order details') + '">👁️</button></td>' +
               '<td>' +
               esc(o.order_number || o.id) +
-              '<span class="order-summary-inline">Items: ' +
-              esc(o.order_items_summary || 'No items') +
-              '</span>' +
+              renderOrderSummaryInlineHtml(o.order_items_summary) +
               '</td><td data-status-cell></td><td>' +
               esc(rest || o.restaurant_id || '—') +
               '</td><td>' +
@@ -5617,16 +5692,16 @@
             const rbBtn = document.createElement('button');
             rbBtn.type = 'button';
             rbBtn.className = 'btn-rebroadcast';
-            rbBtn.textContent = 'Re-broadcast';
-            rbBtn.title = 'Notify all online couriers — order available (push)';
+            rbBtn.textContent = typeof t === 'function' ? t('btn_rebroadcast', 'Re-broadcast') : 'Re-broadcast';
+            rbBtn.title = typeof t === 'function' ? t('btn_rebroadcast_title', 'Notify restaurant and couriers of pending order (Push)') : 'إعادة إشعار سائقي التوصيل المتاحين بأن الطلب متاح للتوصيل (Push)';
             rbBtn.addEventListener('click', () => rebroadcastOrder(o.id, rbBtn));
             btnRow.appendChild(rbBtn);
             if (orderCanCancelFromDashboard(o)) {
               const cancelBtn = document.createElement('button');
               cancelBtn.type = 'button';
               cancelBtn.className = 'btn-cancel-order';
-              cancelBtn.textContent = 'Cancel';
-              cancelBtn.title = 'Cancel order and notify customer (push)';
+              cancelBtn.textContent = typeof t === 'function' ? t('btn_cancel', 'Cancel') : 'Cancel';
+              cancelBtn.title = typeof t === 'function' ? t('btn_cancel_title', 'Cancel order and notify customer (push)') : 'Cancel order and notify customer (push)';
               cancelBtn.addEventListener('click', () =>
                 openCancelOrderModal(o.id, o.order_number || o.id),
               );
@@ -5637,9 +5712,7 @@
             pub.appendChild(tr);
           });
           if (!mpu.length) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="12" class="meta">None</td>';
-            pub.appendChild(tr);
+            pub.innerHTML = renderEmptyRow(12);
           }
         }
 
@@ -5737,7 +5810,7 @@
       async function rebroadcastOrder(orderId, btn) {
         const prev = btn.textContent;
         btn.disabled = true;
-        btn.textContent = 'Sending…';
+        btn.textContent = 'جاري الإرسال…';
         try {
           const r = await fetch(
             API + '/orders/' + encodeURIComponent(orderId) + '/rebroadcast',
@@ -5749,15 +5822,18 @@
             },
           );
           const j = await r.json().catch(() => ({}));
-          if (!r.ok) {
-            const msg = [j.error, j.detail].filter(Boolean).join(' — ') || r.statusText;
+          if (!r.ok || j.success === false) {
+            const msg = [j.error, j.detail].filter(Boolean).join(' — ') || r.statusText || 'فشل إعادة البث';
             throw new Error(msg);
           }
-          const ts = j.total_sent != null ? String(j.total_sent) : '?';
-          const rc = j.recipients != null ? String(j.recipients) : '?';
-          alert('Re-broadcast sent (' + (j.kind || '') + '). Push tokens: ' + ts + ', targets: ' + rc + '.');
+          const defaultMsg = j.kind === 'restaurant'
+            ? 'تم إعادة البث إلى مالك/طاقم المطعم.'
+            : 'تم إعادة البث إلى سائقي التوصيل المتاحين.';
+          const msg = j.message || defaultMsg;
+          const ts = j.total_sent != null ? j.total_sent : j.recipients;
+          alert(msg + (ts != null ? ' (تم إرسال ' + ts + ' إشعار)' : ''));
         } catch (e) {
-          alert('Re-broadcast failed: ' + (e && e.message ? e.message : String(e)));
+          alert('فشل إعادة البث: ' + (e && e.message ? e.message : String(e)));
         } finally {
           btn.disabled = false;
           btn.textContent = prev;
@@ -5900,8 +5976,8 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn-drop-assignment';
-        btn.textContent = 'Drop assignment';
-        btn.title = 'Remove assigned delivery man from this order';
+        btn.textContent = typeof t === 'function' ? t('btn_drop_courier', 'Drop courier') : 'Drop assignment';
+        btn.title = typeof t === 'function' ? t('btn_drop_courier_title', 'Remove assigned delivery man from this order') : 'Remove assigned delivery man from this order';
         btn.addEventListener('click', () => dropOrderAssignment(order, btn));
         btnRow.appendChild(btn);
       }
@@ -5911,14 +5987,17 @@
         const canAssign =
           !order?.delivery_person_id && ['confirmed', 'preparing', 'ready'].includes(st);
         if (!canAssign) {
+          const assignedText = typeof t === 'function' ? t('th_assigned', 'Assigned') : 'Assigned';
+          const acceptText = typeof t === 'function' ? t('assign_accept_first', 'Accept first') : 'Accept first';
           td.innerHTML = order?.delivery_person_id
-            ? '<span class="meta">Assigned</span>'
-            : '<span class="meta">Accept first</span>';
+            ? '<span class="meta">' + esc(assignedText) + '</span>'
+            : '<span class="meta">' + esc(acceptText) + '</span>';
           return;
         }
         const sel = document.createElement('select');
         sel.className = 'manual-assign-select';
-        sel.innerHTML = '<option value="">Assign delivery man…</option>';
+        const placeholderText = typeof t === 'function' ? t('select_courier_placeholder', 'Assign delivery man…') : 'Assign delivery man…';
+        sel.innerHTML = '<option value="">' + esc(placeholderText) + '</option>';
         for (const c of availableOrderCouriers) {
           const opt = document.createElement('option');
           opt.value = c.id;
@@ -5927,7 +6006,8 @@
         }
         if (!availableOrderCouriers.length) {
           sel.disabled = true;
-          sel.innerHTML = '<option value="">No available delivery men</option>';
+          const noCouriersText = typeof t === 'function' ? t('dm_filter_available_no', 'No available delivery men') : 'No available delivery men';
+          sel.innerHTML = '<option value="">' + esc(noCouriersText) + '</option>';
         }
         sel.addEventListener('change', () => assignOrderCourier(order.id, sel.value, sel));
         td.appendChild(sel);
@@ -6045,9 +6125,7 @@
           if (!cb) return;
           cb.innerHTML = '';
           if (!rows.length) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="14" class="meta">No cancelled orders for this filter.</td>';
-            cb.appendChild(tr);
+            cb.innerHTML = renderEmptyRow(14, 'sec_cancelled_none');
             return;
           }
           rows.forEach((o, i) => {
@@ -6059,18 +6137,16 @@
               assignedCell =
                 esc(o.courier_assigned_ago_label) +
                 (o.courier_assigned_time_exact === false
-                  ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                  ? ' <span class="meta" title="From order updated_at">' + esc(typeof t === 'function' ? t('time_approx', '(approx.)') : '(approx.)') + '</span>'
                   : '');
             }
             tr.innerHTML =
-              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="' + esc(typeof t === 'function' ? t('th_eye_title', 'View order details') : 'View order details') + '">👁️</button></td>' +
               '<td class="num">' +
               (i + 1) +
               '</td><td>' +
               esc(o.order_number || o.id) +
-              '<span class="order-summary-inline">Items: ' +
-              esc(o.order_items_summary || 'No items') +
-              '</span>' +
+              renderOrderSummaryInlineHtml(o.order_items_summary) +
               '</td><td data-status-cell></td><td>' +
               esc(rest || o.restaurant_id || '—') +
               '</td><td>' +
@@ -6139,9 +6215,7 @@
             ' new order(s).';
           tb.innerHTML = '';
           if (!newOrders.length) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="15" class="meta">No orders match the filters.</td>';
-            tb.appendChild(tr);
+            tb.innerHTML = renderEmptyRow(15, 'sec_new_orders_none');
           } else {
             newOrders.forEach((o, i) => {
             const tr = document.createElement('tr');
@@ -6151,18 +6225,16 @@
               assignedCell =
                 esc(o.courier_assigned_ago_label) +
                 (o.courier_assigned_time_exact === false
-                  ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                  ? ' <span class="meta" title="From order updated_at">' + esc(typeof t === 'function' ? t('time_approx', '(approx.)') : '(approx.)') + '</span>'
                   : '');
             }
             tr.innerHTML =
-              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="' + esc(typeof t === 'function' ? t('th_eye_title', 'View order details') : 'View order details') + '">👁️</button></td>' +
               '<td class="num">' +
               (i + 1) +
               '</td><td>' +
               esc(o.order_number || o.id) +
-              '<span class="order-summary-inline">Items: ' +
-              esc(o.order_items_summary || 'No items') +
-              '</span>' +
+              renderOrderSummaryInlineHtml(o.order_items_summary) +
               '</td><td data-status-cell></td><td>' +
               esc(rest || o.restaurant_id || '—') +
               '</td><td>' +
@@ -6197,35 +6269,35 @@
               const pickupBtn = document.createElement('button');
               pickupBtn.type = 'button';
               pickupBtn.className = 'btn-pickup-order';
-              pickupBtn.textContent = 'Pick-up';
+              pickupBtn.textContent = typeof t === 'function' ? t('btn_mark_pickup', 'Pick-up') : 'Pick-up';
               pickupBtn.title = 'Mark this assigned order as picked up';
               pickupBtn.addEventListener('click', () => markPickedUp(oid, pickupBtn));
               btnRow.appendChild(pickupBtn);
-            } else if (stLc === 'pending' || (stLc === 'preparing' && noCourier)) {
+            } else if (stLc === 'pending' || ((stLc === 'preparing' || stLc === 'ready') && noCourier)) {
               if (stLc === 'pending') {
                 const acceptBtn = document.createElement('button');
                 acceptBtn.type = 'button';
                 acceptBtn.className = 'btn-accept-order';
-                acceptBtn.textContent = 'Accept order';
-                acceptBtn.title = 'Confirm this pending order (same fallback flow)';
+                acceptBtn.textContent = typeof t === 'function' ? t('btn_accept_order', 'Accept order') : 'Accept order';
+                acceptBtn.title = typeof t === 'function' ? t('btn_accept_order_title', 'Confirm this pending order (same fallback flow)') : 'Confirm this pending order (same fallback flow)';
                 acceptBtn.addEventListener('click', () => acceptOrder(oid, acceptBtn));
                 btnRow.appendChild(acceptBtn);
               }
               const rbBtn = document.createElement('button');
               rbBtn.type = 'button';
               rbBtn.className = 'btn-rebroadcast';
-              rbBtn.textContent = 'Re-broadcast';
+              rbBtn.textContent = typeof t === 'function' ? t('btn_rebroadcast', 'Re-broadcast') : 'Re-broadcast';
               rbBtn.title =
                 stLc === 'pending'
-                  ? 'Notify restaurant owner and admin team (push)'
-                  : 'Notify all online couriers — order available (push)';
+                  ? (typeof t === 'function' ? t('btn_rebroadcast_title', 'Notify restaurant and couriers of pending order (Push)') : 'إعادة إشعار طاقم المطعم بالطلب المعلق (Push)')
+                  : 'إعادة إشعار سائقي التوصيل المتاحين بأن الطلب متاح للتوصيل (Push)';
               rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
               btnRow.appendChild(rbBtn);
             } else if (stLc === 'picked_up') {
               const doneBtn = document.createElement('button');
               doneBtn.type = 'button';
               doneBtn.className = 'btn-delivered-order';
-              doneBtn.textContent = 'Delivered';
+              doneBtn.textContent = typeof t === 'function' ? t('btn_mark_delivered', 'Delivered') : 'Delivered';
               doneBtn.title = 'Mark this picked-up order as delivered';
               doneBtn.addEventListener('click', () => markDelivered(oid, doneBtn));
               btnRow.appendChild(doneBtn);
@@ -6235,8 +6307,8 @@
               const cancelBtn = document.createElement('button');
               cancelBtn.type = 'button';
               cancelBtn.className = 'btn-cancel-order';
-              cancelBtn.textContent = 'Cancel';
-              cancelBtn.title = 'Cancel order and notify customer (push)';
+              cancelBtn.textContent = typeof t === 'function' ? t('btn_cancel', 'Cancel') : 'Cancel';
+              cancelBtn.title = typeof t === 'function' ? t('btn_cancel_title', 'Cancel order and notify customer (push)') : 'Cancel order and notify customer (push)';
               cancelBtn.addEventListener('click', () =>
                 openCancelOrderModal(oid, o.order_number || o.id),
               );
@@ -6414,11 +6486,15 @@
         const timeStr = cfg.algiers_time ? ' (DZ ' + cfg.algiers_time + ')' : '';
         const range = (cfg.default_start || '11:00') + ' - ' + (cfg.default_end || '22:00');
         
+        const openText = typeof t === 'function' ? t('shift_open', 'Shift: OPEN') : 'Shift: OPEN';
+        const closedText = typeof t === 'function' ? t('shift_closed', 'Shift: CLOSED') : 'Shift: CLOSED';
+        const autoClosedText = typeof t === 'function' ? t('shift_auto_closed', 'auto-closed') : 'auto-closed';
+
         if (isOpen) {
-          text.textContent = 'Shift: OPEN ' + range + timeStr;
+          text.textContent = openText + ' ' + range + timeStr;
         } else {
-          const autoCloseInfo = cfg.auto_closed_count ? ' [' + cfg.auto_closed_count + ' auto-closed]' : '';
-          text.textContent = 'Shift: CLOSED (' + range + ')' + timeStr + autoCloseInfo;
+          const autoCloseInfo = cfg.auto_closed_count ? ' [' + cfg.auto_closed_count + ' ' + autoClosedText + ']' : '';
+          text.textContent = closedText + ' (' + range + ')' + timeStr + autoCloseInfo;
         }
       }
 
@@ -6439,7 +6515,8 @@
         html += '</span>';
 
         if (isAutoClosed) {
-          html += '<span class="wh-auto-closed-pill" title="Auto-closed outside working hours; will reopen when shift starts">🌙 Off-shift</span>';
+          const offShiftText = typeof t === 'function' ? t('badge_off_shift', 'Off-shift') : 'Off-shift';
+          html += '<span class="wh-auto-closed-pill" title="Auto-closed outside working hours; will reopen when shift starts">🌙 ' + esc(offShiftText) + '</span>';
         }
 
         html += '<button type="button" class="btn-wh-edit" data-wh-courier-id="' + esc(courierId) + '" data-wh-user-id="' + esc(userId) + '" data-wh-name="' + esc(name) + '" data-wh-start="' + esc(start) + '" data-wh-end="' + esc(end) + '" data-wh-custom="' + (isCustom ? '1' : '0') + '" title="Edit working hours for this courier">✏️</button>';
@@ -6532,12 +6609,16 @@
         const tb = $('deliveryMenBody');
         tb.innerHTML = '';
         if (!rows.length) {
-          const tr = document.createElement('tr');
-          tr.innerHTML =
-            '<td colspan="13" class="meta">No delivery personnel match this filter.</td>';
-          tb.appendChild(tr);
+          tb.innerHTML = renderEmptyRow(13, 'dm_empty');
           return;
         }
+        const blockedBadgeText = typeof t === 'function' ? t('badge_blocked', 'blocked') : 'blocked';
+        const addNotePh = typeof t === 'function' ? t('ph_add_note', 'Add note…') : 'Add note…';
+        const unblockBtnText = typeof t === 'function' ? t('btn_unblock', 'Unblock') : 'Unblock';
+        const mockOrderBtnText = typeof t === 'function' ? t('btn_mock_order', 'Mock order') : 'Mock order';
+        const mockOrderBtnTitle = typeof t === 'function' ? t('btn_mock_order_title', 'Create preparing mock order and push only this courier') : 'Create preparing mock order and push only this courier';
+        const blockBtnText = typeof t === 'function' ? t('btn_block', 'Block') : 'Block';
+
         rows.forEach((row, i) => {
           const userId = String(row.user_id || '');
           const isPinned = userId && pinnedUserIds.includes(userId);
@@ -6559,7 +6640,7 @@
             (i + 1) +
             '</td><td>' +
             esc(row.name || '—') +
-            (isBlocked ? ' <span class="status-pill">blocked</span>' : '') +
+            (isBlocked ? ' <span class="status-pill">' + esc(blockedBadgeText) + '</span>' : '') +
             '</td><td>' +
             esc(row.work_phone || '—') +
             '</td><td>' +
@@ -6578,7 +6659,7 @@
             esc(formatSahlaTax(row.sahla_tax)) +
             '</td><td class="delivery-man-notes-cell"><textarea class="delivery-man-notes-input" data-delivery-note-user-id="' +
             esc(userId) +
-            '" rows="2" maxlength="2000" placeholder="Add note…">' +
+            '" rows="2" maxlength="2000" placeholder="' + esc(addNotePh) + '">' +
             esc(noteValue) +
             '</textarea><span class="delivery-man-notes-status" data-delivery-note-status-for="' +
             esc(userId) +
@@ -6586,13 +6667,13 @@
             (isBlocked
               ? '<button type="button" class="btn-unblock-courier" data-unblock-delivery-user-id="' +
                 esc(userId) +
-                '">Unblock</button>'
+                '">' + esc(unblockBtnText) + '</button>'
               : '<button type="button" class="btn-mock-order" data-mock-order-user-id="' +
                 esc(userId) +
-                '" title="Create preparing mock order and push only this courier">Mock order</button>' +
+                '" title="' + esc(mockOrderBtnTitle) + '">' + esc(mockOrderBtnText) + '</button>' +
                 '<button type="button" class="btn-block-courier" data-block-delivery-user-id="' +
                 esc(userId) +
-                '">Block</button>') +
+                '">' + esc(blockBtnText) + '</button>') +
             '</div></td>';
           tb.appendChild(tr);
         });
@@ -6801,13 +6882,11 @@
           updateCollectAllButton();
           $('deliveryHistoryMeta').textContent =
             rows.length +
-            ' delivered order(s). “Today” follows Africa/Algiers (UTC+1). Use “All” for all dates.';
+            ' ' + (typeof t === 'function' ? t('caption_delivered', 'delivered order(s). “Today” follows Africa/Algiers (UTC+1). Use “All” for all dates.') : 'delivered order(s). “Today” follows Africa/Algiers (UTC+1). Use “All” for all dates.');
           const tb = $('deliveryHistoryBody');
           tb.innerHTML = '';
           if (!rows.length) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="15" class="meta">No delivered orders for this filter.</td>';
-            tb.appendChild(tr);
+            tb.innerHTML = renderEmptyRow(15, 'sec_delivered_none');
             return;
           }
           rows.forEach((o, i) => {
@@ -6819,18 +6898,19 @@
               assignedCell =
                 esc(o.courier_assigned_ago_label) +
                 (o.courier_assigned_time_exact === false
-                  ? ' <span class="meta" title="From order updated_at">(approx.)</span>'
+                  ? ' <span class="meta" title="From order updated_at">' + esc(typeof t === 'function' ? t('time_approx', '(approx.)') : '(approx.)') + '</span>'
                   : '');
             }
+            const yesLabel = typeof t === 'function' ? t('val_yes', 'YES') : 'YES';
+            const noLabel = typeof t === 'function' ? t('val_no', 'No') : 'No';
+            const collectBtnLabel = typeof t === 'function' ? t('btn_collect', 'Collect') : 'Collect';
             tr.innerHTML =
-              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="View order details">👁️</button></td>' +
+              '<td><button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(o.id) + '\')" title="' + esc(typeof t === 'function' ? t('th_eye_title', 'View order details') : 'View order details') + '">👁️</button></td>' +
               '<td class="num">' +
               (i + 1) +
               '</td><td>' +
               esc(o.order_number || o.id) +
-              '<span class="order-summary-inline">Items: ' +
-              esc(o.order_items_summary || 'No items') +
-              '</span>' +
+              renderOrderSummaryInlineHtml(o.order_items_summary) +
               '</td><td data-status-cell></td><td>' +
               esc(rest || o.restaurant_id || '—') +
               '</td><td>' +
@@ -6848,13 +6928,13 @@
               '</td><td>' +
               esc(o.payment_method || '—') +
               '</td><td><span class="status-pill">' +
-              esc(o.payment_status || 'unknown') +
+              esc(orderStatusLabel(o.payment_status) || 'unknown') +
               '</span></td><td class="collect-cell">' +
               (collect
-                ? '<strong style="color:#e53935">YES</strong> <button type="button" class="btn-collect-payment" data-collect-order-id="' +
+                ? '<strong style="color:#e53935">' + esc(yesLabel) + '</strong> <button type="button" class="btn-collect-payment" data-collect-order-id="' +
                   esc(o.id) +
-                  '">Collect</button>'
-                : 'No') +
+                  '">' + esc(collectBtnLabel) + '</button>'
+                : esc(noLabel)) +
               '</td><td>' +
               esc(fmtDate(o.updated_at || o.created_at)) +
               '</td>';
@@ -8099,14 +8179,8 @@
       };
 
       $('btnSendMorningGreeting').onclick = async () => {
-        const confirmSend = confirm(
-          'Send morning greeting push notification to all currently available delivery men?\n\n' +
-          'Title: صباح الخير (اسمه) بداية نهار موفقة\n' +
-          'Body: اللهم ارزقنا رزقاً واسعاً حلالاً طيباً\n\n' +
-          'Note: Zero DB pressure guaranteed (persist_notification=false, in-memory deduplication).'
-        );
+        const confirmSend = confirm('هل تريد إرسال تحية الصباح لعمال التوصيل المتاحين الآن؟\n\nاضغط "موافق" للإرسال الفوري لجميع السائقين المتاحين.');
         if (!confirmSend) return;
-
         const btn = $('btnSendMorningGreeting');
         const prevText = btn.textContent;
         btn.disabled = true;
@@ -8114,7 +8188,7 @@
         try {
           const res = await api('/delivery-personnel/send-morning-greeting', {
             method: 'POST',
-            body: JSON.stringify({ force: false }),
+            body: JSON.stringify({ force: true }),
           });
           alert(
             '☀️ Morning Greeting Dispatch Results:\n\n' +
@@ -8382,11 +8456,19 @@
           return name.includes(query) || phone.includes(query) || pnum.includes(query);
         });
 
+        const couriersLabel = typeof t === 'function' ? t('th_courier', 'Couriers') : 'Couriers';
+        const paymentsLabel = typeof t === 'function' ? t('th_payment', 'Payments') : 'Payments';
+        const ordersDetailsBtnText = typeof t === 'function' ? t('th_orders_details', 'Orders Details') : 'Orders Details';
+        const markPaidBtnText = typeof t === 'function' ? t('status_paid', 'Mark Paid') : 'Mark Paid';
+        const viewReceiptText = typeof t === 'function' ? t('btn_view_receipt', 'View Receipt') : 'View Receipt';
+        const approveBtnText = typeof t === 'function' ? t('btn_approve', 'Approve') : 'Approve';
+        const rejectBtnText = typeof t === 'function' ? t('btn_reject', 'Reject') : 'Reject';
+
         if ($('sahlaUnpaidBadgeCount')) {
-          $('sahlaUnpaidBadgeCount').textContent = `${filteredUnpaid.length} Couriers`;
+          $('sahlaUnpaidBadgeCount').textContent = `${filteredUnpaid.length} ${couriersLabel}`;
         }
         if ($('sahlaOngoingBadgeCount')) {
-          $('sahlaOngoingBadgeCount').textContent = `${filteredOngoing.length} Payments`;
+          $('sahlaOngoingBadgeCount').textContent = `${filteredOngoing.length} ${paymentsLabel}`;
         }
 
         // Render Unpaid Table
@@ -8423,16 +8505,16 @@
                   ${creditBadge}
                 </td>
                 <td>
-                  <span style="font-weight:700;padding:2px 8px;background:#f5f5f5;border-radius:6px;">${ordersCount} orders</span>
+                  <span style="font-weight:700;padding:2px 8px;background:#f5f5f5;border-radius:6px;">${ordersCount}</span>
                 </td>
                 <td>
                   <button type="button" class="btn-orders-details" onclick="openSahlaOrderDetails('${c.id}', 'unpaid')">
-                    📦 Orders Details
+                    📦 ${esc(ordersDetailsBtnText)}
                   </button>
                 </td>
                 <td>
                   <button type="button" class="btn-sahla-collect" onclick="collectSahlaTaxDirect('${c.id}', '${esc(c.delivery_name || '')}', ${taxVal})">
-                    💰 Mark Paid
+                    💰 ${esc(markPaidBtnText)}
                   </button>
                 </td>
               </tr>`;
@@ -8463,13 +8545,13 @@
               } else if (status === 'auto_generated') {
                 statusChip = '<span class="sahla-status-chip auto_generated">🔵 Auto Generated</span>';
               } else {
-                statusChip = `<span class="sahla-status-chip">${esc(status)}</span>`;
+                statusChip = `<span class="sahla-status-chip">${esc(orderStatusLabel(status))}</span>`;
               }
 
-              let receiptHtml = '<span class="sahla-receipt-none">No receipt</span>';
+              let receiptHtml = '<span class="sahla-receipt-none">—</span>';
               if (c.receipt_url) {
                 receiptHtml = `<a class="sahla-receipt-thumb" href="${esc(c.receipt_url)}" target="_blank" rel="noopener noreferrer">
-                  📄 View Receipt
+                  📄 ${esc(viewReceiptText)}
                 </a>`;
               }
 
@@ -8491,16 +8573,16 @@
                 <td>${receiptHtml}</td>
                 <td>
                   <button type="button" class="btn-orders-details" onclick="openSahlaOrderDetails('${c.id}', 'ongoing')">
-                    📦 Orders Details
+                    📦 ${esc(ordersDetailsBtnText)}
                   </button>
                 </td>
                 <td>
                   <div class="btn-row">
                     <button type="button" class="btn-sahla-approve" onclick="approveSahlaPayment('${c.id}', '${pnumEsc}')">
-                      ✓ Approve
+                      ✓ ${esc(approveBtnText)}
                     </button>
                     <button type="button" class="btn-sahla-reject" onclick="rejectSahlaPayment('${c.id}', '${pnumEsc}')">
-                      ✕ Reject
+                      ✕ ${esc(rejectBtnText)}
                     </button>
                   </div>
                 </td>

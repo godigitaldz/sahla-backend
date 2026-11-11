@@ -439,19 +439,22 @@ export async function sendMorningGreetingToAvailableCouriers({
             user_id: uid,
             title,
             body,
-            persist_notification: false, // ZERO DB INSERTS: bypasses notifications table to eliminate DB pressure
+            persist_notification: true,
             force_activate_inactive_tokens: true,
             data: {
               type: 'delivery_morning_greeting',
               sound: 'default',
+              channel_id: 'high_importance_channel',
               source: 'working_hours_shift_start',
               sent_at: new Date().toISOString(),
             },
           },
         });
 
-        if (invokeRes.error) {
-          logger.warn?.(`[MorningGreeting] Push error for user ${uid}:`, invokeRes.error.message);
+        const invokeData = invokeRes.data;
+        const totalSent = invokeData?.summary?.total_sent ?? (invokeData?.success ? 1 : 0);
+        if (invokeRes.error || (invokeData && invokeData.success === false && totalSent === 0)) {
+          logger.warn?.(`[MorningGreeting] Push failed/no active token for user ${uid}:`, invokeRes.error?.message || invokeData?.message);
           failCount++;
         } else {
           sentCount++;

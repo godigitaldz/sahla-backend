@@ -1452,57 +1452,94 @@ router.post('/orders/:id/rebroadcast', requirePerformanceAuth, async (req, res) 
     const id = req.params.id;
     const { data: order, error: fErr } = await supabaseAdmin
       .from('orders')
-      .select('id, order_number, status, restaurant_id, fulfillment_type, parcel_sender_id')
+      .select('id, order_number, status, restaurant_id, delivery_person_id, fulfillment_type, parcel_sender_id')
       .eq('id', id)
       .maybeSingle();
     if (fErr) throw fErr;
     if (!order) return res.status(404).json({ success: false, error: 'Order not found' });
 
-    let recipients = [];
-    let kind = 'pending';
     const orderNumber = order.order_number || order.id;
 
     if (order.status === 'pending') {
-      kind = 'restaurant_owner';
-      const [restOps, adminIds] = await Promise.all([
-        order.restaurant_id ? getRestaurantOpsUserIds(order.restaurant_id) : [],
-        getActiveAdminUserIds(),
-      ]);
-      recipients = [...new Set([...restOps, ...adminIds])];
-      if (recipients.length) {
-        await supabasePushGateway.sendPush({
-          userIds: recipients,
-          title: 'طلب جديد بانتظار التأكيد',
-          body: `الطلب #${orderNumber} ما زال بانتظار التأكيد.`,
-          data: {
-            type: 'order_pending_rebroadcast',
-            order_id: id,
-            order_number: orderNumber,
-          },
+      const recipients = order.restaurant_id ? await getRestaurantOpsUserIds(order.restaurant_id) : [];
+      if (!recipients.length) {
+        return res.status(400).json({
+          success: false,
+          kind: 'restaurant',
+          error: 'لم يتم العثور على مستلمي إشعارات للمطعم.',
+          recipients: 0,
+          total_sent: 0,
         });
       }
-    } else {
-      kind = 'online_couriers';
-      recipients = await getOnlineAvailableCourierUserIds();
-      if (recipients.length) {
-        await supabasePushGateway.sendPush({
-          userIds: recipients,
-          title: 'طلب متاح للتوصيل',
-          body: `الطلب #${orderNumber} جاهز أو قيد التحضير وبانتظار مندوب توصيل.`,
-          data: {
-            type: 'courier_order_available',
-            order_id: id,
-            order_number: orderNumber,
-          },
-        });
-      }
+
+      const pushRes = await supabasePushGateway.sendPush({
+        userIds: recipients,
+        title: 'طلب جديد',
+        body: `الطلب #${orderNumber} لا يزال معلقاً.`,
+        data: {
+          type: 'new_order',
+          order_id: String(id),
+          order_number: String(orderNumber),
+          restaurant_id: String(order.restaurant_id || ''),
+          flow: 'admin_track_manual_pending_rebroadcast',
+          source: 'performance_dashboard',
+        },
+      });
+
+      return res.json({
+        success: true,
+        kind: 'restaurant',
+        message: 'تم إعادة البث إلى مالك/طاقم المطعم.',
+        recipients: recipients.length,
+        total_sent: pushRes.total_sent ?? recipients.length,
+      });
     }
 
-    return res.json({
-      success: true,
-      kind,
-      recipients: recipients.length,
-      total_sent: recipients.length,
+    if (order.status === 'preparing' || order.status === 'ready') {
+      if (order.delivery_person_id) {
+        return res.status(400).json({
+          success: false,
+          error: 'الطلب تم تعيينه لسائق بالفعل.',
+        });
+      }
+
+      const recipients = await getOnlineAvailableCourierUserIds();
+      if (!recipients.length) {
+        return res.status(400).json({
+          success: false,
+          kind: 'courier',
+          error: 'لا يوجد سائقو توصيل متاحون.',
+          recipients: 0,
+          total_sent: 0,
+        });
+      }
+
+      const pushRes = await supabasePushGateway.sendPush({
+        userIds: recipients,
+        title: 'طلب متاح',
+        body: `الطلب #${orderNumber} جاهز لتعيين سائق.`,
+        data: {
+          type: 'order_available',
+          order_id: String(id),
+          order_number: String(orderNumber),
+          restaurant_id: String(order.restaurant_id || ''),
+          flow: 'admin_track_manual_preparing_unassigned_rebroadcast',
+          source: 'performance_dashboard',
+        },
+      });
+
+      return res.json({
+        success: true,
+        kind: 'courier',
+        message: 'تم إعادة البث إلى سائقي التوصيل المتاحين.',
+        recipients: recipients.length,
+        total_sent: pushRes.total_sent ?? recipients.length,
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      error: 'حالة الطلب الحالية لا تدعم إعادة البث.',
     });
   } catch (e) {
     console.error('performance order rebroadcast', e);

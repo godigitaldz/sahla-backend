@@ -41,7 +41,7 @@ jobs:
             echo "::notice::Set SAHLA_CRON_SECRET to enable scheduled polls (no performance dashboard needed)."
             exit 0
           fi
-          POLL_URL="${URL:-https://www.sahla-delivery.com/api/internal/pending-orders-poll}"
+          POLL_URL="${URL:-https://sahla-backend.vercel.app/api/internal/pending-orders-poll}"
           args=(-fsS -H "Authorization: Bearer ${SECRET}")
           if [[ -n "${BYPASS:-}" ]]; then
             args+=(-H "x-vercel-protection-bypass: ${BYPASS}")

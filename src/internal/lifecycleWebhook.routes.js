@@ -361,6 +361,30 @@ async function runCronTick(req, res) {
     result.web_order_push_drainer = { skipped: true, reason: 'budget_exhausted' };
   }
 
+  // Stage: Reconcile / arm rolling push campaigns within 6.5 days
+  if (remainingMs() > 3_000) {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+      if (supabaseUrl && key) {
+        const resArm = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/schedule-push-campaign`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${key}`,
+            apikey: key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action: 'arm_pending' }),
+        });
+        if (resArm.ok) {
+          result.push_campaign_arm = await resArm.json();
+        }
+      }
+    } catch (e) {
+      log.warn('push campaign arm check failed', { error: e?.message });
+    }
+  }
+
   result.elapsed_ms = Date.now() - tickStartedAt;
   return res.json({ success: true, ...result });
 }

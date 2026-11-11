@@ -277,8 +277,8 @@ export async function handleOrderLifecycleEvent(payload, { logger = console } = 
       orderId,
       cohort: 'restaurant_ops',
       userIds: restaurantOpsIds,
-      title: 'طلب قيد الانتظار',
-      body: `الطلب #${orderNumber} ما زال قيد الانتظار.`,
+      title: 'طلب جديد',
+      body: `الطلب #${orderNumber} لا يزال معلقاً.`,
       data: {
         type: 'new_order',
         flow: `lifecycle_pending_${stageSuffix}_restaurant_rebroadcast`,
@@ -439,19 +439,22 @@ export async function handleOrderLifecycleEvent(payload, { logger = console } = 
     flow,
   }) {
     const courierIds = await getOnlineAvailableCourierUserIds(logger);
+    const rid = String(order.restaurant_id ?? '').trim();
     await sendDedupePush({
       dispatchKey: episodeDispatchKey(orderId, dispatchSuffix, order.courier_unassigned_episode_at),
       orderId,
       cohort: 'courier',
       userIds: courierIds,
-      title: 'طلب جديد بانتظار التوصيل',
-      body,
+      title: 'طلب متاح',
+      body: body || `الطلب #${orderNumber} جاهز لتعيين سائق.`,
       data: {
         type: 'order_available',
         stage,
         flow,
         order_id: orderId,
         order_number: orderNumber,
+        ...(rid ? { restaurant_id: rid } : {}),
+        source: 'lifecycle_preparing_unassigned_rebroadcast',
       },
     });
   }
