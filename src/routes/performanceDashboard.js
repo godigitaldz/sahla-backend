@@ -1483,6 +1483,7 @@ router.post('/orders/:id/rebroadcast', requirePerformanceAuth, async (req, res) 
           restaurant_id: String(order.restaurant_id || ''),
           flow: 'admin_track_manual_pending_rebroadcast',
           source: 'performance_dashboard',
+          skip_push_dedupe: true,
         },
       });
 
@@ -1516,8 +1517,8 @@ router.post('/orders/:id/rebroadcast', requirePerformanceAuth, async (req, res) 
 
       const pushRes = await supabasePushGateway.sendPush({
         userIds: recipients,
-        title: 'طلب متاح',
-        body: `الطلب #${orderNumber} جاهز لتعيين سائق.`,
+        title: 'طلب متاح للتوصيل',
+        body: `الطلب #${orderNumber} جاهز أو قيد التحضير وبانتظار مندوب توصيل.`,
         data: {
           type: 'order_available',
           order_id: String(id),
@@ -1525,6 +1526,8 @@ router.post('/orders/:id/rebroadcast', requirePerformanceAuth, async (req, res) 
           restaurant_id: String(order.restaurant_id || ''),
           flow: 'admin_track_manual_preparing_unassigned_rebroadcast',
           source: 'performance_dashboard',
+          click_action: 'FLUTTER_NOTIFICATION_CLICK',
+          skip_push_dedupe: true,
         },
       });
 
