@@ -5,7 +5,7 @@
   "scripts": {
     "prebuild": "node scripts/generate-firebase-messaging-sw.mjs",
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"
