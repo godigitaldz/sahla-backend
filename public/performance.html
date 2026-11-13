@@ -3477,16 +3477,16 @@
                       <span id="moConfigItemBasePrice" style="font-weight:700;color:#e65100;"></span>
                     </div>
 
-                    <!-- Sizes / Pricing Options -->
-                    <div id="moSizesGroup" class="mo-options-group hidden">
-                      <div class="mo-options-title" data-i18n="mo_opt_size">Size / Portion (الحجم)</div>
-                      <div id="moSizesPills" class="mo-pills"></div>
-                    </div>
-
                     <!-- Variants -->
                     <div id="moVariantsGroup" class="mo-options-group hidden">
                       <div class="mo-options-title" data-i18n="mo_opt_variant">Variant / Flavor (النوع)</div>
                       <div id="moVariantsPills" class="mo-pills"></div>
+                    </div>
+
+                    <!-- Sizes / Pricing Options -->
+                    <div id="moSizesGroup" class="mo-options-group hidden">
+                      <div class="mo-options-title" data-i18n="mo_opt_size">Size / Portion (الحجم)</div>
+                      <div id="moSizesPills" class="mo-pills"></div>
                     </div>
 
                     <!-- Supplements -->
@@ -7267,12 +7267,84 @@
           for (const item of items) {
             const opt = document.createElement('option');
             opt.value = item.id;
-            const priceStr = item.price > 0 ? `${item.price} DA` : 'Varied prices';
+            let priceVal = parseFloat(item.price) || 0;
+            if (priceVal <= 0 && Array.isArray(item.pricing_options) && item.pricing_options.length > 0) {
+              const pNums = item.pricing_options.map((p) => parseFloat(p.price) || 0).filter((p) => p > 0);
+              if (pNums.length > 0) priceVal = Math.min(...pNums);
+            }
+            const priceStr = priceVal > 0 ? `${priceVal} DA` : 'Varied prices';
             opt.textContent = `${item.name}${item.name_ar ? ' (' + item.name_ar + ')' : ''} - ${priceStr}`;
             optGroup.appendChild(opt);
           }
           itemSelect.appendChild(optGroup);
         }
+      }
+
+      function isDummySize(sizeStr) {
+        if (!sizeStr) return true;
+        const s = String(sizeStr).trim().toLowerCase();
+        return (
+          !s ||
+          s === 'default' ||
+          s === 'افتراضي' ||
+          s === 'standard' ||
+          s === 'normal' ||
+          s === 'عادي' ||
+          s === 'size 1' ||
+          s === 'taille 1' ||
+          /^size\s*1$/i.test(s)
+        );
+      }
+
+      function isDummyVariant(variantStr) {
+        if (!variantStr) return true;
+        const v = String(variantStr).trim().toLowerCase();
+        return (
+          !v ||
+          v === 'default' ||
+          v === 'افتراضي' ||
+          v === 'standard' ||
+          v === 'classic' ||
+          v === 'كلاسيك' ||
+          v === 'normal' ||
+          v === 'عادي'
+        );
+      }
+
+      function getMoItemVariantPricing(item, variantId) {
+        const allPricing = Array.isArray(item.pricing_options) ? item.pricing_options : [];
+        if (!allPricing.length) return [];
+        if (!variantId) return allPricing;
+        const filtered = allPricing.filter((p) => String(p.variant_id) === String(variantId));
+        if (filtered.length > 0) return filtered;
+        const unassigned = allPricing.filter((p) => !p.variant_id);
+        return unassigned.length > 0 ? unassigned : allPricing;
+      }
+
+      function getMoLocalizedVariantName(v) {
+        if (!v) return '';
+        const lang = window.currentSahlaLang || 'ar';
+        if (lang === 'ar') {
+          return v.name_ar || v.name || v.name_latin || '';
+        } else if (lang === 'fr') {
+          return v.name_latin || v.name || v.name_ar || '';
+        } else {
+          return v.name || v.name_latin || v.name_ar || '';
+        }
+      }
+
+      function getMoLocalizedSizeName(opt, idx) {
+        if (!opt) return `Size ${idx + 1}`;
+        const lang = window.currentSahlaLang || 'ar';
+        let val = '';
+        if (lang === 'ar') {
+          val = opt.size_ar || opt.size || opt.size_latin || '';
+        } else if (lang === 'fr') {
+          val = opt.size_latin || opt.size || opt.size_ar || '';
+        } else {
+          val = opt.size || opt.size_latin || opt.size_ar || '';
+        }
+        return val || `Size ${idx + 1}`;
       }
 
       function onMoItemSelectChange() {
@@ -7290,73 +7362,192 @@
 
         box.classList.remove('hidden');
         $('moConfigItemName').textContent = `${moSelectedMenuItem.name}${moSelectedMenuItem.name_ar ? ' (' + moSelectedMenuItem.name_ar + ')' : ''}`;
-        $('moConfigItemBasePrice').textContent = `${moSelectedMenuItem.price} DA`;
         $('moConfigQty').value = '1';
         $('moConfigNotes').value = '';
 
-        // 1. Sizes
+        const rawVariants = Array.isArray(moSelectedMenuItem.variants) ? moSelectedMenuItem.variants : [];
+        const validVariants = rawVariants.filter((v) => v && (v.name || v.name_ar || v.name_latin || v.id));
+
         const sizesGroup = $('moSizesGroup');
         const sizesPills = $('moSizesPills');
-        sizesPills.innerHTML = '';
-        const pricingOptions = Array.isArray(moSelectedMenuItem.pricing_options) ? moSelectedMenuItem.pricing_options : [];
-
-        if (pricingOptions.length > 0) {
-          sizesGroup.classList.remove('hidden');
-          pricingOptions.forEach((opt, idx) => {
-            const label = document.createElement('label');
-            label.className = `mo-pill-label ${idx === 0 ? 'active' : ''}`;
-            const sizeLabel = opt.size_ar || opt.size || opt.size_latin || `Size ${idx + 1}`;
-            label.innerHTML = `
-              <input type="radio" name="mo_size_radio" value="${opt.id || idx}" ${idx === 0 ? 'checked' : ''} style="display:none;" />
-              <span>${sizeLabel} (<strong>${opt.price} DA</strong>)</span>
-            `;
-            if (idx === 0) {
-              moSelectedSize = { size: sizeLabel, price: parseFloat(opt.price) || 0 };
-            }
-            label.onclick = () => {
-              document.querySelectorAll('#moSizesPills .mo-pill-label').forEach((el) => el.classList.remove('active'));
-              label.classList.add('active');
-              moSelectedSize = { size: sizeLabel, price: parseFloat(opt.price) || 0 };
-              updateMoConfigPricePreview();
-            };
-            sizesPills.appendChild(label);
-          });
-        } else {
-          sizesGroup.classList.add('hidden');
-        }
-
-        // 2. Variants
         const variantsGroup = $('moVariantsGroup');
         const variantsPills = $('moVariantsPills');
+        sizesPills.innerHTML = '';
         variantsPills.innerHTML = '';
-        const rawVariants = Array.isArray(moSelectedMenuItem.variants) ? moSelectedMenuItem.variants : [];
-        const validVariants = rawVariants.filter((v) => v && (v.name || v.name_ar));
 
-        if (validVariants.length > 0) {
+        // Check if every variant has exactly one pricing option (matches Flutter mobile app hideUnifiedSizes / VerticalVariantPicker)
+        const hasMultipleVariants = validVariants.length > 1;
+        const everyVariantHasSinglePricing =
+          hasMultipleVariants &&
+          validVariants.every((v) => {
+            const pList = getMoItemVariantPricing(moSelectedMenuItem, v.id);
+            return pList.length === 1;
+          });
+
+        if (hasMultipleVariants && everyVariantHasSinglePricing) {
+          // Case A: 1 price per variant (e.g. Crêpes, Pancakes, Gaufres, Milkshakes, Jus)
+          // Hide size container completely; display variants with their prices directly on the pills
+          sizesGroup.classList.add('hidden');
           variantsGroup.classList.remove('hidden');
+
           validVariants.forEach((v, idx) => {
+            const pList = getMoItemVariantPricing(moSelectedMenuItem, v.id);
+            const pOpt = pList[0];
+            const price = pOpt ? (parseFloat(pOpt.price) || 0) : (parseFloat(moSelectedMenuItem.price) || 0);
+            const vName = getMoLocalizedVariantName(v);
+
             const label = document.createElement('label');
             label.className = `mo-pill-label ${idx === 0 ? 'active' : ''}`;
-            const vName = v.name_ar || v.name || v.name_latin || `Option ${idx + 1}`;
             label.innerHTML = `
               <input type="radio" name="mo_variant_radio" value="${v.id || idx}" ${idx === 0 ? 'checked' : ''} style="display:none;" />
-              <span>${vName}</span>
+              <span>${vName} (<strong>${price} DA</strong>)</span>
             `;
+
             if (idx === 0) {
               moSelectedVariant = vName;
+              moSelectedSize = { size: '', price: price, id: pOpt ? pOpt.id : null };
+              $('moConfigItemBasePrice').textContent = `${price} DA`;
             }
+
             label.onclick = () => {
               document.querySelectorAll('#moVariantsPills .mo-pill-label').forEach((el) => el.classList.remove('active'));
               label.classList.add('active');
               moSelectedVariant = vName;
+              moSelectedSize = { size: '', price: price, id: pOpt ? pOpt.id : null };
+              $('moConfigItemBasePrice').textContent = `${price} DA`;
+              updateMoConfigPricePreview();
             };
+
+            variantsPills.appendChild(label);
+          });
+        } else if (hasMultipleVariants) {
+          // Case B: Multiple variants with multiple sizes per variant
+          variantsGroup.classList.remove('hidden');
+
+          const renderSizesForSelectedVariant = (vObj) => {
+            const pList = getMoItemVariantPricing(moSelectedMenuItem, vObj.id);
+            sizesPills.innerHTML = '';
+
+            if (pList.length === 0) {
+              sizesGroup.classList.add('hidden');
+              moSelectedSize = { size: '', price: parseFloat(moSelectedMenuItem.price) || 0 };
+              $('moConfigItemBasePrice').textContent = `${moSelectedSize.price} DA`;
+            } else if (pList.length === 1 && isDummySize(getMoLocalizedSizeName(pList[0], 0))) {
+              sizesGroup.classList.add('hidden');
+              const opt = pList[0];
+              moSelectedSize = { size: '', price: parseFloat(opt.price) || parseFloat(moSelectedMenuItem.price) || 0, id: opt.id };
+              $('moConfigItemBasePrice').textContent = `${moSelectedSize.price} DA`;
+            } else {
+              sizesGroup.classList.remove('hidden');
+              pList.forEach((opt, sIdx) => {
+                const sLabel = getMoLocalizedSizeName(opt, sIdx);
+                const sPrice = parseFloat(opt.price) || 0;
+                const sBtn = document.createElement('label');
+                sBtn.className = `mo-pill-label ${sIdx === 0 ? 'active' : ''}`;
+                sBtn.innerHTML = `
+                  <input type="radio" name="mo_size_radio" value="${opt.id || sIdx}" ${sIdx === 0 ? 'checked' : ''} style="display:none;" />
+                  <span>${sLabel} (<strong>${sPrice} DA</strong>)</span>
+                `;
+                if (sIdx === 0) {
+                  moSelectedSize = { size: sLabel, price: sPrice, id: opt.id };
+                  $('moConfigItemBasePrice').textContent = `${sPrice} DA`;
+                }
+                sBtn.onclick = () => {
+                  document.querySelectorAll('#moSizesPills .mo-pill-label').forEach((el) => el.classList.remove('active'));
+                  sBtn.classList.add('active');
+                  moSelectedSize = { size: sLabel, price: sPrice, id: opt.id };
+                  $('moConfigItemBasePrice').textContent = `${sPrice} DA`;
+                  updateMoConfigPricePreview();
+                };
+                sizesPills.appendChild(sBtn);
+              });
+            }
+          };
+
+          validVariants.forEach((v, idx) => {
+            const vName = getMoLocalizedVariantName(v);
+            const label = document.createElement('label');
+            label.className = `mo-pill-label ${idx === 0 ? 'active' : ''}`;
+            label.innerHTML = `
+              <input type="radio" name="mo_variant_radio" value="${v.id || idx}" ${idx === 0 ? 'checked' : ''} style="display:none;" />
+              <span>${vName}</span>
+            `;
+
+            if (idx === 0) {
+              moSelectedVariant = vName;
+              renderSizesForSelectedVariant(v);
+            }
+
+            label.onclick = () => {
+              document.querySelectorAll('#moVariantsPills .mo-pill-label').forEach((el) => el.classList.remove('active'));
+              label.classList.add('active');
+              moSelectedVariant = vName;
+              renderSizesForSelectedVariant(v);
+              updateMoConfigPricePreview();
+            };
+
             variantsPills.appendChild(label);
           });
         } else {
+          // Case C: Single Variant or No Variants (e.g. Hot Chocolate, Brownie, Canette, Eau Minérale)
           variantsGroup.classList.add('hidden');
+          const singleVariant = validVariants[0] || null;
+          const rawVName = singleVariant ? getMoLocalizedVariantName(singleVariant) : '';
+          moSelectedVariant = isDummyVariant(rawVName) ? null : rawVName;
+
+          const pList = getMoItemVariantPricing(moSelectedMenuItem, singleVariant ? singleVariant.id : null);
+
+          if (pList.length === 0) {
+            sizesGroup.classList.add('hidden');
+            moSelectedSize = { size: '', price: parseFloat(moSelectedMenuItem.price) || 0 };
+            $('moConfigItemBasePrice').textContent = `${moSelectedSize.price} DA`;
+          } else if (pList.length === 1) {
+            const opt = pList[0];
+            const sLabel = getMoLocalizedSizeName(opt, 0);
+            if (isDummySize(sLabel)) {
+              sizesGroup.classList.add('hidden');
+              moSelectedSize = { size: '', price: parseFloat(opt.price) || parseFloat(moSelectedMenuItem.price) || 0, id: opt.id };
+              $('moConfigItemBasePrice').textContent = `${moSelectedSize.price} DA`;
+            } else {
+              sizesGroup.classList.remove('hidden');
+              const label = document.createElement('label');
+              label.className = 'mo-pill-label active';
+              label.innerHTML = `
+                <input type="radio" name="mo_size_radio" value="${opt.id || 0}" checked style="display:none;" />
+                <span>${sLabel} (<strong>${opt.price} DA</strong>)</span>
+              `;
+              moSelectedSize = { size: sLabel, price: parseFloat(opt.price) || 0, id: opt.id };
+              $('moConfigItemBasePrice').textContent = `${moSelectedSize.price} DA`;
+              sizesPills.appendChild(label);
+            }
+          } else {
+            sizesGroup.classList.remove('hidden');
+            pList.forEach((opt, idx) => {
+              const label = document.createElement('label');
+              label.className = `mo-pill-label ${idx === 0 ? 'active' : ''}`;
+              const sLabel = getMoLocalizedSizeName(opt, idx);
+              const sPrice = parseFloat(opt.price) || 0;
+              label.innerHTML = `
+                <input type="radio" name="mo_size_radio" value="${opt.id || idx}" ${idx === 0 ? 'checked' : ''} style="display:none;" />
+                <span>${sLabel} (<strong>${sPrice} DA</strong>)</span>
+              `;
+              if (idx === 0) {
+                moSelectedSize = { size: sLabel, price: sPrice, id: opt.id };
+                $('moConfigItemBasePrice').textContent = `${sPrice} DA`;
+              }
+              label.onclick = () => {
+                document.querySelectorAll('#moSizesPills .mo-pill-label').forEach((el) => el.classList.remove('active'));
+                label.classList.add('active');
+                moSelectedSize = { size: sLabel, price: sPrice, id: opt.id };
+                $('moConfigItemBasePrice').textContent = `${sPrice} DA`;
+                updateMoConfigPricePreview();
+              };
+              sizesPills.appendChild(label);
+            });
+          }
         }
 
-        // 3. Supplements
+        // Supplements
         const suppGroup = $('moSupplementsGroup');
         const suppList = $('moSupplementsList');
         suppList.innerHTML = '';
@@ -7367,7 +7558,7 @@
           rawSupps.forEach((s, idx) => {
             const itemDiv = document.createElement('label');
             itemDiv.className = 'mo-supp-item';
-            const sName = s.name_ar || s.name || 'Supplement';
+            const sName = getMoLocalizedVariantName(s) || s.name_ar || s.name || 'Supplement';
             const sPrice = parseFloat(s.price) || 0;
             itemDiv.innerHTML = `
               <input type="checkbox" data-supp-idx="${idx}" />
@@ -7380,7 +7571,7 @@
                 const sObj = rawSupps[parseInt(el.getAttribute('data-supp-idx'), 10)];
                 if (sObj) {
                   moSelectedSupplements.push({
-                    name: sObj.name_ar || sObj.name,
+                    name: getMoLocalizedVariantName(sObj) || sObj.name_ar || sObj.name,
                     price: parseFloat(sObj.price) || 0,
                   });
                 }
@@ -7414,8 +7605,12 @@
         const notes = $('moConfigNotes').value.trim();
 
         const descParts = [];
-        if (moSelectedSize) descParts.push(`Size: ${moSelectedSize.size}`);
-        if (moSelectedVariant) descParts.push(`Type: ${moSelectedVariant}`);
+        if (moSelectedSize && moSelectedSize.size && !isDummySize(moSelectedSize.size)) {
+          descParts.push(`Size: ${moSelectedSize.size}`);
+        }
+        if (moSelectedVariant && !isDummyVariant(moSelectedVariant)) {
+          descParts.push(`Type: ${moSelectedVariant}`);
+        }
         if (moSelectedSupplements.length > 0) {
           descParts.push(`Extras: ${moSelectedSupplements.map((s) => s.name).join(', ')}`);
         }
@@ -7432,8 +7627,8 @@
           total_price: unitPrice * qty,
           special_instructions: notes || null,
           customizations: {
-            selected_size: moSelectedSize ? moSelectedSize.size : null,
-            selected_variants: moSelectedVariant ? [moSelectedVariant] : [],
+            selected_size: moSelectedSize && moSelectedSize.size && !isDummySize(moSelectedSize.size) ? moSelectedSize.size : null,
+            selected_variants: moSelectedVariant && !isDummyVariant(moSelectedVariant) ? [moSelectedVariant] : [],
             selected_supplements: moSelectedSupplements,
             special_instructions: notes || null,
           },
