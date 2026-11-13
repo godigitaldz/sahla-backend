@@ -40,8 +40,11 @@ const SAHLA_PERF_I18N = {
     tab_tasks: 'المهام (إفريلي)',
 
     // Orders + Alerts Sections
+    sec_pending_and_new: 'الطلبات المعلقة والجديدة (مع تنبيهات المهلة)',
+    sec_pending_and_new_none: 'لا توجد طلبات معلقة أو جديدة.',
     sec_pending_stuck: 'طلبات معلقة تجاوزت المهلة (≥ الحد المسموح)',
     sec_picked_up_delayed: 'تم الاستلام — لم يتم التوصيل (≥ تأخير)',
+    sec_picked_up_none: 'لا توجد تنبيهات لطلبات مستلمة متأخرة.',
     sec_prep_assigned: 'قيد التحضير — السائق معيّن ولم يستلم (≥ 20 د)',
     sec_prep_assigned_none: 'لا توجد تنبيهات لطلبات قيد التحضير متأخرة.',
     sec_prep_unassigned: 'قيد التحضير — بانتظار سائق (≥ 5 د)',
@@ -443,8 +446,11 @@ const SAHLA_PERF_I18N = {
     tab_tasks: 'Tâches (Ifrili)',
 
     // Orders + Alerts Sections
+    sec_pending_and_new: 'Commandes en attente et nouvelles (alertes de délai)',
+    sec_pending_and_new_none: 'Aucune commande en attente ou nouvelle.',
     sec_pending_stuck: 'Commandes en attente (≥ seuil)',
     sec_picked_up_delayed: 'Récupérées — non livrées (≥ délai)',
+    sec_picked_up_none: 'Aucune alerte de commande récupérée en retard.',
     sec_prep_assigned: 'En préparation — Livreur assigné non récupéré (≥ 20 min)',
     sec_prep_assigned_none: 'Aucune alerte de préparation assignée en retard.',
     sec_prep_unassigned: "En préparation — En attente d'un livreur (≥ 5 min)",
@@ -846,8 +852,11 @@ const SAHLA_PERF_I18N = {
     tab_tasks: 'Tasks',
 
     // Orders + Alerts Sections
+    sec_pending_and_new: 'Pending & new orders (with threshold alerts)',
+    sec_pending_and_new_none: 'No pending or new orders.',
     sec_pending_stuck: 'Orders stuck in pending (≥ threshold)',
     sec_picked_up_delayed: 'Picked up — not delivered (≥ delay)',
+    sec_picked_up_none: 'No delayed picked-up alerts.',
     sec_prep_assigned: 'Preparing — Courier assigned not picked up (≥ 20 min)',
     sec_prep_assigned_none: 'No delayed preparing assigned alerts.',
     sec_prep_unassigned: 'Preparing — Waiting for courier (≥ 5 min)',
