@@ -1976,55 +1976,62 @@
         background: #fef2f2;
       }
       .mo-footer-container {
-        padding: 12px 22px 14px;
+        padding: 10px 18px;
         border-top: 1px solid var(--border);
         background: #f8fafc;
         display: flex;
         flex-direction: column;
-        gap: 10px;
         flex-shrink: 0;
+      }
+      .mo-footer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        width: 100%;
+        flex-wrap: nowrap;
       }
       .mo-summary-box {
         background: #0f172a;
         color: #fff;
-        border-radius: 10px;
-        padding: 10px 16px;
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 8px;
-        text-align: center;
+        border-radius: 8px;
+        padding: 6px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex: 1;
         box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
       }
-      @media (max-width: 900px) {
-        .mo-summary-box {
-          grid-template-columns: repeat(3, 1fr);
-        }
-      }
-      @media (max-width: 550px) {
-        .mo-summary-box {
-          grid-template-columns: repeat(2, 1fr);
-        }
+      .mo-summary-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        flex: 1;
       }
       .mo-summary-item .label {
-        font-size: 0.72rem;
+        font-size: 0.68rem;
         color: #94a3b8;
         text-transform: uppercase;
         margin-bottom: 2px;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
         font-weight: 600;
+        white-space: nowrap;
       }
       .mo-summary-item .value {
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         font-weight: 700;
+        white-space: nowrap;
       }
       .mo-summary-item.total .value {
         color: #f97316;
-        font-size: 1.25rem;
+        font-size: 1.12rem;
         font-weight: 800;
       }
       .mo-summary-item.cash .value {
         color: #10b981;
-        font-size: 1.25rem;
+        font-size: 1.12rem;
         font-weight: 800;
       }
       .mo-actions-footer {
@@ -2032,10 +2039,26 @@
         border-top: none;
         background: transparent;
         display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
+        gap: 8px;
+        flex-wrap: nowrap;
         align-items: center;
         justify-content: flex-end;
+        flex-shrink: 0;
+      }
+      @media (max-width: 1100px) {
+        .mo-footer-row {
+          flex-wrap: wrap;
+        }
+        .mo-summary-box {
+          min-width: 100%;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+        }
+        .mo-actions-footer {
+          width: 100%;
+          justify-content: flex-end;
+        }
       }
       .btn-mo-cancel {
         padding: 10px 18px;
@@ -3599,48 +3622,50 @@
           </div>
         </div>
 
-        <!-- Step 6: Bottom Sticky Footer with Financial Prices Banner & Action Buttons -->
+        <!-- Step 6: Bottom Sticky Footer with Financial Prices Banner & Action Buttons on Same Row -->
         <div class="mo-footer-container">
-          <!-- Prices Banner -->
-          <div class="mo-summary-box">
-            <div class="mo-summary-item">
-              <div class="label" data-i18n="mo_sum_subtotal">Subtotal</div>
-              <div class="value" id="moSumSubtotal">0 DA</div>
-            </div>
-            <div class="mo-summary-item">
-              <div class="label" data-i18n="mo_sum_delivery">Delivery Fee</div>
-              <div class="value" id="moSumDelivery">0 DA</div>
-            </div>
-            <div class="mo-summary-item">
-              <div class="label" data-i18n="mo_sum_service">Service Fee</div>
-              <div class="value" id="moSumService">0 DA</div>
-            </div>
-            <div class="mo-summary-item">
-              <div class="label" data-i18n="mo_sum_discount">Discount</div>
-              <div class="value" id="moSumDiscount" style="color:#ef5350;">-0 DA</div>
-            </div>
-            <div class="mo-summary-item total">
-              <div class="label" data-i18n="mo_sum_total">Total Amount</div>
-              <div class="value" id="moSumTotal">0 DA</div>
-            </div>
-            <div class="mo-summary-item cash">
-              <div class="label" data-i18n="mo_sum_cash">Cash to Collect</div>
-              <div class="value" id="moSumCash">0 DA</div>
-            </div>
-          </div>
-
           <!-- Result / Notification Banner -->
-          <div id="moResultBanner" class="force-push-result hidden" style="margin:0;"></div>
+          <div id="moResultBanner" class="force-push-result hidden" style="margin:0 0 8px 0;width:100%;"></div>
 
-          <!-- Action Execution Buttons -->
-          <div class="mo-actions-footer">
-            <button type="button" class="btn-mo-cancel" id="moCancelBtn" data-i18n="btn_cancel">Cancel</button>
-            <button type="button" class="btn-mo-send-restaurant" id="moSendRestaurantBtn" title="Sends pending order to restaurant to accept &amp; prepare" data-i18n="mo_btn_send_restaurant">
-              🛎️ Send Order to Restaurant (Pending)
-            </button>
-            <button type="button" class="btn-mo-broadcast-couriers" id="moBroadcastCouriersBtn" title="Creates preparing order and broadcasts immediately to couriers" data-i18n="mo_btn_broadcast_couriers">
-              🛵 Direct Broadcast to Delivery Men (Preparing)
-            </button>
+          <div class="mo-footer-row">
+            <!-- Prices Banner -->
+            <div class="mo-summary-box">
+              <div class="mo-summary-item">
+                <div class="label" data-i18n="mo_sum_subtotal">Subtotal</div>
+                <div class="value" id="moSumSubtotal">0 DA</div>
+              </div>
+              <div class="mo-summary-item">
+                <div class="label" data-i18n="mo_sum_delivery">Delivery Fee</div>
+                <div class="value" id="moSumDelivery">0 DA</div>
+              </div>
+              <div class="mo-summary-item">
+                <div class="label" data-i18n="mo_sum_service">Service Fee</div>
+                <div class="value" id="moSumService">0 DA</div>
+              </div>
+              <div class="mo-summary-item">
+                <div class="label" data-i18n="mo_sum_discount">Discount</div>
+                <div class="value" id="moSumDiscount" style="color:#ef5350;">-0 DA</div>
+              </div>
+              <div class="mo-summary-item total">
+                <div class="label" data-i18n="mo_sum_total">Total Amount</div>
+                <div class="value" id="moSumTotal">0 DA</div>
+              </div>
+              <div class="mo-summary-item cash">
+                <div class="label" data-i18n="mo_sum_cash">Cash to Collect</div>
+                <div class="value" id="moSumCash">0 DA</div>
+              </div>
+            </div>
+
+            <!-- Action Execution Buttons -->
+            <div class="mo-actions-footer">
+              <button type="button" class="btn-mo-cancel" id="moCancelBtn" data-i18n="btn_cancel">Cancel</button>
+              <button type="button" class="btn-mo-send-restaurant" id="moSendRestaurantBtn" title="Sends pending order to restaurant to accept &amp; prepare" data-i18n="mo_btn_send_restaurant">
+                🛎️ Send Order to Restaurant (Pending)
+              </button>
+              <button type="button" class="btn-mo-broadcast-couriers" id="moBroadcastCouriersBtn" title="Creates preparing order and broadcasts immediately to couriers" data-i18n="mo_btn_broadcast_couriers">
+                🛵 Direct Broadcast to Delivery Men (Preparing)
+              </button>
+            </div>
           </div>
         </div>
       </div>
