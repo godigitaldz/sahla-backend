@@ -32,6 +32,19 @@ interface RestaurantItem {
 
 const FEATURED_RESTAURANTS: RestaurantItem[] = [
   {
+    id: 'o-chicken-biskra',
+    name: 'O-Chicken Biskra',
+    tagAr: 'دجاج مشوي • أطباق • سندويتشات وعروض يومية',
+    tagFr: 'Poulet Rôti • Plats • Sandwiches & Box',
+    tagEn: 'Roasted Chicken • Platters • Sandwiches',
+    rating: 5.0,
+    deliveryTime: '20-30 دقيقة',
+    deliveryTimeEn: '20-30 min',
+    logo: 'https://pub-e75807f307834b89a8e0a2463ebb914f.r2.dev/847939330_18564854512076917_9054660436327542566_n.jpg',
+    cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/0-chicken.jpeg',
+    slug: 'o-chicken-biskra',
+  },
+  {
     id: 'brothers-food',
     name: 'Brothers Food',
     tagAr: 'برغر • طاكوس • ملفوف • كالزون',
@@ -274,6 +287,20 @@ const CONTENT = {
       contact: 'اتصل بنا',
       copyright: '© 2026 ساهلة (Sahla Delivery). جميع الحقوق محفوظة.',
     },
+    iosAnnouncement: {
+      bannerTag: 'تنبيه لمستخدمي iPhone',
+      bannerText: 'تطبيق App Store يخضع لتحديث مؤقت وسيتوفر قريباً! يمكنك تصفح المطاعم والطلب مباشرة عبر موقعنا الآن دون تحميل.',
+      bannerCta: 'تصفح واطلب الآن',
+      badgeText: 'قيد التحديث ⏳',
+      modalTitle: 'تطبيق App Store قيد التحديث ⏳',
+      modalDesc: 'تطبيق Sahla يخضع حالياً لتحديثات دورية على متجر App Store من قِبل Apple وسيكون متاحاً للتحميل قريباً جداً.',
+      modalHighlight: 'لا داعي للانتظار! يمكنك تصفح جميع مطاعمك المفضلة واختيار وجباتك وتأكيد طلبك مباشرة عبر موقعنا بكل سهولة وسرعة وبدون الحاجة لتطبيق.',
+      modalWebCta: '🍔 تصفح المطاعم والطلب عبر الويب',
+      modalWhatsappCta: '💬 طلب سريع عبر واتساب',
+      modalClose: 'إغلاق',
+      heroWebOrderBadge: '🌐 جديد: الطلب متاح مباشرة عبر الويب',
+      heroWebOrderText: 'تصفح المطاعم واطلب وجبتك المفضلة الآن ←',
+    },
   },
   fr: {
     nav: {
@@ -358,6 +385,20 @@ const CONTENT = {
       deleteAccount: 'Supprimer mon compte',
       contact: 'Contactez-nous',
       copyright: '© 2026 Sahla Delivery. Tous droits réservés.',
+    },
+    iosAnnouncement: {
+      bannerTag: 'Avis utilisateurs iPhone',
+      bannerText: 'L’application App Store est temporairement en mise à jour. Commandez directement sur notre site web sans application !',
+      bannerCta: 'Commander sur le Web',
+      badgeText: 'En mise à jour ⏳',
+      modalTitle: 'Application App Store en mise à jour ⏳',
+      modalDesc: 'L’application Sahla sur l’App Store est temporairement en cours de mise à jour Apple et sera disponible très bientôt.',
+      modalHighlight: 'Pas besoin d’attendre ! Vous pouvez parcourir tous nos restaurants partenaires et commander directement en ligne sans application.',
+      modalWebCta: '🍔 Voir les restaurants & commander',
+      modalWhatsappCta: '💬 Commander via WhatsApp',
+      modalClose: 'Fermer',
+      heroWebOrderBadge: '🌐 Nouveau : Commande directe sur le Web',
+      heroWebOrderText: 'Choisissez votre restaurant et commandez ←',
     },
   },
   en: {
@@ -444,11 +485,27 @@ const CONTENT = {
       contact: 'Contact Us',
       copyright: '© 2026 Sahla Delivery. All rights reserved.',
     },
+    iosAnnouncement: {
+      bannerTag: 'Notice for iPhone Users',
+      bannerText: 'The App Store app is temporarily updating. You can order directly via our website right now without an app!',
+      bannerCta: 'Order on the Web',
+      badgeText: 'Updating ⏳',
+      modalTitle: 'App Store App Updating Soon ⏳',
+      modalDesc: 'The Sahla iOS app on the App Store is temporarily undergoing updates and will be available shortly.',
+      modalHighlight: 'No need to wait! Browse all partner restaurants and order your favorite meals directly on our website.',
+      modalWebCta: '🍔 Browse Restaurants & Order on Web',
+      modalWhatsappCta: '💬 Order via WhatsApp',
+      modalClose: 'Close',
+      heroWebOrderBadge: '🌐 New: Direct Web Ordering Available',
+      heroWebOrderText: 'Pick your restaurant and order now ←',
+    },
   },
 };
 
 export default function HomePage() {
   const [lang, setLang] = useState<Language>('ar');
+  const [showBanner, setShowBanner] = useState<boolean>(true);
+  const [showAppStoreModal, setShowAppStoreModal] = useState<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -456,7 +513,34 @@ export default function HomePage() {
     if (saved && (saved === 'ar' || saved === 'fr' || saved === 'en')) {
       setLang(saved);
     }
+    const bannerDismissed = sessionStorage.getItem('sahla_hide_ios_banner');
+    if (bannerDismissed === '1') {
+      setShowBanner(false);
+    }
   }, []);
+
+  const handleDismissBanner = () => {
+    setShowBanner(false);
+    sessionStorage.setItem('sahla_hide_ios_banner', '1');
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAppStoreModal(false);
+      }
+    };
+    if (showAppStoreModal) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [showAppStoreModal]);
 
   const handleLanguageChange = (newLang: Language) => {
     setLang(newLang);
@@ -475,6 +559,37 @@ export default function HomePage() {
 
   return (
     <main className="landing-page" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* ----------------------------------------
+          IOS APP STORE TEMPORARY ANNOUNCEMENT BAR
+          ---------------------------------------- */}
+      {showBanner && (
+        <div className="ios-announcement-banner" role="alert">
+          <div className="ios-banner-container">
+            <div className="ios-banner-content">
+              <span className="ios-banner-tag">
+                <span className="ios-banner-pulse" />
+                {t.iosAnnouncement.bannerTag}
+              </span>
+              <span className="ios-banner-message">{t.iosAnnouncement.bannerText}</span>
+            </div>
+            <div className="ios-banner-actions">
+              <a href="#services" className="ios-banner-cta-btn">
+                <span>{t.iosAnnouncement.bannerCta}</span>
+                <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
+              </a>
+              <button
+                type="button"
+                className="ios-banner-close-btn"
+                onClick={handleDismissBanner}
+                aria-label="Dismiss banner"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ----------------------------------------
           POLISHED HEADER / NAVBAR
           ---------------------------------------- */}
@@ -574,15 +689,15 @@ export default function HomePage() {
 
             {/* Guaranteed Same-Row Store Buttons on Mobile & Desktop */}
             <div className="hero-download-group" id="download-app">
-              {/* App Store Button */}
-              <a
-                href={APP_STORE_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="store-btn"
-                aria-label="Download on App Store"
+              {/* App Store Button (with Updating Badge & Modal trigger) */}
+              <button
+                type="button"
+                onClick={() => setShowAppStoreModal(true)}
+                className="store-btn store-btn-appstore"
+                aria-label="Download on App Store (Updating)"
                 dir="ltr"
               >
+                <span className="store-badge-tempo">{t.iosAnnouncement.badgeText}</span>
                 <svg className="store-btn-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.67-.82 1.13-1.96 1.01-3.1-.98.04-2.17.65-2.87 1.47-.62.72-1.16 1.88-1.01 2.99 1.1.09 2.2-.54 2.87-1.36z" />
                 </svg>
@@ -590,7 +705,7 @@ export default function HomePage() {
                   <span className="store-btn-label">Download on</span>
                   <span className="store-btn-name">App Store</span>
                 </div>
-              </a>
+              </button>
 
               {/* Google Play Button */}
               <a
@@ -608,6 +723,14 @@ export default function HomePage() {
                   <span className="store-btn-label">Get it on</span>
                   <span className="store-btn-name">Google Play</span>
                 </div>
+              </a>
+            </div>
+
+            {/* Direct Web Ordering Banner right in Hero */}
+            <div className="hero-web-order-card">
+              <a href="#services" className="hero-web-order-link">
+                <span className="hero-web-order-pill">{t.iosAnnouncement.heroWebOrderBadge}</span>
+                <span className="hero-web-order-prompt">{t.iosAnnouncement.heroWebOrderText}</span>
               </a>
             </div>
           </div>
@@ -899,14 +1022,14 @@ export default function HomePage() {
 
           {/* Store Download Buttons (Google Play & App Store) */}
           <div className="hero-download-group footer-download-group">
-            <a
-              href={APP_STORE_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="store-btn"
-              aria-label="Download on App Store"
+            <button
+              type="button"
+              onClick={() => setShowAppStoreModal(true)}
+              className="store-btn store-btn-appstore"
+              aria-label="Download on App Store (Updating)"
               dir="ltr"
             >
+              <span className="store-badge-tempo">{t.iosAnnouncement.badgeText}</span>
               <svg className="store-btn-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.67-.82 1.13-1.96 1.01-3.1-.98.04-2.17.65-2.87 1.47-.62.72-1.16 1.88-1.01 2.99 1.1.09 2.2-.54 2.87-1.36z" />
               </svg>
@@ -914,7 +1037,7 @@ export default function HomePage() {
                 <span className="store-btn-label">Download on</span>
                 <span className="store-btn-name">App Store</span>
               </div>
-            </a>
+            </button>
 
             <a
               href={GOOGLE_PLAY_URL}
@@ -1019,6 +1142,65 @@ export default function HomePage() {
         </svg>
         <span className="floating-whatsapp-tooltip">{t.contact.chatWhatsapp}</span>
       </a>
+
+      {/* ----------------------------------------
+          IOS APP STORE TEMPORARY NOTICE MODAL
+          ---------------------------------------- */}
+      {showAppStoreModal && (
+        <div
+          className="ios-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowAppStoreModal(false)}
+        >
+          <div
+            className="ios-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            <div className="ios-modal-icon-wrap">
+              <span className="ios-modal-icon">🍎</span>
+              <span className="ios-modal-subicon">⏳</span>
+            </div>
+
+            <h3 className="ios-modal-title">{t.iosAnnouncement.modalTitle}</h3>
+            <p className="ios-modal-desc">{t.iosAnnouncement.modalDesc}</p>
+
+            <div className="ios-modal-highlight-box">
+              <span className="ios-highlight-star">✨</span>
+              <p>{t.iosAnnouncement.modalHighlight}</p>
+            </div>
+
+            <div className="ios-modal-buttons">
+              <a
+                href="#services"
+                className="ios-modal-primary-btn"
+                onClick={() => setShowAppStoreModal(false)}
+              >
+                <span>{t.iosAnnouncement.modalWebCta}</span>
+                <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
+              </a>
+
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="ios-modal-secondary-btn"
+              >
+                <span>{t.iosAnnouncement.modalWhatsappCta}</span>
+              </a>
+
+              <button
+                type="button"
+                className="ios-modal-close-link"
+                onClick={() => setShowAppStoreModal(false)}
+              >
+                {t.iosAnnouncement.modalClose}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
