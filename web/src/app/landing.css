@@ -1779,19 +1779,50 @@
 .ios-banner-container {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 0.6rem 1.25rem;
+  padding: 0.55rem 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.25rem;
+  direction: ltr !important; /* Top Left for Notice, Top Right for Close */
 }
 
-.ios-banner-content {
+.ios-banner-left {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.ios-banner-center {
   flex: 1;
-  min-width: 260px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.landing-page[dir="rtl"] .ios-banner-center {
+  direction: rtl;
+}
+
+.landing-page[dir="ltr"] .ios-banner-center {
+  direction: ltr;
+}
+
+.ios-banner-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ios-banner-message {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #78350F;
+  line-height: 1.45;
+  margin: 0;
+  text-align: center;
 }
 
 .ios-banner-tag {
@@ -1800,9 +1831,9 @@
   gap: 0.4rem;
   background: #F59E0B;
   color: #FFFFFF;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  padding: 0.22rem 0.6rem;
+  padding: 0.24rem 0.65rem;
   border-radius: 9999px;
   white-space: nowrap;
   flex-shrink: 0;
@@ -1811,8 +1842,8 @@
 }
 
 .ios-banner-pulse {
-  width: 6px;
-  height: 6px;
+  width: 6.5px;
+  height: 6.5px;
   background: #FFFFFF;
   border-radius: 50%;
   display: inline-block;
@@ -1825,50 +1856,17 @@
   100% { transform: scale(0.95); opacity: 0.8; }
 }
 
-.ios-banner-message {
-  font-weight: 600;
-  color: #78350F;
-}
-
-.ios-banner-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-shrink: 0;
-}
-
-.ios-banner-cta-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: #064E3B;
-  color: #FFFFFF;
-  font-size: 0.8rem;
-  font-weight: 700;
-  padding: 0.36rem 0.9rem;
-  border-radius: 9999px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(6, 78, 59, 0.22);
-  white-space: nowrap;
-}
-
-.ios-banner-cta-btn:hover {
-  background: #0A5C36;
-  transform: translateY(-1px);
-}
-
 .ios-banner-close-btn {
   background: transparent;
   border: none;
   color: #92400E;
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 700;
   cursor: pointer;
-  padding: 0.2rem 0.4rem;
+  padding: 0.2rem 0.45rem;
   line-height: 1;
   border-radius: 6px;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1876,36 +1874,54 @@
 
 .ios-banner-close-btn:hover {
   background: rgba(146, 64, 14, 0.12);
+  color: #78350F;
+  transform: scale(1.1);
 }
 
 @media (max-width: 768px) {
   .ios-banner-container {
-    padding: 0.5rem 0.85rem;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.45rem;
+    padding: 0.55rem 0.9rem 0.65rem;
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    grid-template-rows: auto auto !important;
+    row-gap: 0.45rem !important;
+    align-items: center !important;
   }
-  .ios-banner-content {
-    font-size: 0.8rem;
-    gap: 0.45rem;
+
+  .ios-banner-left {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important; /* Notice in Top Left */
   }
-  .ios-banner-tag {
-    font-size: 0.68rem;
-    padding: 0.18rem 0.5rem;
+
+  .ios-banner-right {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important; /* Close in Top Right */
   }
+
+  .ios-banner-center {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    justify-self: center !important; /* Context in Middle */
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
   .ios-banner-message {
-    font-size: 0.77rem;
-    line-height: 1.35;
+    font-size: 0.79rem;
+    line-height: 1.4;
+    text-align: center;
   }
-  .ios-banner-actions {
-    width: 100%;
-    justify-content: space-between;
+
+  .ios-banner-tag {
+    font-size: 0.69rem;
+    padding: 0.18rem 0.52rem;
   }
-  .ios-banner-cta-btn {
-    flex: 1;
-    justify-content: center;
-    padding: 0.35rem 0.75rem;
-    font-size: 0.76rem;
+
+  .ios-banner-close-btn {
+    font-size: 1.2rem;
+    padding: 0.15rem 0.35rem;
   }
 }
 

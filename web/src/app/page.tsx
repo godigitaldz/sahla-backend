@@ -618,18 +618,21 @@ export default function HomePage() {
       {showBanner && (
         <div className="ios-announcement-banner" role="alert">
           <div className="ios-banner-container">
-            <div className="ios-banner-content">
+            {/* Top Left: Notice Badge */}
+            <div className="ios-banner-left">
               <span className="ios-banner-tag">
                 <span className="ios-banner-pulse" />
                 {t.iosAnnouncement.bannerTag}
               </span>
+            </div>
+
+            {/* Middle: Context Text */}
+            <div className="ios-banner-center">
               <span className="ios-banner-message">{t.iosAnnouncement.bannerText}</span>
             </div>
-            <div className="ios-banner-actions">
-              <a href="#services" className="ios-banner-cta-btn">
-                <span>{t.iosAnnouncement.bannerCta}</span>
-                <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
-              </a>
+
+            {/* Top Right: Close Button */}
+            <div className="ios-banner-right">
               <button
                 type="button"
                 className="ios-banner-close-btn"
