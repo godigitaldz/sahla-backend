@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin, getSupabaseAnon } from '@/server/supabase/admin';
+import { isAcceptingOrdersNow } from '@/lib/restaurant/restaurantAvailability';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,10 +33,10 @@ export async function GET() {
     }));
 
     // Fetch verified and open restaurants ONLY
-    const { data: rests, error } = await client
+    const { data: rawRests, error } = await client
       .from('restaurants')
       .select(
-        'id,name,name_ar,name_latin,description,image,cover_image_url,logo_url,rating,review_count,minimum_order,delivery_fee,estimated_delivery_time,is_open,is_featured,is_verified,is_new,public_slug,is_public_web_enabled'
+        'id,name,name_ar,name_latin,description,image,cover_image_url,logo_url,rating,review_count,minimum_order,delivery_fee,estimated_delivery_time,is_open,is_featured,is_verified,is_new,public_slug,is_public_web_enabled,opening_hours,closing_hours,vacation_starts_at,vacation_returns_at'
       )
       .eq('is_verified', true)
       .eq('is_open', true)
@@ -46,6 +47,9 @@ export async function GET() {
       console.error('[api/public/restaurants] Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Double-defense: enforce real working hours check against local Algerian time
+    const rests = (rawRests || []).filter((r) => isAcceptingOrdersNow(r as any));
 
     const restIds = (rests || []).map((r) => r.id);
 

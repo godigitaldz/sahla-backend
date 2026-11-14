@@ -52,7 +52,7 @@ const INITIAL_CUISINES: CuisineCategory[] = [
     id: 'all',
     name: 'All',
     nameAr: 'الكل',
-    icon: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/default_logo.png',
+    icon: '',
     sortOrder: 0,
   },
   {
@@ -627,7 +627,6 @@ export default function HomePage() {
   );
   const [cuisines, setCuisines] = useState<CuisineCategory[]>(INITIAL_CUISINES);
   const [selectedCuisineId, setSelectedCuisineId] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -646,7 +645,7 @@ export default function HomePage() {
                 id: 'all',
                 name: 'All',
                 nameAr: 'الكل',
-                icon: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/default_logo.png',
+                icon: '',
                 sortOrder: 0,
               },
               ...data.cuisines,
@@ -670,19 +669,8 @@ export default function HomePage() {
       list = list.filter((r) => r.cuisineTypeIds?.includes(selectedCuisineId));
     }
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      list = list.filter(
-        (r) =>
-          r.name.toLowerCase().includes(q) ||
-          (r.nameAr && r.nameAr.toLowerCase().includes(q)) ||
-          (r.tagAr && r.tagAr.toLowerCase().includes(q)) ||
-          (r.tagFr && r.tagFr.toLowerCase().includes(q))
-      );
-    }
-
     return list;
-  }, [restaurants, selectedCuisineId, searchQuery]);
+  }, [restaurants, selectedCuisineId]);
 
   useEffect(() => {
     const saved = localStorage.getItem('sahla_user_lang') as Language;
@@ -914,62 +902,16 @@ export default function HomePage() {
           ---------------------------------------- */}
       <section className="app-food-discovery-section" id="services">
         <div className="app-discovery-container">
-          {/* Top Bar: Location Note & Customer Service */}
+          {/* Top Bar: Location Tag */}
           <div className="app-top-info-row">
             <span className="app-location-tag">
               {t.restaurants.locationSubtitle}
             </span>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="app-customer-care-btn"
-              title={t.restaurants.customerCare}
-            >
-              <span className="app-customer-care-icon">🎧</span>
-              <span>{t.restaurants.customerCare}</span>
-            </a>
           </div>
 
           {/* Dynamic Greeting (صباح الخير / مساء الخير) */}
           <div className="app-greeting-row">
             <h1 className="app-greeting-title">{getGreeting(lang)}</h1>
-          </div>
-
-          {/* Real-time Search Input */}
-          <div className="app-search-wrapper">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#9CA3AF"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="app-search-icon"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              type="text"
-              className="app-search-input"
-              placeholder={t.restaurants.searchPlaceholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search restaurants"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="app-search-clear-btn"
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear search"
-              >
-                ✕
-              </button>
-            )}
           </div>
 
           {/* Horizontal Pinned Cuisines / Category Scroll */}
@@ -987,7 +929,22 @@ export default function HomePage() {
                     onClick={() => setSelectedCuisineId(c.id)}
                   >
                     <div className="app-category-avatar-wrap">
-                      {c.icon ? (
+                      {c.id === 'all' ? (
+                        <svg
+                          width="26"
+                          height="26"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke={isSelected ? '#064E3B' : '#4B5563'}
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+                          <path d="M7 2v20" />
+                          <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+                        </svg>
+                      ) : c.icon ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={c.icon}
@@ -1014,7 +971,13 @@ export default function HomePage() {
               {t.restaurants.appSectionTitle}
             </h2>
             <span className="app-discovery-count-pill">
-              {filteredRestaurants.length} {t.restaurants.openNowBadge}
+              {filteredRestaurants.length > 0
+                ? `${filteredRestaurants.length} ${t.restaurants.openNowBadge}`
+                : lang === 'ar'
+                ? 'يُفتح على 11:00 🕒'
+                : lang === 'fr'
+                ? 'Ouvre à 11:00 🕒'
+                : 'Opens at 11:00 🕒'}
             </span>
           </div>
 
@@ -1022,17 +985,26 @@ export default function HomePage() {
           <div className="app-restaurants-vertical-list">
             {filteredRestaurants.length === 0 ? (
               <div className="app-restaurants-empty-state">
-                <span className="app-empty-icon">🔍</span>
-                <h3>{t.restaurants.emptySearchTitle}</h3>
-                <p>{t.restaurants.emptySearchDesc}</p>
-                {(selectedCuisineId !== 'all' || searchQuery) && (
+                <span className="app-empty-icon">🕒</span>
+                <h3>
+                  {lang === 'ar'
+                    ? 'المطاعم مغلقة حالياً'
+                    : lang === 'fr'
+                    ? 'Les restaurants sont actuellement fermés'
+                    : 'Restaurants are currently closed'}
+                </h3>
+                <p>
+                  {lang === 'ar'
+                    ? 'يبدأ استقبال وتوصيل الطلبات يومياً عند الساعة 11:00 صباحاً بتوقيت بسكرة.'
+                    : lang === 'fr'
+                    ? 'Les commandes et livraisons débutent quotidiennement à partir de 11:00 (heure de Biskra).'
+                    : 'Order delivery resumes daily starting at 11:00 AM (Biskra local time).'}
+                </p>
+                {selectedCuisineId !== 'all' && (
                   <button
                     type="button"
                     className="app-reset-filter-btn"
-                    onClick={() => {
-                      setSelectedCuisineId('all');
-                      setSearchQuery('');
-                    }}
+                    onClick={() => setSelectedCuisineId('all')}
                   >
                     {t.restaurants.resetFilters}
                   </button>
@@ -1046,12 +1018,9 @@ export default function HomePage() {
                     : lang === 'fr' && resto.nameLatin
                     ? resto.nameLatin
                     : resto.name;
-                const tag =
-                  lang === 'ar' ? resto.tagAr : lang === 'fr' ? resto.tagFr : resto.tagEn;
                 const time =
                   lang === 'ar' ? resto.deliveryTime : resto.deliveryTimeEn;
                 const linkHref = resto.slug ? `/restaurants/${resto.slug}` : '#download-app';
-                const minOrder = resto.minimumOrder || 150;
                 const deliveryFee = resto.deliveryFee || 150;
                 const reviewCount = resto.reviewCount || 0;
 
@@ -1062,7 +1031,7 @@ export default function HomePage() {
                     className="app-restaurant-card-row"
                     title={displayName}
                   >
-                    {/* Media Column (Image + Min Order overlay + Floating Logo) */}
+                    {/* Media Column (Image + Floating Logo) */}
                     <div className="app-card-media-box">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -1077,11 +1046,6 @@ export default function HomePage() {
                       <div className="app-card-mini-logo">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={resto.logo} alt="" className="app-card-mini-logo-img" />
-                      </div>
-
-                      {/* Minimum Order overlay pill */}
-                      <div className="app-card-min-pill">
-                        <span>{minOrder} {t.restaurants.currency} {t.restaurants.minOrderSuffix}</span>
                       </div>
                     </div>
 
@@ -1107,7 +1071,7 @@ export default function HomePage() {
                         <span className="app-reviews-view-text">({t.restaurants.viewReviews})</span>
                       </div>
 
-                      {/* Delivery Row: Fee | Time | Cuisine Tag */}
+                      {/* Delivery Row: Fee | Time */}
                       <div className="app-card-delivery-meta">
                         <span className="app-meta-fee">
                           🛵 {deliveryFee} {t.restaurants.currency}
@@ -1115,10 +1079,6 @@ export default function HomePage() {
                         <span className="app-meta-sep">•</span>
                         <span className="app-meta-time">
                           🕒 {time}
-                        </span>
-                        <span className="app-meta-sep">•</span>
-                        <span className="app-meta-tag">
-                          {tag.split('•')[0]?.trim() || t.restaurants.cuisineFallback}
                         </span>
                       </div>
                     </div>

@@ -58,6 +58,14 @@
     {
       "path": "/api/internal/delivery-personnel/sync-working-hours",
       "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/internal/restaurants/sync-working-hours",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/internal/restaurants/sync-working-hours",
+      "schedule": "0 21 * * *"
     }
   ]
 }

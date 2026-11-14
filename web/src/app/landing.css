@@ -566,13 +566,11 @@
   width: 100%;
 }
 
-/* Top Location & Customer Care Bar */
+/* Top Location Bar */
 .app-top-info-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
 }
 
 .app-location-tag {
@@ -582,30 +580,9 @@
   letter-spacing: -0.01em;
 }
 
-.app-customer-care-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: #FEF3C7;
-  color: #78350F !important;
-  font-size: 0.82rem;
-  font-weight: 800;
-  padding: 0.35rem 0.85rem;
-  border-radius: 9999px;
-  text-decoration: none;
-  border: 1px solid #FDE68A;
-  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.12);
-  transition: all 0.2s ease;
-}
-
-.app-customer-care-btn:hover {
-  background: #FDE68A;
-  transform: translateY(-1px);
-}
-
 /* Big Greeting */
 .app-greeting-row {
-  margin-bottom: 1.15rem;
+  margin-bottom: 1.35rem;
 }
 
 .app-greeting-title {
