@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     if (!process.env.SUPABASE_URL) {
-      return NextResponse.json({ restaurants: [], total: 0 });
+      return NextResponse.json({ restaurants: [], cuisines: [], total: 0 });
     }
 
     let client;
@@ -16,13 +16,29 @@ export async function GET() {
       client = getSupabaseAnon();
     }
 
+    // Fetch pinned cuisine categories for the top filter row
+    const { data: rawCuisines } = await client
+      .from('cuisine_types')
+      .select('id, name, name_ar, icon, home_category_row_sort_order')
+      .eq('pinned_to_home_category_row', true)
+      .order('home_category_row_sort_order', { ascending: true });
+
+    const cuisines = (rawCuisines || []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      nameAr: c.name_ar,
+      icon: c.icon,
+      sortOrder: c.home_category_row_sort_order || 0,
+    }));
+
+    // Fetch verified and open restaurants ONLY
     const { data: rests, error } = await client
       .from('restaurants')
       .select(
-        'id,name,name_ar,name_latin,description,image,cover_image_url,logo_url,rating,estimated_delivery_time,is_open,is_featured,is_verified,is_new,public_slug,is_public_web_enabled'
+        'id,name,name_ar,name_latin,description,image,cover_image_url,logo_url,rating,review_count,minimum_order,delivery_fee,estimated_delivery_time,is_open,is_featured,is_verified,is_new,public_slug,is_public_web_enabled'
       )
       .eq('is_verified', true)
-      .order('is_open', { ascending: false })
+      .eq('is_open', true)
       .order('is_featured', { ascending: false })
       .order('rating', { ascending: false });
 
@@ -33,10 +49,10 @@ export async function GET() {
 
     const restIds = (rests || []).map((r) => r.id);
 
-    // Fetch top menu categories for tags
+    // Fetch menu items to associate cuisines and category tags
     const { data: items } = await client
       .from('menu_items')
-      .select('restaurant_id,category,categories(name,name_ar,name_latin)')
+      .select('restaurant_id,category,cuisine_type_id,categories(name,name_ar,name_latin)')
       .in('restaurant_id', restIds)
       .eq('is_available', true);
 
@@ -44,18 +60,23 @@ export async function GET() {
       string,
       { ar: Set<string>; fr: Set<string>; en: Set<string> }
     > = {};
+    const restCuisineMap: Record<string, Set<string>> = {};
 
     const skipKeywords = ['drink', 'boisson', 'مشروب', 'limited time offer', 'عرض محدود الوقت'];
 
     for (const it of items || []) {
       const restId = (it as any).restaurant_id;
       if (!catMap[restId]) {
-        catMap[restId] = {
-          ar: new Set(),
-          fr: new Set(),
-          en: new Set(),
-        };
+        catMap[restId] = { ar: new Set(), fr: new Set(), en: new Set() };
       }
+      if (!restCuisineMap[restId]) {
+        restCuisineMap[restId] = new Set();
+      }
+
+      if ((it as any).cuisine_type_id) {
+        restCuisineMap[restId].add((it as any).cuisine_type_id);
+      }
+
       const catsObj = (it as any).categories;
       const arName = (catsObj?.name_ar || it.category || '').trim();
       const frName = (catsObj?.name_latin || catsObj?.name || it.category || '').trim();
@@ -73,9 +94,9 @@ export async function GET() {
     }
 
     const restaurants = (rests || []).map((r) => {
-      const catsAr = Array.from(catMap[r.id]?.ar || []).slice(0, 4);
-      const catsFr = Array.from(catMap[r.id]?.fr || []).slice(0, 4);
-      const catsEn = Array.from(catMap[r.id]?.en || []).slice(0, 4);
+      const catsAr = Array.from(catMap[r.id]?.ar || []).slice(0, 3);
+      const catsFr = Array.from(catMap[r.id]?.fr || []).slice(0, 3);
+      const catsEn = Array.from(catMap[r.id]?.en || []).slice(0, 3);
       const dt = r.estimated_delivery_time || 30;
 
       const fallbackDescAr = r.description || 'أشهى المأكولات والوجبات السريعة';
@@ -91,6 +112,9 @@ export async function GET() {
         tagFr: catsFr.length > 0 ? catsFr.join(' • ') : fallbackDescFr,
         tagEn: catsEn.length > 0 ? catsEn.join(' • ') : fallbackDescEn,
         rating: Number(r.rating) || 5.0,
+        reviewCount: Number(r.review_count) || 0,
+        minimumOrder: Number(r.minimum_order) || 150,
+        deliveryFee: Number(r.delivery_fee) || 150,
         deliveryTime: `${dt}-${dt + 10} دقيقة`,
         deliveryTimeEn: `${dt}-${dt + 10} min`,
         logo:
@@ -103,18 +127,18 @@ export async function GET() {
           r.logo_url ||
           'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/default_cover.jpg',
         slug: r.public_slug,
-        isOpen: r.is_open ?? true,
+        isOpen: true,
         isFeatured: r.is_featured ?? false,
         isNew: r.is_new ?? false,
+        cuisineTypeIds: Array.from(restCuisineMap[r.id] || []),
       };
     });
 
     return NextResponse.json(
-      { restaurants, total: restaurants.length },
+      { restaurants, cuisines, total: restaurants.length },
       {
         headers: {
-          'Cache-Control':
-            'public, s-maxage=30, stale-while-revalidate=60',
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
         },
       }
     );

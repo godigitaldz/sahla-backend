@@ -25,6 +25,9 @@ interface RestaurantItem {
   tagFr: string;
   tagEn: string;
   rating: number;
+  reviewCount?: number;
+  minimumOrder?: number;
+  deliveryFee?: number;
   deliveryTime: string;
   deliveryTimeEn: string;
   logo: string;
@@ -33,6 +36,75 @@ interface RestaurantItem {
   isOpen?: boolean;
   isFeatured?: boolean;
   isNew?: boolean;
+  cuisineTypeIds?: string[];
+}
+
+interface CuisineCategory {
+  id: string;
+  name: string;
+  nameAr: string;
+  icon: string | null;
+  sortOrder: number;
+}
+
+const INITIAL_CUISINES: CuisineCategory[] = [
+  {
+    id: 'all',
+    name: 'All',
+    nameAr: 'الكل',
+    icon: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/default_logo.png',
+    sortOrder: 0,
+  },
+  {
+    id: '13a11997-2175-4057-9129-4f4b639d8db6',
+    name: 'Healthy',
+    nameAr: 'صحي',
+    icon: 'https://pub-66ae0208f9aa4258a7d4e176cd1b62df.r2.dev/Healthy.png',
+    sortOrder: 1,
+  },
+  {
+    id: 'e5021b58-9273-4d84-a56a-05da539f79db',
+    name: 'Fast Food',
+    nameAr: 'أكل سريع',
+    icon: 'https://pub-66ae0208f9aa4258a7d4e176cd1b62df.r2.dev/Fast%20Food.png',
+    sortOrder: 2,
+  },
+  {
+    id: '150e05cb-24c5-49bd-8dfa-cab1d5b870ba',
+    name: 'Desserts',
+    nameAr: 'حلويات',
+    icon: 'https://pub-66ae0208f9aa4258a7d4e176cd1b62df.r2.dev/Desserts.png',
+    sortOrder: 3,
+  },
+  {
+    id: '8e37ad82-4332-48d7-a248-d7aee9f0daec',
+    name: 'Traditional',
+    nameAr: 'تقليدي',
+    icon: 'https://pub-66ae0208f9aa4258a7d4e176cd1b62df.r2.dev/traditional.png',
+    sortOrder: 4,
+  },
+  {
+    id: 'd3e000fb-6124-4758-a2b7-3f14b92c35d1',
+    name: 'Grills',
+    nameAr: 'مشاوي',
+    icon: 'https://pub-66ae0208f9aa4258a7d4e176cd1b62df.r2.dev/grills.png',
+    sortOrder: 5,
+  },
+];
+
+function getGreeting(lang: Language): string {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const algDate = new Date(utc + 3600000); // Africa/Algiers UTC+1
+  const hour = algDate.getHours();
+
+  if (hour >= 5 && hour < 12) {
+    return lang === 'ar' ? 'صباح الخير' : lang === 'fr' ? 'Bonjour' : 'Good Morning';
+  } else if (hour >= 12 && hour < 18) {
+    return lang === 'ar' ? 'مساء الخير' : lang === 'fr' ? 'Bon après-midi' : 'Good Afternoon';
+  } else {
+    return lang === 'ar' ? 'مساء الخير' : lang === 'fr' ? 'Bonsoir' : 'Good Evening';
+  }
 }
 
 const FEATURED_RESTAURANTS: RestaurantItem[] = [
@@ -229,17 +301,24 @@ const CONTENT = {
       downloadGooglePlay: 'Google Play',
     },
     restaurants: {
-      eyebrow: 'شركاؤنا المميزون',
-      title: 'أفضل وأشهر مطاعم مدينتك في مكان واحد',
-      lead: 'اسحب وتصفح أشهر المطاعم المعتمدة والشريكة مع ساهلة. اطلب وجبتك المفضلة لتصلك ساخنة وطازجة لباب دارك.',
+      locationSubtitle: 'نقدم لكم أفضل الإختيارات في ولاية بسكرة',
+      customerCare: 'خدمة العملاء',
+      searchPlaceholder: 'البحث في المطاعم...',
+      appSectionTitle: 'استمتع بأفضل اختياراتنا لك',
+      openNowBadge: 'مفتوح الآن 🟢',
+      statusOpen: 'مفتوح الآن',
+      viewReviews: 'عرض جميع المراجعات',
+      currency: 'دج',
+      minOrderSuffix: 'الحد الأدنى',
+      cuisineFallback: 'أشهى الوجبات',
+      emptySearchTitle: 'لا توجد مطاعم مطابقة',
+      emptySearchDesc: 'جرب البحث باسم مطعم آخر أو اختر تصنيفاً مختلفاً من الأعلى',
+      resetFilters: 'عرض جميع المطاعم',
+      bottomNavHome: 'الرئيسية',
+      bottomNavOrders: 'الطلبات',
+      bottomNavHelp: 'المساعدة',
       viewMenu: 'تصفح المنيو',
       openApp: 'اطلب الآن',
-      filterAll: 'الكل',
-      filterOpen: 'مفتوح الآن',
-      filterFeatured: 'المميزة',
-      statusOpen: 'مفتوح الآن',
-      statusClosed: 'مغلق',
-      emptyFilter: 'لا توجد مطاعم مطابقة لهذا الفلتر حالياً.',
     },
     whySahla: {
       eyebrow: 'لماذا يفضلنا المئات؟',
@@ -334,17 +413,24 @@ const CONTENT = {
       downloadGooglePlay: 'Google Play',
     },
     restaurants: {
-      eyebrow: 'Nos Partenaires d’Excellence',
-      title: 'Les Meilleurs Restaurants de Votre Ville',
-      lead: 'Faites défiler et découvrez les établissements partenaires officiels. Commandez vos repas préférés livrés chez vous.',
+      locationSubtitle: 'Les meilleures sélections à Biskra',
+      customerCare: 'Service Client',
+      searchPlaceholder: 'Rechercher un restaurant...',
+      appSectionTitle: 'Nos meilleures sélections pour vous',
+      openNowBadge: 'ouverts maintenant 🟢',
+      statusOpen: 'Ouvert',
+      viewReviews: 'Voir les avis',
+      currency: 'DA',
+      minOrderSuffix: 'Min',
+      cuisineFallback: 'Repas savoureux',
+      emptySearchTitle: 'Aucun restaurant trouvé',
+      emptySearchDesc: 'Essayez un autre mot-clé ou changez de catégorie',
+      resetFilters: 'Voir tous les restaurants',
+      bottomNavHome: 'Accueil',
+      bottomNavOrders: 'Commandes',
+      bottomNavHelp: 'Aide',
       viewMenu: 'Voir le menu',
       openApp: 'Commander',
-      filterAll: 'Tous',
-      filterOpen: 'Ouvert maintenant',
-      filterFeatured: 'En vedette',
-      statusOpen: 'Ouvert',
-      statusClosed: 'Fermé',
-      emptyFilter: 'Aucun restaurant ne correspond à ce filtre pour le moment.',
     },
     whySahla: {
       eyebrow: 'Pourquoi des centaines nous font confiance ?',
@@ -439,17 +525,24 @@ const CONTENT = {
       downloadGooglePlay: 'Google Play',
     },
     restaurants: {
-      eyebrow: 'Featured Partner Restaurants',
-      title: 'Top Rated Eateries in Your City',
-      lead: 'Swipe and browse popular verified partner eateries on Sahla. Order your favorite meals delivered fresh to your door.',
+      locationSubtitle: 'The finest selections in Biskra',
+      customerCare: 'Customer Care',
+      searchPlaceholder: 'Search restaurants...',
+      appSectionTitle: 'Enjoy our best picks for you',
+      openNowBadge: 'open now 🟢',
+      statusOpen: 'Open Now',
+      viewReviews: 'View all reviews',
+      currency: 'DA',
+      minOrderSuffix: 'Min order',
+      cuisineFallback: 'Delicious Food',
+      emptySearchTitle: 'No restaurants found',
+      emptySearchDesc: 'Try another search keyword or switch category',
+      resetFilters: 'View all restaurants',
+      bottomNavHome: 'Home',
+      bottomNavOrders: 'Orders',
+      bottomNavHelp: 'Support',
       viewMenu: 'View Menu',
       openApp: 'Order Now',
-      filterAll: 'All',
-      filterOpen: 'Open Now',
-      filterFeatured: 'Featured',
-      statusOpen: 'Open',
-      statusClosed: 'Closed',
-      emptyFilter: 'No restaurants match this filter currently.',
     },
     whySahla: {
       eyebrow: 'Why Hundreds Choose Us',
@@ -529,9 +622,12 @@ export default function HomePage() {
   const [lang, setLang] = useState<Language>('ar');
   const [showBanner, setShowBanner] = useState<boolean>(true);
   const [showAppStoreModal, setShowAppStoreModal] = useState<boolean>(false);
-  const [restaurants, setRestaurants] = useState<RestaurantItem[]>(FEATURED_RESTAURANTS);
-  const [restaurantFilter, setRestaurantFilter] = useState<'all' | 'open' | 'featured'>('all');
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [restaurants, setRestaurants] = useState<RestaurantItem[]>(
+    FEATURED_RESTAURANTS.filter((r) => r.isOpen !== false)
+  );
+  const [cuisines, setCuisines] = useState<CuisineCategory[]>(INITIAL_CUISINES);
+  const [selectedCuisineId, setSelectedCuisineId] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -540,8 +636,22 @@ export default function HomePage() {
         const res = await fetch('/api/public/restaurants');
         if (!res.ok) return;
         const data = await res.json();
-        if (isMounted && Array.isArray(data?.restaurants) && data.restaurants.length > 0) {
-          setRestaurants(data.restaurants);
+        if (isMounted) {
+          if (Array.isArray(data?.restaurants) && data.restaurants.length > 0) {
+            setRestaurants(data.restaurants.filter((r: any) => r.isOpen !== false));
+          }
+          if (Array.isArray(data?.cuisines) && data.cuisines.length > 0) {
+            setCuisines([
+              {
+                id: 'all',
+                name: 'All',
+                nameAr: 'الكل',
+                icon: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/default_logo.png',
+                sortOrder: 0,
+              },
+              ...data.cuisines,
+            ]);
+          }
         }
       } catch (err) {
         // Fallback to static initial list
@@ -554,12 +664,25 @@ export default function HomePage() {
   }, []);
 
   const filteredRestaurants = useMemo(() => {
-    return restaurants.filter((r) => {
-      if (restaurantFilter === 'open') return r.isOpen;
-      if (restaurantFilter === 'featured') return r.isFeatured || r.rating >= 4.9;
-      return true;
-    });
-  }, [restaurants, restaurantFilter]);
+    let list = restaurants.filter((r) => r.isOpen !== false);
+
+    if (selectedCuisineId !== 'all') {
+      list = list.filter((r) => r.cuisineTypeIds?.includes(selectedCuisineId));
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (r) =>
+          r.name.toLowerCase().includes(q) ||
+          (r.nameAr && r.nameAr.toLowerCase().includes(q)) ||
+          (r.tagAr && r.tagAr.toLowerCase().includes(q)) ||
+          (r.tagFr && r.tagFr.toLowerCase().includes(q))
+      );
+    }
+
+    return list;
+  }, [restaurants, selectedCuisineId, searchQuery]);
 
   useEffect(() => {
     const saved = localStorage.getItem('sahla_user_lang') as Language;
@@ -598,13 +721,6 @@ export default function HomePage() {
   const handleLanguageChange = (newLang: Language) => {
     setLang(newLang);
     localStorage.setItem('sahla_user_lang', newLang);
-  };
-
-  const scrollCarousel = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const scrollAmount = direction === 'left' ? -310 : 310;
-      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
   };
 
   const t = CONTENT[lang];
@@ -794,179 +910,222 @@ export default function HomePage() {
       </section>
 
       {/* ----------------------------------------
-          FEATURED PARTNER RESTAURANTS (HORIZONTAL SWIPE)
+          APP-MATCHING RESTAURANTS & FOOD DISCOVERY SECTION
           ---------------------------------------- */}
-      <section className="partners-showcase-section" id="services">
-        <div className="partners-showcase-container">
-          <div className="section-head-with-controls">
-            <div className="section-head-text">
-              <span className="section-eyebrow">{t.restaurants.eyebrow}</span>
-              <h2 className="section-main-title">{t.restaurants.title}</h2>
-              <p className="section-lead">{t.restaurants.lead}</p>
-            </div>
-
-            {/* Desktop Navigation Arrows */}
-            <div className="carousel-nav-controls" aria-label="Carousel Navigation">
-              <button
-                type="button"
-                className="carousel-nav-btn"
-                onClick={() => scrollCarousel(isRtl ? 'right' : 'left')}
-                aria-label="Previous"
-                title="Previous"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={isRtl ? "M9 18l6-6-6-6" : "M15 18l-6-6 6-6"} />
-                </svg>
-              </button>
-              <button
-                type="button"
-                className="carousel-nav-btn"
-                onClick={() => scrollCarousel(isRtl ? 'left' : 'right')}
-                aria-label="Next"
-                title="Next"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={isRtl ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} />
-                </svg>
-              </button>
-            </div>
+      <section className="app-food-discovery-section" id="services">
+        <div className="app-discovery-container">
+          {/* Top Bar: Location Note & Customer Service */}
+          <div className="app-top-info-row">
+            <span className="app-location-tag">
+              {t.restaurants.locationSubtitle}
+            </span>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="app-customer-care-btn"
+              title={t.restaurants.customerCare}
+            >
+              <span className="app-customer-care-icon">🎧</span>
+              <span>{t.restaurants.customerCare}</span>
+            </a>
           </div>
 
-          {/* Quick Filter Bar */}
-          <div className="restaurants-filter-bar" role="tablist" aria-label="Restaurant filters">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={restaurantFilter === 'all'}
-              className={`restaurant-filter-pill ${restaurantFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setRestaurantFilter('all')}
-            >
-              <span>{t.restaurants.filterAll}</span>
-              <span className="filter-pill-badge">{restaurants.length}</span>
-            </button>
-
-            <button
-              type="button"
-              role="tab"
-              aria-selected={restaurantFilter === 'open'}
-              className={`restaurant-filter-pill ${restaurantFilter === 'open' ? 'active' : ''}`}
-              onClick={() => setRestaurantFilter('open')}
-            >
-              <span className="status-live-dot" aria-hidden="true" />
-              <span>{t.restaurants.filterOpen}</span>
-              <span className="filter-pill-badge">{restaurants.filter((r) => r.isOpen).length}</span>
-            </button>
-
-            <button
-              type="button"
-              role="tab"
-              aria-selected={restaurantFilter === 'featured'}
-              className={`restaurant-filter-pill ${restaurantFilter === 'featured' ? 'active' : ''}`}
-              onClick={() => setRestaurantFilter('featured')}
-            >
-              <span aria-hidden="true">⭐</span>
-              <span>{t.restaurants.filterFeatured}</span>
-              <span className="filter-pill-badge">
-                {restaurants.filter((r) => r.isFeatured || r.rating >= 4.9).length}
-              </span>
-            </button>
+          {/* Dynamic Greeting (صباح الخير / مساء الخير) */}
+          <div className="app-greeting-row">
+            <h1 className="app-greeting-title">{getGreeting(lang)}</h1>
           </div>
 
-          {/* Horizontal Scroll / Swipe Track */}
-          <div className="restaurants-swipe-wrapper">
-            <div
-              ref={scrollRef}
-              className="restaurants-swipe-track"
-              role="region"
-              aria-label="Featured Restaurants"
+          {/* Real-time Search Input */}
+          <div className="app-search-wrapper">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#9CA3AF"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="app-search-icon"
             >
-              {filteredRestaurants.length === 0 ? (
-                <div className="restaurants-empty-state">
-                  <p>{t.restaurants.emptyFilter}</p>
-                </div>
-              ) : (
-                filteredRestaurants.map((resto) => {
-                  const displayName =
-                    lang === 'ar' && resto.nameAr
-                      ? resto.nameAr
-                      : lang === 'fr' && resto.nameLatin
-                      ? resto.nameLatin
-                      : resto.name;
-                  const tag =
-                    lang === 'ar' ? resto.tagAr : lang === 'fr' ? resto.tagFr : resto.tagEn;
-                  const time =
-                    lang === 'ar' ? resto.deliveryTime : resto.deliveryTimeEn;
-                  const linkHref = resto.slug ? `/restaurants/${resto.slug}` : '#download-app';
-                  const isOpen = resto.isOpen ?? true;
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              className="app-search-input"
+              placeholder={t.restaurants.searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search restaurants"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="app-search-clear-btn"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
 
-                  return (
-                    <Link
-                      key={resto.id}
-                      href={linkHref}
-                      className={`restaurant-swipe-card ${isOpen ? 'is-open' : 'is-closed'}`}
-                      title={`${displayName} - ${resto.slug ? t.restaurants.viewMenu : t.restaurants.openApp}`}
-                    >
-                      {/* Cover Image */}
-                      <div className="restaurant-card-cover">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* Horizontal Pinned Cuisines / Category Scroll */}
+          <div className="app-categories-scroll-wrapper">
+            <div className="app-categories-scroll" role="tablist" aria-label="Food Categories">
+              {cuisines.map((c) => {
+                const isSelected = selectedCuisineId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    className={`app-category-pill-item ${isSelected ? 'active' : ''}`}
+                    onClick={() => setSelectedCuisineId(c.id)}
+                  >
+                    <div className="app-category-avatar-wrap">
+                      {c.icon ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={resto.cover}
-                          alt={displayName}
+                          src={c.icon}
+                          alt={c.nameAr}
+                          className="app-category-avatar-img"
                           loading="lazy"
-                          className="restaurant-cover-img"
                         />
-                        <div className="restaurant-cover-overlay" />
-
-                        {/* Time Badge */}
-                        <div className="restaurant-badge-time">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                          </svg>
-                          <span>{time}</span>
-                        </div>
-
-                        {/* Rating Badge */}
-                        <div className="restaurant-badge-rating">
-                          <span className="rating-star">★</span>
-                          <span>{resto.rating.toFixed(1)}</span>
-                        </div>
-                      </div>
-
-                      {/* Floating Logo + Live Status Meta Row */}
-                      <div className="restaurant-card-meta-row">
-                        <div className="restaurant-logo-holder">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={resto.logo}
-                            alt={`${displayName} Logo`}
-                            loading="lazy"
-                            className="restaurant-logo-img"
-                          />
-                        </div>
-
-                        <div className={`restaurant-live-badge ${isOpen ? 'status-open' : 'status-closed'}`}>
-                          <span className="live-badge-dot" />
-                          <span>{isOpen ? t.restaurants.statusOpen : t.restaurants.statusClosed}</span>
-                        </div>
-                      </div>
-
-                      {/* Card Body */}
-                      <div className="restaurant-card-body">
-                        <h3 className="restaurant-name">{displayName}</h3>
-                        <p className="restaurant-tags">{tag}</p>
-
-                        <div className="restaurant-action-btn">
-                          <span>{resto.slug ? t.restaurants.viewMenu : t.restaurants.openApp}</span>
-                          <span className="action-btn-arrow" aria-hidden="true">
-                            {isRtl ? '←' : '→'}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })
-              )}
+                      ) : (
+                        <span className="app-category-avatar-fallback">🍽️</span>
+                      )}
+                    </div>
+                    <span className="app-category-label">
+                      {lang === 'ar' ? c.nameAr : c.name}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
+          </div>
+
+          {/* Section Headline */}
+          <div className="app-discovery-head">
+            <h2 className="app-discovery-title">
+              {t.restaurants.appSectionTitle}
+            </h2>
+            <span className="app-discovery-count-pill">
+              {filteredRestaurants.length} {t.restaurants.openNowBadge}
+            </span>
+          </div>
+
+          {/* Vertical App-Matching Restaurant Feed */}
+          <div className="app-restaurants-vertical-list">
+            {filteredRestaurants.length === 0 ? (
+              <div className="app-restaurants-empty-state">
+                <span className="app-empty-icon">🔍</span>
+                <h3>{t.restaurants.emptySearchTitle}</h3>
+                <p>{t.restaurants.emptySearchDesc}</p>
+                {(selectedCuisineId !== 'all' || searchQuery) && (
+                  <button
+                    type="button"
+                    className="app-reset-filter-btn"
+                    onClick={() => {
+                      setSelectedCuisineId('all');
+                      setSearchQuery('');
+                    }}
+                  >
+                    {t.restaurants.resetFilters}
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredRestaurants.map((resto) => {
+                const displayName =
+                  lang === 'ar' && resto.nameAr
+                    ? resto.nameAr
+                    : lang === 'fr' && resto.nameLatin
+                    ? resto.nameLatin
+                    : resto.name;
+                const tag =
+                  lang === 'ar' ? resto.tagAr : lang === 'fr' ? resto.tagFr : resto.tagEn;
+                const time =
+                  lang === 'ar' ? resto.deliveryTime : resto.deliveryTimeEn;
+                const linkHref = resto.slug ? `/restaurants/${resto.slug}` : '#download-app';
+                const minOrder = resto.minimumOrder || 150;
+                const deliveryFee = resto.deliveryFee || 150;
+                const reviewCount = resto.reviewCount || 0;
+
+                return (
+                  <Link
+                    key={resto.id}
+                    href={linkHref}
+                    className="app-restaurant-card-row"
+                    title={displayName}
+                  >
+                    {/* Media Column (Image + Min Order overlay + Floating Logo) */}
+                    <div className="app-card-media-box">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={resto.cover}
+                        alt={displayName}
+                        loading="lazy"
+                        className="app-card-cover-photo"
+                      />
+                      <div className="app-card-cover-dim" />
+
+                      {/* Floating Mini Logo */}
+                      <div className="app-card-mini-logo">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={resto.logo} alt="" className="app-card-mini-logo-img" />
+                      </div>
+
+                      {/* Minimum Order overlay pill */}
+                      <div className="app-card-min-pill">
+                        <span>{minOrder} {t.restaurants.currency} {t.restaurants.minOrderSuffix}</span>
+                      </div>
+                    </div>
+
+                    {/* Info Column */}
+                    <div className="app-card-info-box">
+                      <div className="app-card-title-row">
+                        <h3 className="app-card-name">{displayName}</h3>
+                      </div>
+
+                      {/* Live Open Status */}
+                      <div className="app-card-live-status">
+                        <span className="app-live-pulse-dot" />
+                        <span>{t.restaurants.statusOpen}</span>
+                      </div>
+
+                      {/* Rating & Reviews */}
+                      <div className="app-card-rating-line">
+                        <span className="app-star-icon">★</span>
+                        <span className="app-rating-val">{resto.rating.toFixed(1)}</span>
+                        <span className="app-review-cnt">
+                          ({reviewCount > 0 ? `+${reviewCount}` : '+0'})
+                        </span>
+                        <span className="app-reviews-view-text">({t.restaurants.viewReviews})</span>
+                      </div>
+
+                      {/* Delivery Row: Fee | Time | Cuisine Tag */}
+                      <div className="app-card-delivery-meta">
+                        <span className="app-meta-fee">
+                          🛵 {deliveryFee} {t.restaurants.currency}
+                        </span>
+                        <span className="app-meta-sep">•</span>
+                        <span className="app-meta-time">
+                          🕒 {time}
+                        </span>
+                        <span className="app-meta-sep">•</span>
+                        <span className="app-meta-tag">
+                          {tag.split('•')[0]?.trim() || t.restaurants.cuisineFallback}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
       </section>
@@ -1326,6 +1485,31 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* ----------------------------------------
+          MOBILE APP EXPERIENCE DOCK (BOTTOM BAR)
+          ---------------------------------------- */}
+      <nav className="app-mobile-bottom-dock" aria-label="App Navigation">
+        <a href="#services" className="app-dock-item active">
+          <span className="app-dock-icon">🏠</span>
+          <span className="app-dock-label">{t.restaurants.bottomNavHome}</span>
+        </a>
+
+        <a href="#services" className="app-dock-item">
+          <span className="app-dock-icon">📋</span>
+          <span className="app-dock-label">{t.restaurants.bottomNavOrders}</span>
+        </a>
+
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="app-dock-item"
+        >
+          <span className="app-dock-icon">🎧</span>
+          <span className="app-dock-label">{t.restaurants.bottomNavHelp}</span>
+        </a>
+      </nav>
     </main>
   );
 }
