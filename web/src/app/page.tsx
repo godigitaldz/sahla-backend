@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import './landing.css';
@@ -19,6 +19,8 @@ type Language = 'ar' | 'fr' | 'en';
 interface RestaurantItem {
   id: string;
   name: string;
+  nameAr?: string;
+  nameLatin?: string;
   tagAr: string;
   tagFr: string;
   tagEn: string;
@@ -28,6 +30,9 @@ interface RestaurantItem {
   logo: string;
   cover: string;
   slug: string | null;
+  isOpen?: boolean;
+  isFeatured?: boolean;
+  isNew?: boolean;
 }
 
 const FEATURED_RESTAURANTS: RestaurantItem[] = [
@@ -229,6 +234,12 @@ const CONTENT = {
       lead: 'اسحب وتصفح أشهر المطاعم المعتمدة والشريكة مع ساهلة. اطلب وجبتك المفضلة لتصلك ساخنة وطازجة لباب دارك.',
       viewMenu: 'تصفح المنيو',
       openApp: 'اطلب الآن',
+      filterAll: 'الكل',
+      filterOpen: 'مفتوح الآن',
+      filterFeatured: 'المميزة',
+      statusOpen: 'مفتوح الآن',
+      statusClosed: 'مغلق',
+      emptyFilter: 'لا توجد مطاعم مطابقة لهذا الفلتر حالياً.',
     },
     whySahla: {
       eyebrow: 'لماذا يفضلنا المئات؟',
@@ -328,6 +339,12 @@ const CONTENT = {
       lead: 'Faites défiler et découvrez les établissements partenaires officiels. Commandez vos repas préférés livrés chez vous.',
       viewMenu: 'Voir le menu',
       openApp: 'Commander',
+      filterAll: 'Tous',
+      filterOpen: 'Ouvert maintenant',
+      filterFeatured: 'En vedette',
+      statusOpen: 'Ouvert',
+      statusClosed: 'Fermé',
+      emptyFilter: 'Aucun restaurant ne correspond à ce filtre pour le moment.',
     },
     whySahla: {
       eyebrow: 'Pourquoi des centaines nous font confiance ?',
@@ -427,6 +444,12 @@ const CONTENT = {
       lead: 'Swipe and browse popular verified partner eateries on Sahla. Order your favorite meals delivered fresh to your door.',
       viewMenu: 'View Menu',
       openApp: 'Order Now',
+      filterAll: 'All',
+      filterOpen: 'Open Now',
+      filterFeatured: 'Featured',
+      statusOpen: 'Open',
+      statusClosed: 'Closed',
+      emptyFilter: 'No restaurants match this filter currently.',
     },
     whySahla: {
       eyebrow: 'Why Hundreds Choose Us',
@@ -506,7 +529,37 @@ export default function HomePage() {
   const [lang, setLang] = useState<Language>('ar');
   const [showBanner, setShowBanner] = useState<boolean>(true);
   const [showAppStoreModal, setShowAppStoreModal] = useState<boolean>(false);
+  const [restaurants, setRestaurants] = useState<RestaurantItem[]>(FEATURED_RESTAURANTS);
+  const [restaurantFilter, setRestaurantFilter] = useState<'all' | 'open' | 'featured'>('all');
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRestaurants() {
+      try {
+        const res = await fetch('/api/public/restaurants');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isMounted && Array.isArray(data?.restaurants) && data.restaurants.length > 0) {
+          setRestaurants(data.restaurants);
+        }
+      } catch (err) {
+        // Fallback to static initial list
+      }
+    }
+    loadRestaurants();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredRestaurants = useMemo(() => {
+    return restaurants.filter((r) => {
+      if (restaurantFilter === 'open') return r.isOpen;
+      if (restaurantFilter === 'featured') return r.isFeatured || r.rating >= 4.9;
+      return true;
+    });
+  }, [restaurants, restaurantFilter]);
 
   useEffect(() => {
     const saved = localStorage.getItem('sahla_user_lang') as Language;
@@ -776,6 +829,46 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Quick Filter Bar */}
+          <div className="restaurants-filter-bar" role="tablist" aria-label="Restaurant filters">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={restaurantFilter === 'all'}
+              className={`restaurant-filter-pill ${restaurantFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setRestaurantFilter('all')}
+            >
+              <span>{t.restaurants.filterAll}</span>
+              <span className="filter-pill-badge">{restaurants.length}</span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={restaurantFilter === 'open'}
+              className={`restaurant-filter-pill ${restaurantFilter === 'open' ? 'active' : ''}`}
+              onClick={() => setRestaurantFilter('open')}
+            >
+              <span className="status-live-dot" aria-hidden="true" />
+              <span>{t.restaurants.filterOpen}</span>
+              <span className="filter-pill-badge">{restaurants.filter((r) => r.isOpen).length}</span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={restaurantFilter === 'featured'}
+              className={`restaurant-filter-pill ${restaurantFilter === 'featured' ? 'active' : ''}`}
+              onClick={() => setRestaurantFilter('featured')}
+            >
+              <span aria-hidden="true">⭐</span>
+              <span>{t.restaurants.filterFeatured}</span>
+              <span className="filter-pill-badge">
+                {restaurants.filter((r) => r.isFeatured || r.rating >= 4.9).length}
+              </span>
+            </button>
+          </div>
+
           {/* Horizontal Scroll / Swipe Track */}
           <div className="restaurants-swipe-wrapper">
             <div
@@ -784,63 +877,92 @@ export default function HomePage() {
               role="region"
               aria-label="Featured Restaurants"
             >
-              {FEATURED_RESTAURANTS.map((resto) => {
-                const tag = lang === 'ar' ? resto.tagAr : lang === 'fr' ? resto.tagFr : resto.tagEn;
-                const time = lang === 'ar' ? resto.deliveryTime : resto.deliveryTimeEn;
-                const linkHref = resto.slug ? `/restaurants/${resto.slug}` : '#download-app';
+              {filteredRestaurants.length === 0 ? (
+                <div className="restaurants-empty-state">
+                  <p>{t.restaurants.emptyFilter}</p>
+                </div>
+              ) : (
+                filteredRestaurants.map((resto) => {
+                  const displayName =
+                    lang === 'ar' && resto.nameAr
+                      ? resto.nameAr
+                      : lang === 'fr' && resto.nameLatin
+                      ? resto.nameLatin
+                      : resto.name;
+                  const tag =
+                    lang === 'ar' ? resto.tagAr : lang === 'fr' ? resto.tagFr : resto.tagEn;
+                  const time =
+                    lang === 'ar' ? resto.deliveryTime : resto.deliveryTimeEn;
+                  const linkHref = resto.slug ? `/restaurants/${resto.slug}` : '#download-app';
+                  const isOpen = resto.isOpen ?? true;
 
-                return (
-                  <div key={resto.id} className="restaurant-swipe-card">
-                    {/* Cover Image */}
-                    <div className="restaurant-card-cover">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={resto.cover}
-                        alt={resto.name}
-                        loading="lazy"
-                        className="restaurant-cover-img"
-                      />
-                      <div className="restaurant-cover-overlay" />
+                  return (
+                    <Link
+                      key={resto.id}
+                      href={linkHref}
+                      className={`restaurant-swipe-card ${isOpen ? 'is-open' : 'is-closed'}`}
+                      title={`${displayName} - ${resto.slug ? t.restaurants.viewMenu : t.restaurants.openApp}`}
+                    >
+                      {/* Cover Image */}
+                      <div className="restaurant-card-cover">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={resto.cover}
+                          alt={displayName}
+                          loading="lazy"
+                          className="restaurant-cover-img"
+                        />
+                        <div className="restaurant-cover-overlay" />
 
-                      {/* Time Badge */}
-                      <div className="restaurant-badge-time">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                        </svg>
-                        <span>{time}</span>
+                        {/* Time Badge */}
+                        <div className="restaurant-badge-time">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                          </svg>
+                          <span>{time}</span>
+                        </div>
+
+                        {/* Rating Badge */}
+                        <div className="restaurant-badge-rating">
+                          <span className="rating-star">★</span>
+                          <span>{resto.rating.toFixed(1)}</span>
+                        </div>
                       </div>
 
-                      {/* Rating Badge */}
-                      <div className="restaurant-badge-rating">
-                        <span className="rating-star">★</span>
-                        <span>{resto.rating.toFixed(1)}</span>
+                      {/* Floating Logo + Live Status Meta Row */}
+                      <div className="restaurant-card-meta-row">
+                        <div className="restaurant-logo-holder">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={resto.logo}
+                            alt={`${displayName} Logo`}
+                            loading="lazy"
+                            className="restaurant-logo-img"
+                          />
+                        </div>
+
+                        <div className={`restaurant-live-badge ${isOpen ? 'status-open' : 'status-closed'}`}>
+                          <span className="live-badge-dot" />
+                          <span>{isOpen ? t.restaurants.statusOpen : t.restaurants.statusClosed}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Overlapping Floating Logo */}
-                    <div className="restaurant-logo-holder">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={resto.logo}
-                        alt={`${resto.name} Logo`}
-                        loading="lazy"
-                        className="restaurant-logo-img"
-                      />
-                    </div>
+                      {/* Card Body */}
+                      <div className="restaurant-card-body">
+                        <h3 className="restaurant-name">{displayName}</h3>
+                        <p className="restaurant-tags">{tag}</p>
 
-                    {/* Card Body */}
-                    <div className="restaurant-card-body">
-                      <h3 className="restaurant-name">{resto.name}</h3>
-                      <p className="restaurant-tags">{tag}</p>
-
-                      <Link href={linkHref} className="restaurant-action-btn">
-                        <span>{resto.slug ? t.restaurants.viewMenu : t.restaurants.openApp}</span>
-                        <span aria-hidden="true">{isRtl ? '←' : '→'}</span>
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
+                        <div className="restaurant-action-btn">
+                          <span>{resto.slug ? t.restaurants.viewMenu : t.restaurants.openApp}</span>
+                          <span className="action-btn-arrow" aria-hidden="true">
+                            {isRtl ? '←' : '→'}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
