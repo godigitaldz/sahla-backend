@@ -67,13 +67,17 @@ export async function runPreparingUnassignedRebroadcastOnce({ logger = console }
     stats.couriers_online = courierIds.length;
     stats.admins = adminIds.length;
 
-    // Fetch dedupe logs from last 30 minutes
+    const candidateIds = (eligibleOrders ?? []).map((o) => String(o?.id ?? '')).filter(Boolean);
+    if (candidateIds.length === 0) return stats;
+
+    // Fetch dedupe logs from last 30 minutes for candidate orders only
     const dedupeSinceIso = safeIsoDate(30 * 60_000);
     const { data: recentLogs, error: logError } = await supabaseAdmin
       .from('push_notifications_log')
       .select('data, created_at')
       .eq('status', 'sent')
-      .gte('created_at', dedupeSinceIso);
+      .gte('created_at', dedupeSinceIso)
+      .in('data->>order_id', candidateIds);
 
     if (logError) {
       logger.warn?.('[preparing-unassigned-rebroadcast] log query failed, continuing:', logError.message);

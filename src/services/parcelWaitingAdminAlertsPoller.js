@@ -50,6 +50,9 @@ export async function runParcelWaitingAdminAlertsOnce({ logger = console } = {})
     stats.parcel_due = (waitingParcels ?? []).length;
     if (stats.parcel_due === 0) return stats;
 
+    const candidateIds = (waitingParcels ?? []).map((o) => String(o?.id ?? '')).filter(Boolean);
+    if (candidateIds.length === 0) return stats;
+
     const adminIds = await getActiveAdminUserIds(logger);
     if (adminIds.length === 0) return stats;
 
@@ -58,7 +61,8 @@ export async function runParcelWaitingAdminAlertsOnce({ logger = console } = {})
       .from('push_notifications_log')
       .select('data')
       .eq('status', 'sent')
-      .gte('created_at', dedupeSinceIso);
+      .gte('created_at', dedupeSinceIso)
+      .in('data->>order_id', candidateIds);
 
     const alreadyAlertedIds = new Set(
       (sentLogs ?? [])

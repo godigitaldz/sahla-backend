@@ -3,6 +3,13 @@ import { supabaseAdmin } from '../config/supabase.js';
 
 const router = Router();
 
+let _cachedMarketTabEnabled = null;
+let _cachedMarketTabTimestamp = 0;
+const MARKET_TAB_TTL_MS = 60_000;
+
+let _cachedVersionPolicy = new Map();
+const VERSION_POLICY_TTL_MS = 60_000;
+
 /**
  * GET /api/public/market-tab-enabled
  * Used by the Flutter app when PostgREST RLS returns no rows for `market_tab_enabled`.
@@ -10,6 +17,12 @@ const router = Router();
  */
 router.get('/market-tab-enabled', async (req, res) => {
   try {
+    const now = Date.now();
+    if (_cachedMarketTabEnabled !== null && (now - _cachedMarketTabTimestamp) < MARKET_TAB_TTL_MS) {
+      res.set('Cache-Control', 'public, max-age=60');
+      return res.json({ marketTabEnabled: _cachedMarketTabEnabled, _cached: true });
+    }
+
     const { data, error } = await supabaseAdmin
       .from('system_config')
       .select('config_value, config_type')
@@ -19,20 +32,24 @@ router.get('/market-tab-enabled', async (req, res) => {
     if (error) {
       console.error('[publicConfig] market_tab_enabled:', error.message);
       res.set('Cache-Control', 'public, max-age=30');
-      return res.json({ marketTabEnabled: true });
+      return res.json({ marketTabEnabled: _cachedMarketTabEnabled ?? true });
     }
 
     if (!data) {
+      _cachedMarketTabEnabled = true;
+      _cachedMarketTabTimestamp = now;
       res.set('Cache-Control', 'public, max-age=60');
       return res.json({ marketTabEnabled: true });
     }
 
     const enabled = parseMarketTabEnabledValue(data.config_value, data.config_type);
+    _cachedMarketTabEnabled = enabled;
+    _cachedMarketTabTimestamp = now;
     res.set('Cache-Control', 'public, max-age=60');
     return res.json({ marketTabEnabled: enabled });
   } catch (e) {
     console.error('[publicConfig] market-tab-enabled', e);
-    return res.json({ marketTabEnabled: true });
+    return res.json({ marketTabEnabled: _cachedMarketTabEnabled ?? true });
   }
 });
 
@@ -56,6 +73,13 @@ router.get('/app-version-policy', async (req, res) => {
       .trim();
     const platform = requestedPlatform === 'ios' ? 'ios' : 'android';
 
+    const now = Date.now();
+    const cached = _cachedVersionPolicy.get(platform);
+    if (cached && (now - cached.timestamp) < VERSION_POLICY_TTL_MS) {
+      res.set('Cache-Control', 'public, max-age=60');
+      return res.json({ ...cached.data, _cached: true });
+    }
+
     const keys = [
       'app_min_version_android',
       'app_min_version_ios',
@@ -73,6 +97,10 @@ router.get('/app-version-policy', async (req, res) => {
 
     if (error) {
       console.error('[publicConfig] app-version-policy:', error.message);
+      if (cached) {
+        res.set('Cache-Control', 'public, max-age=30');
+        return res.json({ ...cached.data, _cached: true });
+      }
       res.set('Cache-Control', 'public, max-age=30');
       return res.json({
         platform,
@@ -106,8 +134,7 @@ router.get('/app-version-policy', async (req, res) => {
     );
     const message = values.get('app_update_message');
 
-    res.set('Cache-Control', 'public, max-age=60');
-    return res.json({
+    const payload = {
       platform,
       forceUpdate,
       minimumVersion:
@@ -120,9 +147,23 @@ router.get('/app-version-policy', async (req, res) => {
           : null,
       message:
         typeof message === 'string' && message.trim() ? message.trim() : null,
-    });
+    };
+
+    _cachedVersionPolicy.set(platform, { data: payload, timestamp: now });
+
+    res.set('Cache-Control', 'public, max-age=60');
+    return res.json(payload);
   } catch (e) {
     console.error('[publicConfig] app-version-policy', e);
+    return res.status(500).json({
+      platform: 'android',
+      forceUpdate: false,
+      minimumVersion: null,
+      updateUrl: null,
+      message: null,
+    });
+  }
+});
     return res.json({
       platform: 'android',
       forceUpdate: false,

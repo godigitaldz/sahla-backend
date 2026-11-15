@@ -103,19 +103,29 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
     }
 
     const sinceIso = safeIsoDate(LOOKBACK_LOG_HOURS * 60 * 60_000);
-    const { data: sentLogs, error: logsError } = await supabaseAdmin
-      .from('push_notifications_log')
-      .select('data')
-      .eq('status', 'sent')
-      .gte('created_at', sinceIso);
+    const candidateOrderIds = [
+      ...(dueOrders ?? []).map((o) => String(o?.id ?? '')),
+      ...(dueDeliveryOrders ?? []).map((o) => String(o?.id ?? '')),
+    ].filter(Boolean);
 
-    if (logsError) {
-      logger.error?.(
-        '[pending-orders-poller] log dedupe query failed:',
-        logsError.message,
-      );
-      stats.error = logsError.message;
-      return stats;
+    let sentLogs = [];
+    if (candidateOrderIds.length > 0) {
+      const { data: logs, error: logsError } = await supabaseAdmin
+        .from('push_notifications_log')
+        .select('data')
+        .eq('status', 'sent')
+        .gte('created_at', sinceIso)
+        .in('data->>order_id', candidateOrderIds);
+
+      if (logsError) {
+        logger.error?.(
+          '[pending-orders-poller] log dedupe query failed:',
+          logsError.message,
+        );
+        stats.error = logsError.message;
+        return stats;
+      }
+      sentLogs = logs ?? [];
     }
 
     const sentFirstStageOrderIds = new Set(

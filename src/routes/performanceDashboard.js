@@ -2736,8 +2736,11 @@ router.post('/manual-order/create', requirePerformanceAuth, async (req, res) => 
     const cashPayableAmount = Math.floor(totalAmount / 10) * 10;
     const cashRoundingAdjustment = Math.round((cashPayableAmount - totalAmount) * 100) / 100;
 
-    // Delivery settlement calculations
-    const deliveryTax = Math.min(Math.round(deliveryFee * 0.15 * 100) / 100, 100);
+    // Delivery settlement calculations: <= 180 DA is tax-free (courier keeps 100%)
+    const taxFreeThreshold = 180;
+    const deliveryTax = deliveryFee <= taxFreeThreshold
+      ? 0
+      : Math.min(Math.round(deliveryFee * 0.15 * 100) / 100, 100);
     const netDeliveryAmount = Math.round((deliveryFee - deliveryTax) * 100) / 100;
     const net = Math.round((totalAmount - deliveryFee - serviceFee) * 100) / 100;
 
@@ -3132,222 +3135,259 @@ router.post('/tables/:id/revoke-sessions', requirePerformanceAuth, async (req, r
 /* Alerts                                                                    */
 /* ========================================================================= */
 
+let _alertsCache = {
+  data: null,
+  timestamp: 0,
+};
+let _alertsInFlightPromise = null;
+const ALERTS_CACHE_TTL_MS = 3_000; // 3-second micro-cache + promise coalescing
+
+async function fetchFreshAlerts() {
+  const minutes = alertThresholdMinutes();
+
+  const [cDm, cR, cPs, newReviewsGlobal, newReviewsDelivery] = await Promise.all([
+    supabaseAdmin
+      .from('delivery_man_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    supabaseAdmin
+      .from('restaurant_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    supabaseAdmin
+      .from('parcel_sender_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    countNewRestaurantReviewsInWindow(null),
+    countNewDeliveryReviewsInWindow(null),
+  ]);
+  if (cDm.error) throw cDm.error;
+  if (cR.error) throw cR.error;
+  if (cPs.error) throw cPs.error;
+
+  const { data: staleOrders, error: e1 } = await supabaseAdmin
+    .from('orders')
+    .select(ORDER_SELECT)
+    .eq('status', 'pending')
+    .is('parcel_sender_id', null)
+    .order('created_at', { ascending: true })
+    .limit(500);
+  if (e1) throw e1;
+
+  const { data: waitingParcels, error: wpErr } = await supabaseAdmin
+    .from('orders')
+    .select(PARCEL_ORDER_SELECT)
+    .not('parcel_sender_id', 'is', null)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(300);
+  if (wpErr) throw wpErr;
+
+  const openOfferStatuses = ['pending', 'cost_review', 'cost_proposed'];
+  const { data: openTasks, error: e2 } = await supabaseAdmin
+    .from('tasks')
+    .select(
+      `
+      id,
+      status,
+      delivery_man_id,
+      description,
+      location_name,
+      assigned_at,
+      created_at,
+      updated_at
+    `,
+    )
+    .in('status', openOfferStatuses)
+    .order('created_at', { ascending: true })
+    .limit(700);
+  if (e2) throw e2;
+
+  const taskRows = openTasks || [];
+  const taskIds = taskRows.map((t) => t.id).filter(Boolean);
+  const withProposal = new Set();
+  const chunk = 120;
+  for (let i = 0; i < taskIds.length; i += chunk) {
+    const slice = taskIds.slice(i, i + chunk);
+    if (!slice.length) break;
+    const { data: propRows, error: e3 } = await supabaseAdmin
+      .from('task_cost_proposals')
+      .select('task_id')
+      .in('task_id', slice);
+    if (e3) throw e3;
+    for (const row of propRows || []) {
+      if (row.task_id) withProposal.add(row.task_id);
+    }
+  }
+
+  const tasksFiltered = taskRows.filter((t) => !withProposal.has(t.id));
+  const tasksWithoutOffers = (await enrichTasksWithCourierDetails(tasksFiltered)).map((t) => ({
+    ...t,
+    ageMinutes: ageMinutes(t.created_at),
+  }))
+    .filter((t) => t.ageMinutes != null && t.ageMinutes >= minutes);
+
+  const stalePendingOrders = (staleOrders || []).map((o) => ({
+    ...enrichOrderCourier(o),
+    ageMinutes: ageMinutes(o.created_at),
+  }))
+    .filter((o) => o.ageMinutes != null && o.ageMinutes >= minutes);
+
+  const parcelWaitingOrders = (waitingParcels || []).map((o) => ({
+    ...enrichOrderCourier(o),
+    ageMinutes: ageMinutes(o.created_at),
+  }))
+    .filter((o) => o.ageMinutes != null && o.ageMinutes >= minutes);
+
+  const pickupDelayMin = Number(process.env.PERFORMANCE_PICKED_UP_DELAY_MINUTES) || 15;
+  const { data: delayedPickedUpOrders, error: dpErr } = await supabaseAdmin
+    .from('orders')
+    .select(ORDER_SELECT)
+    .eq('status', 'picked_up')
+    .order('updated_at', { ascending: true })
+    .limit(300);
+  if (dpErr) throw dpErr;
+
+  const pickedUpDeliveryDelayed = (delayedPickedUpOrders || []).map((o) => ({
+    ...enrichOrderCourier(o),
+    ageMinutes: ageMinutes(o.picked_up_at || o.updated_at),
+  })).filter((o) => o.ageMinutes != null && o.ageMinutes >= pickupDelayMin);
+
+  // Active alert for orders in preparing/ready with courier assigned but NOT picked up within threshold (20 min)
+  const preparingAssignedDelayMin = Number(process.env.PERFORMANCE_PREPARING_ASSIGNED_DELAY_MINUTES) || 20;
+  const preparingAssignedThresholdIso = new Date(Date.now() - preparingAssignedDelayMin * 60_000).toISOString();
+  const { data: delayedPreparingAssigned, error: paErr } = await supabaseAdmin
+    .from('orders')
+    .select(ORDER_SELECT)
+    .in('status', ['preparing', 'ready'])
+    .not('delivery_person_id', 'is', null)
+    .is('parcel_sender_id', null)
+    .or(`courier_assigned_at.lte.${preparingAssignedThresholdIso},and(courier_assigned_at.is.null,updated_at.lte.${preparingAssignedThresholdIso})`)
+    .order('created_at', { ascending: true })
+    .limit(300);
+  if (paErr) throw paErr;
+
+  const preparingAssignedDelayed = (delayedPreparingAssigned || []).map((o) => ({
+    ...enrichOrderCourier(o),
+    ageMinutes: ageMinutes(o.courier_assigned_at || o.updated_at),
+  })).filter((o) => o.ageMinutes != null && o.ageMinutes >= preparingAssignedDelayMin);
+
+  // Active alert for orders in preparing/ready with NO courier assigned within threshold (5 min)
+  const preparingUnassignedDelayMin = Number(process.env.PERFORMANCE_PREPARING_UNASSIGNED_DELAY_MINUTES) || 5;
+  const preparingUnassignedThresholdIso = new Date(Date.now() - preparingUnassignedDelayMin * 60_000).toISOString();
+  const { data: delayedPreparingUnassigned, error: puErr } = await supabaseAdmin
+    .from('orders')
+    .select(ORDER_SELECT)
+    .in('status', ['preparing', 'ready'])
+    .is('delivery_person_id', null)
+    .is('parcel_sender_id', null)
+    .lte('updated_at', preparingUnassignedThresholdIso)
+    .order('created_at', { ascending: true })
+    .limit(300);
+  if (puErr) throw puErr;
+
+  const preparingUnassignedDelayed = (delayedPreparingUnassigned || []).map((o) => ({
+    ...enrichOrderCourier(o),
+    ageMinutes: ageMinutes(o.courier_unassigned_episode_at || o.updated_at || o.created_at),
+  })).filter((o) => o.ageMinutes != null && o.ageMinutes >= preparingUnassignedDelayMin);
+
+  const dashboardPollMs = Number(process.env.PERFORMANCE_OPEN_DASHBOARD_POLL_MS || 0);
+  if (Number.isFinite(dashboardPollMs) && dashboardPollMs >= 30_000) {
+    const now = Date.now();
+    if (now - _lastDashboardEscalationPollMs >= dashboardPollMs) {
+      _lastDashboardEscalationPollMs = now;
+      setImmediate(async () => {
+        try {
+          const pending = await runPendingOrdersPollOnce({ logger: console });
+          const pickup = await runPickupDelayAdminAlertsOnce({ logger: console });
+          const preparingRebroadcast = await runPreparingUnassignedRebroadcastOnce({ logger: console }).catch(() => {});
+          const preparingAssignedAlerts = await runPreparingAssignedDelayAdminAlertsOnce({ logger: console }).catch(() => {});
+          console.info?.('[performance/alerts] background escalation poll', {
+            pending,
+            pickup,
+            preparingRebroadcast,
+            preparingAssignedAlerts,
+          });
+        } catch (err) {
+          console.error('[performance/alerts] background escalation poll failed', err);
+        }
+      });
+    }
+  }
+
+  const [
+    stalePendingOrdersWithItems,
+    parcelWaitingOrdersWithItems,
+    pickedUpDelayedWithItems,
+    preparingAssignedDelayedWithItems,
+    preparingUnassignedDelayedWithItems,
+  ] = await Promise.all([
+    attachOrderItemsSummary(stalePendingOrders),
+    attachOrderItemsSummary(parcelWaitingOrders),
+    attachOrderItemsSummary(pickedUpDeliveryDelayed),
+    attachOrderItemsSummary(preparingAssignedDelayed),
+    attachOrderItemsSummary(preparingUnassignedDelayed),
+  ]);
+
+  const activeAlertOrderIds = [
+    ...stalePendingOrders.map((o) => o.id),
+    ...parcelWaitingOrders.map((o) => o.id),
+    ...pickedUpDeliveryDelayed.map((o) => o.id),
+    ...preparingAssignedDelayed.map((o) => o.id),
+    ...preparingUnassignedDelayed.map((o) => o.id),
+  ].filter(Boolean);
+
+  return {
+    thresholdMinutes: minutes,
+    activeAlertOrderIds,
+    stalePendingOrders: stalePendingOrdersWithItems,
+    tasksWithoutOffers,
+    parcelWaitingOrders: parcelWaitingOrdersWithItems,
+    parcel_waiting_minutes: minutes,
+    pickedUpDeliveryDelayed: pickedUpDelayedWithItems,
+    picked_up_delay_minutes: pickupDelayMin,
+    preparingAssignedDelayed: preparingAssignedDelayedWithItems,
+    preparing_assigned_delay_minutes: preparingAssignedDelayMin,
+    preparingUnassignedDelayed: preparingUnassignedDelayedWithItems,
+    preparing_unassigned_delay_minutes: preparingUnassignedDelayMin,
+    pending_delivery_man_requests: cDm.count ?? 0,
+    pending_restaurant_requests: cR.count ?? 0,
+    pending_parcel_sender_requests: cPs.count ?? 0,
+    new_restaurant_reviews_in_window: newReviewsGlobal,
+    new_restaurant_reviews_hours: newReviewThresholdHours(),
+    new_delivery_reviews_in_window: newReviewsDelivery,
+  };
+}
+
 router.get('/alerts', requirePerformanceAuth, async (req, res) => {
   try {
-    const minutes = alertThresholdMinutes();
-
-    const [cDm, cR, cPs, newReviewsGlobal, newReviewsDelivery] = await Promise.all([
-      supabaseAdmin
-        .from('delivery_man_requests')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'pending'),
-      supabaseAdmin
-        .from('restaurant_requests')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'pending'),
-      supabaseAdmin
-        .from('parcel_sender_requests')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'pending'),
-      countNewRestaurantReviewsInWindow(null),
-      countNewDeliveryReviewsInWindow(null),
-    ]);
-    if (cDm.error) throw cDm.error;
-    if (cR.error) throw cR.error;
-    if (cPs.error) throw cPs.error;
-
-    const { data: staleOrders, error: e1 } = await supabaseAdmin
-      .from('orders')
-      .select(ORDER_SELECT)
-      .eq('status', 'pending')
-      .is('parcel_sender_id', null)
-      .order('created_at', { ascending: true })
-      .limit(500);
-    if (e1) throw e1;
-
-    const { data: waitingParcels, error: wpErr } = await supabaseAdmin
-      .from('orders')
-      .select(PARCEL_ORDER_SELECT)
-      .not('parcel_sender_id', 'is', null)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true })
-      .limit(300);
-    if (wpErr) throw wpErr;
-
-    const openOfferStatuses = ['pending', 'cost_review', 'cost_proposed'];
-    const { data: openTasks, error: e2 } = await supabaseAdmin
-      .from('tasks')
-      .select(
-        `
-        id,
-        status,
-        delivery_man_id,
-        description,
-        location_name,
-        assigned_at,
-        created_at,
-        updated_at
-      `,
-      )
-      .in('status', openOfferStatuses)
-      .order('created_at', { ascending: true })
-      .limit(700);
-    if (e2) throw e2;
-
-    const taskRows = openTasks || [];
-    const taskIds = taskRows.map((t) => t.id).filter(Boolean);
-    const withProposal = new Set();
-    const chunk = 120;
-    for (let i = 0; i < taskIds.length; i += chunk) {
-      const slice = taskIds.slice(i, i + chunk);
-      if (!slice.length) break;
-      const { data: propRows, error: e3 } = await supabaseAdmin
-        .from('task_cost_proposals')
-        .select('task_id')
-        .in('task_id', slice);
-      if (e3) throw e3;
-      for (const row of propRows || []) {
-        if (row.task_id) withProposal.add(row.task_id);
-      }
+    const now = Date.now();
+    if (_alertsCache.data && (now - _alertsCache.timestamp) < ALERTS_CACHE_TTL_MS) {
+      return res.json({
+        success: true,
+        ..._alertsCache.data,
+        _cached: true,
+      });
     }
 
-    const tasksFiltered = taskRows.filter((t) => !withProposal.has(t.id));
-    const tasksWithoutOffers = (await enrichTasksWithCourierDetails(tasksFiltered)).map((t) => ({
-      ...t,
-      ageMinutes: ageMinutes(t.created_at),
-    }))
-      .filter((t) => t.ageMinutes != null && t.ageMinutes >= minutes);
-
-    const stalePendingOrders = (staleOrders || []).map((o) => ({
-      ...enrichOrderCourier(o),
-      ageMinutes: ageMinutes(o.created_at),
-    }))
-      .filter((o) => o.ageMinutes != null && o.ageMinutes >= minutes);
-
-    const parcelWaitingOrders = (waitingParcels || []).map((o) => ({
-      ...enrichOrderCourier(o),
-      ageMinutes: ageMinutes(o.created_at),
-    }))
-      .filter((o) => o.ageMinutes != null && o.ageMinutes >= minutes);
-
-    const pickupDelayMin = Number(process.env.PERFORMANCE_PICKED_UP_DELAY_MINUTES) || 15;
-    const { data: delayedPickedUpOrders, error: dpErr } = await supabaseAdmin
-      .from('orders')
-      .select(ORDER_SELECT)
-      .eq('status', 'picked_up')
-      .order('updated_at', { ascending: true })
-      .limit(300);
-    if (dpErr) throw dpErr;
-
-    const pickedUpDeliveryDelayed = (delayedPickedUpOrders || []).map((o) => ({
-      ...enrichOrderCourier(o),
-      ageMinutes: ageMinutes(o.picked_up_at || o.updated_at),
-    })).filter((o) => o.ageMinutes != null && o.ageMinutes >= pickupDelayMin);
-
-    // Active alert for orders in preparing/ready with courier assigned but NOT picked up within threshold (20 min)
-    const preparingAssignedDelayMin = Number(process.env.PERFORMANCE_PREPARING_ASSIGNED_DELAY_MINUTES) || 20;
-    const preparingAssignedThresholdIso = new Date(Date.now() - preparingAssignedDelayMin * 60_000).toISOString();
-    const { data: delayedPreparingAssigned, error: paErr } = await supabaseAdmin
-      .from('orders')
-      .select(ORDER_SELECT)
-      .in('status', ['preparing', 'ready'])
-      .not('delivery_person_id', 'is', null)
-      .is('parcel_sender_id', null)
-      .or(`courier_assigned_at.lte.${preparingAssignedThresholdIso},and(courier_assigned_at.is.null,updated_at.lte.${preparingAssignedThresholdIso})`)
-      .order('created_at', { ascending: true })
-      .limit(300);
-    if (paErr) throw paErr;
-
-    const preparingAssignedDelayed = (delayedPreparingAssigned || []).map((o) => ({
-      ...enrichOrderCourier(o),
-      ageMinutes: ageMinutes(o.courier_assigned_at || o.updated_at),
-    })).filter((o) => o.ageMinutes != null && o.ageMinutes >= preparingAssignedDelayMin);
-
-    // Active alert for orders in preparing/ready with NO courier assigned within threshold (5 min)
-    const preparingUnassignedDelayMin = Number(process.env.PERFORMANCE_PREPARING_UNASSIGNED_DELAY_MINUTES) || 5;
-    const preparingUnassignedThresholdIso = new Date(Date.now() - preparingUnassignedDelayMin * 60_000).toISOString();
-    const { data: delayedPreparingUnassigned, error: puErr } = await supabaseAdmin
-      .from('orders')
-      .select(ORDER_SELECT)
-      .in('status', ['preparing', 'ready'])
-      .is('delivery_person_id', null)
-      .is('parcel_sender_id', null)
-      .lte('updated_at', preparingUnassignedThresholdIso)
-      .order('created_at', { ascending: true })
-      .limit(300);
-    if (puErr) throw puErr;
-
-    const preparingUnassignedDelayed = (delayedPreparingUnassigned || []).map((o) => ({
-      ...enrichOrderCourier(o),
-      ageMinutes: ageMinutes(o.courier_unassigned_episode_at || o.updated_at || o.created_at),
-    })).filter((o) => o.ageMinutes != null && o.ageMinutes >= preparingUnassignedDelayMin);
-
-    const dashboardPollMs = Number(process.env.PERFORMANCE_OPEN_DASHBOARD_POLL_MS || 0);
-    if (Number.isFinite(dashboardPollMs) && dashboardPollMs >= 30_000) {
-      const now = Date.now();
-      if (now - _lastDashboardEscalationPollMs >= dashboardPollMs) {
-        _lastDashboardEscalationPollMs = now;
-        setImmediate(async () => {
-          try {
-            const pending = await runPendingOrdersPollOnce({ logger: console });
-            const pickup = await runPickupDelayAdminAlertsOnce({ logger: console });
-            const preparingRebroadcast = await runPreparingUnassignedRebroadcastOnce({ logger: console }).catch(() => {});
-            const preparingAssignedAlerts = await runPreparingAssignedDelayAdminAlertsOnce({ logger: console }).catch(() => {});
-            console.info?.('[performance/alerts] background escalation poll', {
-              pending,
-              pickup,
-              preparingRebroadcast,
-              preparingAssignedAlerts,
-            });
-          } catch (err) {
-            console.error('[performance/alerts] background escalation poll failed', err);
-          }
+    if (!_alertsInFlightPromise) {
+      _alertsInFlightPromise = fetchFreshAlerts()
+        .then((payload) => {
+          _alertsCache = {
+            data: payload,
+            timestamp: Date.now(),
+          };
+          return payload;
+        })
+        .finally(() => {
+          _alertsInFlightPromise = null;
         });
-      }
     }
 
-    const [
-      stalePendingOrdersWithItems,
-      parcelWaitingOrdersWithItems,
-      pickedUpDelayedWithItems,
-      preparingAssignedDelayedWithItems,
-      preparingUnassignedDelayedWithItems,
-    ] = await Promise.all([
-      attachOrderItemsSummary(stalePendingOrders),
-      attachOrderItemsSummary(parcelWaitingOrders),
-      attachOrderItemsSummary(pickedUpDeliveryDelayed),
-      attachOrderItemsSummary(preparingAssignedDelayed),
-      attachOrderItemsSummary(preparingUnassignedDelayed),
-    ]);
-
-    const activeAlertOrderIds = [
-      ...stalePendingOrders.map((o) => o.id),
-      ...parcelWaitingOrders.map((o) => o.id),
-      ...pickedUpDeliveryDelayed.map((o) => o.id),
-      ...preparingAssignedDelayed.map((o) => o.id),
-      ...preparingUnassignedDelayed.map((o) => o.id),
-    ].filter(Boolean);
-
+    const payload = await _alertsInFlightPromise;
     return res.json({
       success: true,
-      thresholdMinutes: minutes,
-      activeAlertOrderIds,
-      stalePendingOrders: stalePendingOrdersWithItems,
-      tasksWithoutOffers,
-      parcelWaitingOrders: parcelWaitingOrdersWithItems,
-      parcel_waiting_minutes: minutes,
-      pickedUpDeliveryDelayed: pickedUpDelayedWithItems,
-      picked_up_delay_minutes: pickupDelayMin,
-      preparingAssignedDelayed: preparingAssignedDelayedWithItems,
-      preparing_assigned_delay_minutes: preparingAssignedDelayMin,
-      preparingUnassignedDelayed: preparingUnassignedDelayedWithItems,
-      preparing_unassigned_delay_minutes: preparingUnassignedDelayMin,
-      pending_delivery_man_requests: cDm.count ?? 0,
-      pending_restaurant_requests: cR.count ?? 0,
-      pending_parcel_sender_requests: cPs.count ?? 0,
-      new_restaurant_reviews_in_window: newReviewsGlobal,
-      new_restaurant_reviews_hours: newReviewThresholdHours(),
-      new_delivery_reviews_in_window: newReviewsDelivery,
+      ...payload,
     });
   } catch (e) {
     console.error('performance /alerts', e);
