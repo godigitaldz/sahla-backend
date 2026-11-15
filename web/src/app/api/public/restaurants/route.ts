@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin, getSupabaseAnon } from '@/server/supabase/admin';
-import { isAcceptingOrdersNow } from '@/lib/restaurant/restaurantAvailability';
+import { isAcceptingOrdersNow, getNextOpeningTime } from '@/lib/restaurant/restaurantAvailability';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,8 +48,8 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Double-defense: enforce real working hours check against local Algerian time
-    const rests = (rawRests || []).filter((r) => isAcceptingOrdersNow(r as any));
+    // Verified restaurants where is_open is true (business active)
+    const rests = rawRests || [];
 
     const restIds = (rests || []).map((r) => r.id);
 
@@ -131,7 +131,8 @@ export async function GET() {
           r.logo_url ||
           'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/default_cover.jpg',
         slug: r.public_slug,
-        isOpen: true,
+        isOpen: isAcceptingOrdersNow(r as any),
+        nextOpeningTime: getNextOpeningTime(r as any) || '11:00',
         isFeatured: r.is_featured ?? false,
         isNew: r.is_new ?? false,
         cuisineTypeIds: Array.from(restCuisineMap[r.id] || []),

@@ -143,82 +143,24 @@ export function isRestaurantOpenNow(restaurant, date = new Date()) {
 }
 
 /**
- * Synchronize restaurant working hours across all verified restaurants in DB.
- * Runs in background cron tick to keep `restaurants.is_open` 100% in sync with real hours.
+ * Restaurant working hours sync - NO-OP for database mutations.
+ * Restaurant owners and admins retain 100% manual control over `is_open`.
+ * Background crons must NEVER forcibly override manual owner closures or reset `is_open`.
  *
  * @param {object} [options]
  * @param {object} [options.logger=console]
  */
 export async function syncRestaurantWorkingHours({ logger = console } = {}) {
-  const startedAt = Date.now();
   const now = new Date();
   const algiersTime = getAlgiersTime(now);
 
-  const { data: restaurants, error } = await supabaseAdmin
-    .from('restaurants')
-    .select('id, name, is_open, is_verified, opening_hours, closing_hours, opening_hours_backup, closing_hours_backup, vacation_starts_at, vacation_returns_at')
-    .eq('is_verified', true);
-
-  if (error) {
-    logger.error?.('[RestaurantWorkingHours] Failed to fetch restaurants:', error.message);
-    throw error;
-  }
-
-  const list = restaurants || [];
-  const toOpen = [];
-  const toClose = [];
-
-  for (const r of list) {
-    const shouldBeOpen = isRestaurantOpenNow(r, now);
-    const currentlyOpen = r.is_open === true;
-
-    if (shouldBeOpen && !currentlyOpen) {
-      toOpen.push(r.id);
-    } else if (!shouldBeOpen && currentlyOpen) {
-      toClose.push(r.id);
-    }
-  }
-
-  let openedCount = 0;
-  let closedCount = 0;
-
-  if (toClose.length > 0) {
-    const { error: closeErr } = await supabaseAdmin
-      .from('restaurants')
-      .update({ is_open: false, updated_at: now.toISOString() })
-      .in('id', toClose);
-
-    if (closeErr) {
-      logger.error?.('[RestaurantWorkingHours] Failed to auto-close restaurants:', closeErr.message);
-    } else {
-      closedCount = toClose.length;
-      logger.log?.(`[RestaurantWorkingHours] Auto-closed ${closedCount} restaurants outside working hours`);
-    }
-  }
-
-  if (toOpen.length > 0) {
-    const { error: openErr } = await supabaseAdmin
-      .from('restaurants')
-      .update({ is_open: true, updated_at: now.toISOString() })
-      .in('id', toOpen);
-
-    if (openErr) {
-      logger.error?.('[RestaurantWorkingHours] Failed to auto-open restaurants:', openErr.message);
-    } else {
-      openedCount = toOpen.length;
-      logger.log?.(`[RestaurantWorkingHours] Auto-opened ${openedCount} restaurants inside working hours`);
-    }
-  }
-
-  const durationMs = Date.now() - startedAt;
+  logger.log?.('[RestaurantWorkingHours] Manual control preserved - no auto-overrides applied to restaurants.is_open');
 
   return {
     success: true,
     algiers_time: algiersTime.fullTimeString,
     weekday: algiersTime.weekday,
-    total_evaluated: list.length,
-    opened_count: openedCount,
-    closed_count: closedCount,
-    duration_ms: durationMs,
+    disabled: true,
+    message: 'Restaurant manual control preserved; no background DB mutations',
   };
 }

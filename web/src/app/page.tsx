@@ -34,6 +34,7 @@ interface RestaurantItem {
   cover: string;
   slug: string | null;
   isOpen?: boolean;
+  nextOpeningTime?: string;
   isFeatured?: boolean;
   isNew?: boolean;
   cuisineTypeIds?: string[];
@@ -52,7 +53,7 @@ const INITIAL_CUISINES: CuisineCategory[] = [
     id: 'all',
     name: 'All',
     nameAr: 'الكل',
-    icon: '',
+    icon: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/default_logo.png',
     sortOrder: 0,
   },
   {
@@ -622,9 +623,7 @@ export default function HomePage() {
   const [lang, setLang] = useState<Language>('ar');
   const [showBanner, setShowBanner] = useState<boolean>(true);
   const [showAppStoreModal, setShowAppStoreModal] = useState<boolean>(false);
-  const [restaurants, setRestaurants] = useState<RestaurantItem[]>(
-    FEATURED_RESTAURANTS.filter((r) => r.isOpen !== false)
-  );
+  const [restaurants, setRestaurants] = useState<RestaurantItem[]>(FEATURED_RESTAURANTS);
   const [cuisines, setCuisines] = useState<CuisineCategory[]>(INITIAL_CUISINES);
   const [selectedCuisineId, setSelectedCuisineId] = useState<string>('all');
 
@@ -637,7 +636,7 @@ export default function HomePage() {
         const data = await res.json();
         if (isMounted) {
           if (Array.isArray(data?.restaurants) && data.restaurants.length > 0) {
-            setRestaurants(data.restaurants.filter((r: any) => r.isOpen !== false));
+            setRestaurants(data.restaurants);
           }
           if (Array.isArray(data?.cuisines) && data.cuisines.length > 0) {
             setCuisines([
@@ -645,7 +644,7 @@ export default function HomePage() {
                 id: 'all',
                 name: 'All',
                 nameAr: 'الكل',
-                icon: '',
+                icon: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/default_logo.png',
                 sortOrder: 0,
               },
               ...data.cuisines,
@@ -971,8 +970,8 @@ export default function HomePage() {
               {t.restaurants.appSectionTitle}
             </h2>
             <span className="app-discovery-count-pill">
-              {filteredRestaurants.length > 0
-                ? `${filteredRestaurants.length} ${t.restaurants.openNowBadge}`
+              {filteredRestaurants.filter((r) => r.isOpen).length > 0
+                ? `${filteredRestaurants.filter((r) => r.isOpen).length} ${t.restaurants.openNowBadge}`
                 : lang === 'ar'
                 ? 'يُفتح على 11:00 🕒'
                 : lang === 'fr'
@@ -1042,6 +1041,15 @@ export default function HomePage() {
                       />
                       <div className="app-card-cover-dim" />
 
+                      {/* Closed Badge Overlay */}
+                      {resto.isOpen === false && (
+                        <div className="app-card-closed-pill">
+                          <span>
+                            {lang === 'ar' ? 'المطعم مغلق' : lang === 'fr' ? 'Fermé' : 'Closed'}
+                          </span>
+                        </div>
+                      )}
+
                       {/* Floating Mini Logo */}
                       <div className="app-card-mini-logo">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1057,8 +1065,20 @@ export default function HomePage() {
 
                       {/* Live Open Status */}
                       <div className="app-card-live-status">
-                        <span className="app-live-pulse-dot" />
-                        <span>{t.restaurants.statusOpen}</span>
+                        {resto.isOpen !== false ? (
+                          <>
+                            <span className="app-live-pulse-dot" />
+                            <span>{t.restaurants.statusOpen}</span>
+                          </>
+                        ) : (
+                          <span className="app-live-opening-time">
+                            {lang === 'ar'
+                              ? `يُفتح على ${resto.nextOpeningTime || '11:00'}`
+                              : lang === 'fr'
+                              ? `Ouvre à ${resto.nextOpeningTime || '11:00'}`
+                              : `Opens at ${resto.nextOpeningTime || '11:00'}`}
+                          </span>
+                        )}
                       </div>
 
                       {/* Rating & Reviews */}
