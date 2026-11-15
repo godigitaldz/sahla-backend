@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin, getSupabaseAnon } from '@/server/supabase/admin';
-import { isAcceptingOrdersNow, getNextOpeningTime } from '@/lib/restaurant/restaurantAvailability';
+import { computeRestaurantStatus } from '@/lib/restaurant/restaurantAvailability';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,14 +32,13 @@ export async function GET() {
       sortOrder: c.home_category_row_sort_order || 0,
     }));
 
-    // Fetch verified and open restaurants ONLY
+    // Fetch verified restaurants (do not filter out is_open=false, backend reads real DB state)
     const { data: rawRests, error } = await client
       .from('restaurants')
       .select(
-        'id,name,name_ar,name_latin,description,image,cover_image_url,logo_url,rating,review_count,minimum_order,delivery_fee,estimated_delivery_time,is_open,is_featured,is_verified,is_new,public_slug,is_public_web_enabled,opening_hours,closing_hours,vacation_starts_at,vacation_returns_at'
+        'id,name,name_ar,name_latin,description,image,cover_image_url,logo_url,rating,review_count,minimum_order,delivery_fee,estimated_delivery_time,is_open,is_featured,is_verified,is_new,public_slug,is_public_web_enabled,opening_hours,closing_hours,opening_hours_backup,closing_hours_backup,vacation_starts_at,vacation_returns_at,business_timezone'
       )
       .eq('is_verified', true)
-      .eq('is_open', true)
       .order('is_featured', { ascending: false })
       .order('rating', { ascending: false });
 
@@ -48,9 +47,7 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Verified restaurants where is_open is true (business active)
     const rests = rawRests || [];
-
     const restIds = (rests || []).map((r) => r.id);
 
     // Fetch menu items to associate cuisines and category tags
@@ -107,6 +104,9 @@ export async function GET() {
       const fallbackDescFr = r.description || 'Plats savoureux & Fast-food';
       const fallbackDescEn = r.description || 'Delicious Food & Fast Delivery';
 
+      // Compute status based on is_open, working hours, and availability
+      const status = computeRestaurantStatus(r as any);
+
       return {
         id: r.id,
         name: r.name,
@@ -131,19 +131,38 @@ export async function GET() {
           r.logo_url ||
           'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/default_cover.jpg',
         slug: r.public_slug,
-        isOpen: isAcceptingOrdersNow(r as any),
-        nextOpeningTime: getNextOpeningTime(r as any) || '11:00',
+        isOpen: status.isOpen,
+        isOpenMaster: status.isOpenMaster,
+        isAvailable: status.isAvailable,
+        workingHours: status.workingHours,
+        statusKind: status.statusKind,
+        statusLabelAr: status.statusLabelAr,
+        statusLabelFr: status.statusLabelFr,
+        statusLabelEn: status.statusLabelEn,
+        nextOpeningTime: status.nextOpeningTime,
+        closingTime: status.closingTime,
         isFeatured: r.is_featured ?? false,
         isNew: r.is_new ?? false,
         cuisineTypeIds: Array.from(restCuisineMap[r.id] || []),
       };
     });
 
+    // Sort: open/available first, then featured, then rating
+    restaurants.sort((a, b) => {
+      if (a.isOpen !== b.isOpen) {
+        return a.isOpen ? -1 : 1;
+      }
+      if (a.isFeatured !== b.isFeatured) {
+        return a.isFeatured ? -1 : 1;
+      }
+      return b.rating - a.rating;
+    });
+
     return NextResponse.json(
       { restaurants, cuisines, total: restaurants.length },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
         },
       }
     );

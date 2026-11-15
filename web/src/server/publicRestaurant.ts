@@ -4,7 +4,7 @@ import { filterWebMenuItems, type WebMenuItem } from '@/lib/menuCatalog';
 export async function fallbackLoadPublicRestaurant(slug: string) {
   const admin = getSupabaseAdmin();
   const baseSelect =
-    'id,name,name_ar,name_latin,description,logo_url,cover_image_url,phone,address_line1,city,wilaya,latitude,longitude,is_open,is_verified,opening_hours,closing_hours,vacation_starts_at,vacation_returns_at,estimated_delivery_time,minimum_order,delivery_fee,is_new';
+    'id,name,name_ar,name_latin,description,logo_url,cover_image_url,phone,address_line1,city,wilaya,latitude,longitude,is_open,is_verified,opening_hours,closing_hours,opening_hours_backup,closing_hours_backup,business_timezone,vacation_starts_at,vacation_returns_at,estimated_delivery_time,minimum_order,delivery_fee,is_new';
 
   let restaurant: Record<string, unknown> | null = null;
 

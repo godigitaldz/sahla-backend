@@ -34,7 +34,15 @@ interface RestaurantItem {
   cover: string;
   slug: string | null;
   isOpen?: boolean;
+  isOpenMaster?: boolean;
+  isAvailable?: boolean;
+  workingHours?: any;
+  statusKind?: 'open' | 'closed_hours' | 'manual_closed' | 'break' | 'vacation';
+  statusLabelAr?: string;
+  statusLabelFr?: string;
+  statusLabelEn?: string;
   nextOpeningTime?: string;
+  closingTime?: string | null;
   isFeatured?: boolean;
   isNew?: boolean;
   cuisineTypeIds?: string[];
@@ -278,7 +286,17 @@ const FEATURED_RESTAURANTS: RestaurantItem[] = [
     cover: 'https://pub-011aba279eb84591b0d96b9b9415ce2e.r2.dev/daily.jpg',
     slug: 'daily-dose',
   },
-];
+].map((r) => ({
+  isOpen: false,
+  isOpenMaster: r.id !== 'dar-djeddi',
+  isAvailable: false,
+  statusKind: (r.id === 'dar-djeddi' ? 'manual_closed' : 'closed_hours') as RestaurantItem['statusKind'],
+  statusLabelAr: r.id === 'dar-djeddi' ? 'مغلق' : 'يُفتح على 11:00',
+  statusLabelFr: r.id === 'dar-djeddi' ? 'Fermé' : 'Ouvre à 11:00',
+  statusLabelEn: r.id === 'dar-djeddi' ? 'Closed' : 'Opens at 11:00',
+  nextOpeningTime: '11:00',
+  ...r,
+}));
 
 const CONTENT = {
   ar: {
@@ -662,7 +680,7 @@ export default function HomePage() {
   }, []);
 
   const filteredRestaurants = useMemo(() => {
-    let list = restaurants.filter((r) => r.isOpen !== false);
+    let list = restaurants;
 
     if (selectedCuisineId !== 'all') {
       list = list.filter((r) => r.cuisineTypeIds?.includes(selectedCuisineId));
@@ -1027,7 +1045,7 @@ export default function HomePage() {
                   <Link
                     key={resto.id}
                     href={linkHref}
-                    className="app-restaurant-card-row"
+                    className={`app-restaurant-card-row ${resto.isOpen === false ? 'is-closed' : 'is-open'}`}
                     title={displayName}
                   >
                     {/* Media Column (Image + Floating Logo) */}
@@ -1064,19 +1082,41 @@ export default function HomePage() {
                       </div>
 
                       {/* Live Open Status */}
-                      <div className="app-card-live-status">
-                        {resto.isOpen !== false ? (
+                      <div className={`app-card-live-status app-status-${resto.statusKind || (resto.isOpen ? 'open' : 'closed-hours')}`}>
+                        {resto.isOpen ? (
                           <>
                             <span className="app-live-pulse-dot" />
-                            <span>{t.restaurants.statusOpen}</span>
+                            <span>
+                              {lang === 'ar'
+                                ? (resto.statusLabelAr || t.restaurants.statusOpen)
+                                : lang === 'fr'
+                                ? (resto.statusLabelFr || 'Ouvert')
+                                : (resto.statusLabelEn || 'Open Now')}
+                            </span>
                           </>
+                        ) : resto.statusKind === 'manual_closed' || resto.isOpenMaster === false ? (
+                          <span className="app-live-status-closed">
+                            {lang === 'ar'
+                              ? (resto.statusLabelAr || 'مغلق')
+                              : lang === 'fr'
+                              ? (resto.statusLabelFr || 'Fermé')
+                              : (resto.statusLabelEn || 'Closed')}
+                          </span>
+                        ) : resto.statusKind === 'vacation' ? (
+                          <span className="app-live-status-vacation">
+                            {lang === 'ar'
+                              ? (resto.statusLabelAr || 'في عطلة')
+                              : lang === 'fr'
+                              ? (resto.statusLabelFr || 'En vacances')
+                              : (resto.statusLabelEn || 'On Vacation')}
+                          </span>
                         ) : (
                           <span className="app-live-opening-time">
                             {lang === 'ar'
-                              ? `يُفتح على ${resto.nextOpeningTime || '11:00'}`
+                              ? (resto.statusLabelAr || `يُفتح على ${resto.nextOpeningTime || '11:00'}`)
                               : lang === 'fr'
-                              ? `Ouvre à ${resto.nextOpeningTime || '11:00'}`
-                              : `Opens at ${resto.nextOpeningTime || '11:00'}`}
+                              ? (resto.statusLabelFr || `Ouvre à ${resto.nextOpeningTime || '11:00'}`)
+                              : (resto.statusLabelEn || `Opens at ${resto.nextOpeningTime || '11:00'}`)}
                           </span>
                         )}
                       </div>

@@ -14,6 +14,8 @@ export type WebRestaurantSchedule = {
   is_open?: boolean | null;
   opening_hours?: unknown;
   closing_hours?: unknown;
+  opening_hours_backup?: unknown;
+  closing_hours_backup?: unknown;
   vacation_starts_at?: string | null;
   vacation_returns_at?: string | null;
   business_timezone?: string | null;
@@ -51,7 +53,18 @@ function isTrueish(value: unknown): boolean {
 }
 
 function asWorkingHoursMap(value: unknown): WorkingHours | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  if (!value) return null;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as WorkingHours;
+      }
+    } catch {
+      return null;
+    }
+  }
+  if (typeof value !== 'object' || Array.isArray(value)) return null;
   return value as WorkingHours;
 }
 
@@ -65,11 +78,17 @@ function hasScheduleDays(value: WorkingHours | null): boolean {
 export function effectiveWorkingHours(
   openingHours: unknown,
   closingHours?: unknown,
+  openingHoursBackup?: unknown,
+  closingHoursBackup?: unknown,
 ): WorkingHours | null {
   const closing = asWorkingHoursMap(closingHours);
   if (hasScheduleDays(closing)) return closing;
   const opening = asWorkingHoursMap(openingHours);
   if (hasScheduleDays(opening)) return opening;
+  const clBackup = asWorkingHoursMap(closingHoursBackup);
+  if (hasScheduleDays(clBackup)) return clBackup;
+  const opBackup = asWorkingHoursMap(openingHoursBackup);
+  if (hasScheduleDays(opBackup)) return opBackup;
   return null;
 }
 
@@ -223,6 +242,8 @@ export function isAcceptingOrdersNow(
   const workingHours = effectiveWorkingHours(
     schedule.opening_hours,
     schedule.closing_hours,
+    schedule.opening_hours_backup,
+    schedule.closing_hours_backup,
   );
   const timeZone = restaurantTimeZone(schedule);
   if (workingHours) return isOpenAt(at, workingHours, timeZone);
@@ -240,6 +261,8 @@ export function isOnBreakNow(schedule: WebRestaurantSchedule, at = new Date()): 
   const workingHours = effectiveWorkingHours(
     schedule.opening_hours,
     schedule.closing_hours,
+    schedule.opening_hours_backup,
+    schedule.closing_hours_backup,
   );
   if (!workingHours) return false;
 
@@ -275,6 +298,8 @@ export function getCurrentBreakEndTime(
   const workingHours = effectiveWorkingHours(
     schedule.opening_hours,
     schedule.closing_hours,
+    schedule.opening_hours_backup,
+    schedule.closing_hours_backup,
   );
   const timeZone = restaurantTimeZone(schedule);
   const todayHours = workingHours?.[zonedClock(at, timeZone).weekday];
@@ -295,6 +320,8 @@ export function getNextOpeningTime(
   const workingHours = effectiveWorkingHours(
     schedule.opening_hours,
     schedule.closing_hours,
+    schedule.opening_hours_backup,
+    schedule.closing_hours_backup,
   );
   if (!workingHours) return null;
 
@@ -410,6 +437,8 @@ export function getAvailabilityState(
   const workingHours = effectiveWorkingHours(
     schedule.opening_hours,
     schedule.closing_hours,
+    schedule.opening_hours_backup,
+    schedule.closing_hours_backup,
   );
   const timeZone = restaurantTimeZone(schedule);
 
@@ -440,5 +469,101 @@ export function getAvailabilityState(
     opensAt,
     breakEndsAt: null,
     vacationReturnLabel: null,
+  };
+}
+
+export type RestaurantComputedStatus = {
+  isOpenMaster: boolean; // 1. is open master toggle in DB
+  workingHours: WorkingHours | null; // 2. working hours schedule from DB
+  isAvailable: boolean; // 3. is available / accepting orders right now
+  isOpen: boolean; // currently inside open hours & not on break/vacation
+  statusKind: 'open' | 'closed_hours' | 'manual_closed' | 'break' | 'vacation';
+  statusLabelAr: string;
+  statusLabelFr: string;
+  statusLabelEn: string;
+  nextOpeningTime: string;
+  closingTime: string | null;
+};
+
+export function computeRestaurantStatus(
+  schedule: WebRestaurantSchedule,
+  at = new Date(),
+): RestaurantComputedStatus {
+  const timeZone = restaurantTimeZone(schedule);
+  const isOpenMaster = schedule.is_open !== false;
+  const onVacation = isOnVacationNow(
+    schedule.vacation_starts_at,
+    schedule.vacation_returns_at,
+    at,
+  );
+  const workingHours = effectiveWorkingHours(
+    schedule.opening_hours,
+    schedule.closing_hours,
+    schedule.opening_hours_backup,
+    schedule.closing_hours_backup,
+  );
+  const clock = zonedClock(at, timeZone);
+  const todayHours = workingHours ? workingHours[clock.weekday] : null;
+  const closingTime = todayHours?.close || null;
+  const nextOpening = getNextOpeningTime(schedule, at) || todayHours?.open || '11:00';
+  const onBreak = isOnBreakNow(schedule, at);
+  const inWorkingHours = workingHours ? isOpenAt(at, workingHours, timeZone) : isOpenMaster;
+
+  let statusKind: 'open' | 'closed_hours' | 'manual_closed' | 'break' | 'vacation';
+  let statusLabelAr: string;
+  let statusLabelFr: string;
+  let statusLabelEn: string;
+  let isOpen = false;
+  let isAvailable = false;
+
+  if (onVacation) {
+    statusKind = 'vacation';
+    statusLabelAr = 'في عطلة';
+    statusLabelFr = 'En vacances';
+    statusLabelEn = 'On Vacation';
+    isOpen = false;
+    isAvailable = false;
+  } else if (!isOpenMaster) {
+    statusKind = 'manual_closed';
+    statusLabelAr = 'مغلق';
+    statusLabelFr = 'Fermé';
+    statusLabelEn = 'Closed';
+    isOpen = false;
+    isAvailable = false;
+  } else if (onBreak) {
+    const breakEnd = getCurrentBreakEndTime(schedule, at);
+    statusKind = 'break';
+    statusLabelAr = breakEnd ? `يُفتح على ${breakEnd}` : 'في فترة استراحة';
+    statusLabelFr = breakEnd ? `Ouvre à ${breakEnd}` : 'En pause';
+    statusLabelEn = breakEnd ? `Opens at ${breakEnd}` : 'On Break';
+    isOpen = false;
+    isAvailable = false;
+  } else if (!inWorkingHours) {
+    statusKind = 'closed_hours';
+    statusLabelAr = `يُفتح على ${nextOpening}`;
+    statusLabelFr = `Ouvre à ${nextOpening}`;
+    statusLabelEn = `Opens at ${nextOpening}`;
+    isOpen = false;
+    isAvailable = false;
+  } else {
+    statusKind = 'open';
+    statusLabelAr = 'مفتوح الآن';
+    statusLabelFr = 'Ouvert';
+    statusLabelEn = 'Open Now';
+    isOpen = true;
+    isAvailable = true;
+  }
+
+  return {
+    isOpenMaster,
+    workingHours,
+    isAvailable,
+    isOpen,
+    statusKind,
+    statusLabelAr,
+    statusLabelFr,
+    statusLabelEn,
+    nextOpeningTime: nextOpening,
+    closingTime,
   };
 }

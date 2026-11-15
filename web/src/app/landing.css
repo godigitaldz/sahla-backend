@@ -924,7 +924,19 @@
 
 .app-live-opening-time {
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 900;
+  color: #ea580c;
+}
+
+.app-live-status-closed {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #dc2626;
+}
+
+.app-live-status-vacation {
+  font-size: 0.78rem;
+  font-weight: 900;
   color: #d97706;
 }
 
@@ -933,16 +945,21 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(217, 119, 6, 0.95);
+  background: #c84824;
   color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(4px);
   z-index: 3;
+  letter-spacing: 0.01em;
+}
+
+.app-restaurant-card-row.is-closed .app-card-cover-photo {
+  opacity: 0.75;
 }
 
 .app-live-pulse-dot {
