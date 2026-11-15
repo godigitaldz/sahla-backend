@@ -164,15 +164,6 @@ router.get('/app-version-policy', async (req, res) => {
     });
   }
 });
-    return res.json({
-      platform: 'android',
-      forceUpdate: false,
-      minimumVersion: null,
-      updateUrl: null,
-      message: null,
-    });
-  }
-});
 
 /**
  * GET /api/public/free-delivery-zone/check?lat=&lng=
