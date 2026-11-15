@@ -787,7 +787,6 @@ export default function HomePage() {
           {/* Desktop Navigation */}
           <nav className="header-nav" aria-label="Main Navigation">
             <a href="#services">{t.nav.services}</a>
-            <a href="#why-sahla">{t.nav.whySahla}</a>
             <a href="#how-it-works">{t.nav.howItWorks}</a>
             <a href="#partners">{t.nav.partners}</a>
             <a href="#contact">{t.contact.title}</a>
@@ -1146,36 +1145,6 @@ export default function HomePage() {
                 );
               })
             )}
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------------------------------
-          WHY SAHLA (3 CORE PILLARS)
-          ---------------------------------------- */}
-      <section className="why-section" id="why-sahla">
-        <div className="section-head-center">
-          <span className="section-eyebrow">{t.whySahla.eyebrow}</span>
-          <h2 className="section-main-title">{t.whySahla.title}</h2>
-        </div>
-
-        <div className="why-grid">
-          <div className="why-card">
-            <div className="why-icon">⚡</div>
-            <h3>{t.whySahla.card1Title}</h3>
-            <p>{t.whySahla.card1Desc}</p>
-          </div>
-
-          <div className="why-card">
-            <div className="why-icon">🛵</div>
-            <h3>{t.whySahla.card2Title}</h3>
-            <p>{t.whySahla.card2Desc}</p>
-          </div>
-
-          <div className="why-card">
-            <div className="why-icon">💬</div>
-            <h3>{t.whySahla.card3Title}</h3>
-            <p>{t.whySahla.card3Desc}</p>
           </div>
         </div>
       </section>
