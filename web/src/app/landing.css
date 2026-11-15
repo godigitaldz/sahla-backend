@@ -1084,11 +1084,6 @@
   background: #085A44;
 }
 
-/* Floating Mobile Bottom Dock */
-.app-mobile-bottom-dock {
-  display: none;
-}
-
 @media (max-width: 768px) {
   .app-restaurant-card-row {
     padding: 0.8rem;
@@ -1114,55 +1109,6 @@
 
   .app-meta-tag {
     max-width: 100px;
-  }
-
-  .app-mobile-bottom-dock {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-    z-index: 95;
-    padding: 0 0.5rem;
-  }
-
-  .app-dock-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.2rem;
-    text-decoration: none !important;
-    color: #6B7280 !important;
-    flex: 1;
-    padding: 0.35rem 0;
-    transition: color 0.18s ease;
-  }
-
-  .app-dock-item.active {
-    color: #064E3B !important;
-  }
-
-  .app-dock-icon {
-    font-size: 1.28rem;
-    line-height: 1;
-  }
-
-  .app-dock-label {
-    font-size: 0.72rem;
-    font-weight: 800;
-  }
-
-  .app-food-discovery-section {
-    padding-bottom: 5.5rem;
   }
 }
 

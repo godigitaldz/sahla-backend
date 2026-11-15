@@ -1474,31 +1474,6 @@ export default function HomePage() {
           </div>
         </div>
       )}
-
-      {/* ----------------------------------------
-          MOBILE APP EXPERIENCE DOCK (BOTTOM BAR)
-          ---------------------------------------- */}
-      <nav className="app-mobile-bottom-dock" aria-label="App Navigation">
-        <a href="#services" className="app-dock-item active">
-          <span className="app-dock-icon">🏠</span>
-          <span className="app-dock-label">{t.restaurants.bottomNavHome}</span>
-        </a>
-
-        <a href="#services" className="app-dock-item">
-          <span className="app-dock-icon">📋</span>
-          <span className="app-dock-label">{t.restaurants.bottomNavOrders}</span>
-        </a>
-
-        <a
-          href={WHATSAPP_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="app-dock-item"
-        >
-          <span className="app-dock-icon">🎧</span>
-          <span className="app-dock-label">{t.restaurants.bottomNavHelp}</span>
-        </a>
-      </nav>
     </main>
   );
 }
