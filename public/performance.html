@@ -2629,9 +2629,12 @@
       </header>
 
       <!-- Autoplay Audio Unlock Banner -->
-      <div id="audioUnlockBanner" class="audio-unlock-banner hidden" onclick="unlockDashboardAudio()">
-        <span>🔔 <strong>Audio Alerts Muted by Browser:</strong> Tap here to enable live audible alarms for critical orders.</span>
-        <button type="button" style="background:#fff;color:#1e3a8a;padding:4px 10px;border-radius:6px;font-weight:700;">Enable Sound</button>
+      <div id="audioUnlockBanner" class="audio-unlock-banner hidden">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;" onclick="unlockDashboardAudio()">
+          <span>🔔 <strong>Audio Alerts Muted by Browser:</strong> Tap here to enable live audible alarms for critical orders.</span>
+          <button type="button" style="background:#fff;color:#1e3a8a;padding:4px 10px;border-radius:6px;font-weight:700;border:none;cursor:pointer;">Enable Sound</button>
+        </div>
+        <button type="button" style="background:transparent;color:#ffffff;border:none;font-size:1.2rem;padding:0 8px;cursor:pointer;" onclick="dismissAudioUnlockBanner(event)" title="Dismiss">✕</button>
       </div>
 
       <!-- iOS Home Screen PWA Install Banner -->
@@ -4473,7 +4476,7 @@
           });
         } catch (networkErr) {
           const msg = 'Network error reaching ' + path + ': ' + (networkErr.message || 'Connection failed');
-          showDashboardError(msg);
+          if (!opts?.silentError) showDashboardError(msg);
           throw new Error(msg);
         }
         const j = await r.json().catch(() => ({}));
@@ -4483,7 +4486,7 @@
           }
           const detail = j.error || r.statusText || ('HTTP ' + r.status);
           const msg = detail + ' (' + path + ' [' + r.status + '])';
-          showDashboardError(msg);
+          if (!opts?.silentError) showDashboardError(msg);
           throw new Error(msg);
         }
         return j;
@@ -4789,7 +4792,7 @@
 
       async function tryBootstrap() {
         try {
-          await api('/meta', { method: 'GET' });
+          await api('/meta', { method: 'GET', silentError: true });
           showApp();
           await loadMeta();
           await loadAlerts();
@@ -4879,6 +4882,8 @@
         checkAudioUnlockState();
         checkIosPwaStatus();
         updateAudioButtonUI();
+        initWebPushState();
+        updateSnoozeButtonUI();
         availableOrderCouriers = Array.isArray(m.available_order_couriers) && m.available_order_couriers.length > 0
           ? m.available_order_couriers
           : (Array.isArray(m.delivery_personnel_options) ? m.delivery_personnel_options : []);
@@ -5549,7 +5554,7 @@
 
       // === Centralized Admin Notification & Audio Engine ===
       let _isAudioMuted = localStorage.getItem('sahla_admin_audio_muted') === 'true';
-      let _snoozeUntil = 0;
+      let _snoozeUntil = Number(localStorage.getItem('sahla_admin_snooze_until') || 0);
       let _repeatingAlarmInterval = null;
       let _audioContext = null;
       let _activeCriticalAlerts = new Set();
@@ -5570,11 +5575,20 @@
         const ctx = getAudioContext();
         const banner = $('audioUnlockBanner');
         if (!banner) return;
-        if (ctx && ctx.state === 'suspended' && !_isAudioMuted) {
+        const dismissed = localStorage.getItem('sahla_audio_banner_dismissed') === 'true';
+        const unlocked = localStorage.getItem('sahla_audio_unlocked') === 'true';
+        if (ctx && ctx.state === 'suspended' && !_isAudioMuted && !dismissed && !unlocked) {
           banner.classList.remove('hidden');
         } else {
           banner.classList.add('hidden');
         }
+      }
+
+      function dismissAudioUnlockBanner(e) {
+        if (e) e.stopPropagation();
+        const banner = $('audioUnlockBanner');
+        if (banner) banner.classList.add('hidden');
+        localStorage.setItem('sahla_audio_banner_dismissed', 'true');
       }
 
       async function unlockDashboardAudio() {
@@ -5583,18 +5597,27 @@
           if (ctx && ctx.state === 'suspended') {
             await ctx.resume();
           }
+          localStorage.setItem('sahla_audio_unlocked', 'true');
+          localStorage.setItem('sahla_audio_banner_dismissed', 'true');
           const banner = $('audioUnlockBanner');
           if (banner) banner.classList.add('hidden');
           playTonePulse(660, 880, 0.15, 0.15);
         } catch (_) {}
       }
 
-      window.addEventListener('click', () => {
+      function trySilentAudioUnlock() {
         const ctx = getAudioContext();
         if (ctx && ctx.state === 'suspended') {
-          ctx.resume().then(checkAudioUnlockState).catch(() => {});
+          ctx.resume().then(() => {
+            localStorage.setItem('sahla_audio_unlocked', 'true');
+            checkAudioUnlockState();
+          }).catch(() => {});
         }
-      }, { once: true });
+      }
+
+      ['click', 'touchstart', 'pointerdown', 'keydown'].forEach((evt) => {
+        window.addEventListener(evt, trySilentAudioUnlock, { passive: true });
+      });
 
       function playTonePulse(freq1, freq2, dur, gainVal = 0.25) {
         if (_isAudioMuted || Date.now() < _snoozeUntil) return;
@@ -5663,16 +5686,24 @@
 
       function snoozeDashboardAudio(minutes = 5) {
         _snoozeUntil = Date.now() + minutes * 60_000;
+        localStorage.setItem('sahla_admin_snooze_until', String(_snoozeUntil));
         stopRepeatingAlarm();
+        updateSnoozeButtonUI();
+      }
+
+      function updateSnoozeButtonUI() {
         const btn = $('sahlaSnoozeBtn');
-        if (btn) {
+        if (!btn) return;
+        const remainingMs = _snoozeUntil - Date.now();
+        if (remainingMs > 0) {
+          const remMin = Math.ceil(remainingMs / 60_000);
           btn.classList.add('muted');
-          btn.innerHTML = `<span>⏱️</span> <span>Snoozed ${minutes}m</span>`;
-          setTimeout(() => {
-            btn.classList.remove('muted');
-            btn.innerHTML = `<span>⏱️</span> <span>Snooze</span>`;
-            syncCriticalAlarmState();
-          }, minutes * 60_000);
+          btn.innerHTML = `<span>⏱️</span> <span>Snoozed ${remMin}m</span>`;
+          setTimeout(updateSnoozeButtonUI, 15_000);
+        } else {
+          btn.classList.remove('muted');
+          btn.innerHTML = `<span>⏱️</span> <span>Snooze</span>`;
+          syncCriticalAlarmState();
         }
       }
 
@@ -5724,6 +5755,61 @@
         }
       }
 
+      async function initWebPushState() {
+        const btn = $('enableWebPushBtn');
+        if (!btn) return;
+        if (!('Notification' in window)) {
+          btn.style.display = 'none';
+          return;
+        }
+
+        if (Notification.permission === 'granted') {
+          btn.innerHTML = '<span>🔔</span> <span>Push Active</span>';
+          btn.classList.add('active');
+          btn.classList.remove('muted');
+          btn.title = 'Push notifications are active on this device';
+          localStorage.setItem('sahla_admin_push_enabled', 'true');
+          syncWebPushRegistrationSilently().catch(() => {});
+        } else if (Notification.permission === 'denied') {
+          btn.innerHTML = '<span>🔕</span> <span>Push Blocked</span>';
+          btn.classList.add('muted');
+          btn.classList.remove('active');
+          btn.title = 'Push notifications are blocked in browser settings';
+        } else {
+          btn.innerHTML = '<span>🔔</span> <span>Push</span>';
+          btn.classList.remove('active', 'muted');
+          btn.title = 'Enable Push Notifications';
+        }
+      }
+
+      async function syncWebPushRegistrationSilently() {
+        if (!('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return;
+        try {
+          await navigator.serviceWorker.register('/admin-sw.js');
+          await navigator.serviceWorker.ready;
+
+          let deviceId = localStorage.getItem('sahla_admin_device_id');
+          if (!deviceId) {
+            deviceId = 'admin-dev-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+            localStorage.setItem('sahla_admin_device_id', deviceId);
+          }
+
+          localStorage.setItem('sahla_admin_push_enabled', 'true');
+
+          await api('/devices/register', {
+            method: 'POST',
+            body: JSON.stringify({
+              device_id: deviceId,
+              token: 'sw-active-' + deviceId,
+              user_agent: navigator.userAgent,
+            }),
+            silentError: true,
+          });
+        } catch (err) {
+          console.debug('Silent push sync:', err);
+        }
+      }
+
       async function requestWebPushPermission() {
         const btn = $('enableWebPushBtn');
         if (!('Notification' in window)) {
@@ -5731,43 +5817,32 @@
           return;
         }
 
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          alert('Notification permission denied or dismissed.');
+        if (Notification.permission === 'denied') {
+          alert('Notifications are blocked in your browser settings. Please enable notifications for this site in your browser permissions.');
           return;
         }
 
-        try {
-          if ('serviceWorker' in navigator) {
-            await navigator.serviceWorker.register('/admin-sw.js');
-            await navigator.serviceWorker.ready;
+        if (Notification.permission === 'granted') {
+          await syncWebPushRegistrationSilently();
+          initWebPushState();
+          new Notification('Sahla Notifications Active', {
+            body: 'Push notifications are active and ready on this device.',
+            icon: '/sahla-logo-circle.png',
+          });
+          return;
+        }
 
-            let deviceId = localStorage.getItem('sahla_admin_device_id');
-            if (!deviceId) {
-              deviceId = 'admin-dev-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
-              localStorage.setItem('sahla_admin_device_id', deviceId);
-            }
-
-            await api('/devices/register', {
-              method: 'POST',
-              body: JSON.stringify({
-                device_id: deviceId,
-                token: 'sw-active-' + deviceId,
-                user_agent: navigator.userAgent,
-              }),
-            });
-
-            if (btn) {
-              btn.innerHTML = '<span>🔔</span> <span>Push Active</span>';
-              btn.classList.add('active');
-            }
-            new Notification('Sahla Notifications Enabled', {
-              body: 'You will now receive emergency alert banners on this device.',
-              icon: '/sahla-logo-circle.png',
-            });
-          }
-        } catch (err) {
-          console.warn('Web push registration warning:', err);
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          localStorage.setItem('sahla_admin_push_enabled', 'true');
+          await syncWebPushRegistrationSilently();
+          initWebPushState();
+          new Notification('Sahla Notifications Enabled', {
+            body: 'You will now receive emergency alert banners on this device.',
+            icon: '/sahla-logo-circle.png',
+          });
+        } else {
+          initWebPushState();
         }
       }
 
@@ -10033,6 +10108,9 @@
       updateForcePushScheduleFields();
       updateSahlaClock();
       setInterval(updateSahlaClock, 1000);
+      updateAudioButtonUI();
+      updateSnoozeButtonUI();
+      initWebPushState().catch(() => {});
       tryBootstrap();
     </script>
   </body>
