@@ -1,0 +1,23 @@
+{
+  "name": "Sahla Operations Dashboard",
+  "short_name": "Sahla Admin",
+  "description": "Real-time Operations & Dispatch Cockpit for Sahla Delivery",
+  "start_url": "/performance?view=alerts",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/images/sahla-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/sahla-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

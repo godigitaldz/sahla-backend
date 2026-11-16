@@ -7,6 +7,7 @@ import {
 import {
   PREPARING_UNASSIGNED_EPISODE_MAX_SECONDS,
 } from '../modules/orders/domain/preparingUnassignedEpisode.js';
+import { adminAlertEngine } from '../modules/alerts/adminAlertEngine.js';
 
 const COURIER_REBROADCAST_INTERVAL_MS = 3 * 60_000;
 const ADMIN_UNASSIGNED_THRESHOLD_MS = 5 * 60_000;
@@ -142,6 +143,16 @@ export async function runPreparingUnassignedRebroadcastOnce({ logger = console }
 
       // Admin escalation alert at 5 minutes
       if (ageMs >= ADMIN_UNASSIGNED_THRESHOLD_MS && adminIds.length > 0) {
+        adminAlertEngine.raiseAlert({
+          orderId,
+          alertType: 'prep_unassigned',
+          severity: 'critical',
+          title: 'تحضير بدون سائق',
+          message: `الطلب #${orderNumber} قيد التحضير/الجاهزية ولم يُعيَّن أي عامل توصيل — منذ 5 دقائق.`,
+          metadata: { order_number: orderNumber, restaurant_id: String(order.restaurant_id || '') },
+          episodeTimestamp: episodeRef,
+        }).catch(() => {});
+
         const alreadyAlerted = logs.some(
           (l) => l?.data?.order_id === orderId && l?.data?.flow === ADMIN_UNASSIGNED_ALERT_TYPE,
         );

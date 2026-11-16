@@ -3,6 +3,7 @@ import { getActiveAdminUserIds } from './adminRecipients.js';
 import { getRestaurantOpsUserIds } from '../modules/notifications/orderRebroadcastRecipients.js';
 import { runPickupDelayAdminAlertsOnce } from './pickupDelayAdminAlertsPoller.js';
 import { runPreparingUnassignedRebroadcastOnce } from './preparingUnassignedRebroadcastPoller.js';
+import { adminAlertEngine } from '../modules/alerts/adminAlertEngine.js';
 
 const DEFAULT_INTERVAL_MS = 60_000;
 const FIRST_ADMIN_THRESHOLD_MS = 2 * 60_000;
@@ -324,6 +325,16 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
             }`,
           );
         }
+
+        adminAlertEngine.raiseAlert({
+          orderId,
+          alertType: 'stale_pending',
+          severity: 'critical',
+          title: 'Order Still Pending',
+          message: `Order #${orderNumber} is still pending after 5 minutes.`,
+          metadata: { order_number: orderNumber, restaurant_id: restaurantId },
+          episodeTimestamp: order.created_at,
+        }).catch(() => {});
       }
 
       if (

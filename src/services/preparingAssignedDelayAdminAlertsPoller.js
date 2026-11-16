@@ -2,6 +2,7 @@ import { pushSendSucceeded } from '../modules/notifications/pushSendResult.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { getActiveAdminUserIds } from './adminRecipients.js';
 import { sendPushWithDispatch } from './notificationDispatchService.js';
+import { adminAlertEngine } from '../modules/alerts/adminAlertEngine.js';
 
 const DEFAULT_PREPARING_ASSIGNED_DELAY_MINUTES = 20;
 const LOOKBACK_HOURS = 24;
@@ -109,6 +110,16 @@ export async function runPreparingAssignedDelayAdminAlertsOnce({ logger = consol
       const ageMinutes = Number.isFinite(assignedMs)
         ? Math.max(thresholdMinutes, Math.floor((now - assignedMs) / 60_000))
         : thresholdMinutes;
+
+      adminAlertEngine.raiseAlert({
+        orderId,
+        alertType: 'prep_assigned_delay',
+        severity: 'high',
+        title: 'سائق معيَّن ولم يستلم',
+        body: `الطلب #${orderNumber} (${restaurantName}) مُعيَّن للسائق (${courierName}) منذ ${ageMinutes} دقيقة ولم يتم استلامه بعد.`,
+        metadata: { order_number: orderNumber, restaurant_name: restaurantName, courier_name: courierName, age_minutes: ageMinutes },
+        episodeTimestamp: order.courier_assigned_at || order.updated_at,
+      }).catch(() => {});
 
       // 1. Admin Alert
       if (adminIds.length > 0) {
