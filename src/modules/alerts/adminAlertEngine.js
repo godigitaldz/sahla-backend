@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../../config/supabase.js';
 import { supabasePushGateway } from '../notifications/supabasePushGateway.js';
 import { getActiveAdminUserIds } from '../../services/adminRecipients.js';
+import { adminWebPushService } from '../../services/adminWebPushService.js';
 
 /** In-memory fallback cache in case PostgreSQL migration is pending */
 const _ephemeralAlerts = new Map();
@@ -41,6 +42,43 @@ export class AdminAlertEngine {
     const dedupeKey = buildDedupeKey(orderId, alertType, episodeTimestamp);
 
     try {
+      // Check if order was already acknowledged by an admin in persistent order_events (cross-serverless instance sync)
+      if (orderId) {
+        try {
+          const { data: dbAck } = await supabaseAdmin
+            .from('order_events')
+            .select('id, created_at, event_data')
+            .eq('order_id', orderId)
+            .eq('event_type', 'updated')
+            .filter('event_data->>action', 'eq', 'admin_alert_acknowledged')
+            .gte('created_at', new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+            .limit(1)
+            .maybeSingle();
+
+          if (dbAck) {
+            const existingAlert = {
+              id: `acked-${orderId}`,
+              order_id: orderId,
+              task_id: taskId,
+              alert_type: alertType,
+              severity,
+              dedupe_key: dedupeKey,
+              title,
+              message,
+              metadata,
+              status: 'acknowledged',
+              acknowledged_by: dbAck.event_data?.operator_name || 'Admin',
+              acknowledged_at: dbAck.created_at,
+              escalation_level: 0,
+              created_at: dbAck.created_at,
+              updated_at: dbAck.created_at,
+            };
+            _ephemeralAlerts.set(dedupeKey, existingAlert);
+            return { alert: existingAlert, isNew: false };
+          }
+        } catch (_) {}
+      }
+
       if (_dbTableAvailable) {
         // 1. Check if active or acknowledged alert already exists with this dedupe_key
         const { data: existing, error: checkError } = await supabaseAdmin
@@ -170,11 +208,24 @@ export class AdminAlertEngine {
         renotify: 'true',
       };
 
+      // 1. Send push to Android mobile app couriers/admins via Supabase Edge Function
       await supabasePushGateway.sendPush({
         userIds: adminUserIds,
         title: title || '⚠️ Sahla Admin Alert',
         body: message || 'Operational threshold exceeded',
         data: payloadData,
+      }).catch((err) => {
+        this.logger.warn?.('[admin-alert-engine] FCM push dispatch warning:', err?.message);
+      });
+
+      // 2. Send native Web Push to locked iOS PWAs and Web Dashboards
+      await adminWebPushService.sendWebPushToAllAdmins({
+        title: title || '⚠️ Sahla Admin Alert',
+        body: message || 'Operational threshold exceeded',
+        data: payloadData,
+        severity,
+      }).catch((err) => {
+        this.logger.warn?.('[admin-alert-engine] Web Push dispatch warning:', err?.message);
       });
     } catch (err) {
       this.logger.warn?.('[admin-alert-engine] Push dispatch warning:', err?.message);
@@ -189,6 +240,36 @@ export class AdminAlertEngine {
     if (!alertId) return { success: false, error: 'alert_id_required' };
 
     const now = new Date().toISOString();
+
+    let targetOrderId = (typeof alertId === 'string' && /^[0-9a-f-]{36}$/i.test(alertId)) ? alertId : null;
+    if (!targetOrderId) {
+      for (const a of _ephemeralAlerts.values()) {
+        if (a.id === alertId && a.order_id) {
+          targetOrderId = a.order_id;
+          break;
+        }
+      }
+    }
+
+    // Persist acknowledgement into order_events so all serverless instances and devices stay synchronized
+    if (targetOrderId) {
+      try {
+        await supabaseAdmin.from('order_events').insert({
+          order_id: targetOrderId,
+          event_type: 'updated',
+          changed_by_role: 'admin',
+          event_data: {
+            action: 'admin_alert_acknowledged',
+            operator_name: operatorName,
+            operator_user_id: operatorUserId,
+            acked_at: now,
+          },
+          source: 'backend',
+        });
+      } catch (err) {
+        this.logger.error?.('[admin-alert-engine] order_events ack insert error:', err.message);
+      }
+    }
 
     if (_dbTableAvailable) {
       try {
@@ -205,25 +286,45 @@ export class AdminAlertEngine {
           .in('status', ['active', 'escalated'])
           .select('*');
 
-        if (error) throw error;
-        if (data && data.length > 0) return { success: true, alerts: data, alert: data[0] };
+        if (error) {
+          if (error.code === 'PGRST205' || error.message?.includes('admin_alerts')) {
+            _dbTableAvailable = false;
+          }
+        } else if (data && data.length > 0) {
+          return { success: true, alerts: data, alert: data[0] };
+        }
       } catch (err) {
         this.logger.error?.('[admin-alert-engine] Acknowledge error:', err.message);
       }
     }
 
-    // Ephemeral fallback
+    // Update Ephemeral cache
+    let matchedAlert = null;
     for (const [key, alert] of _ephemeralAlerts.entries()) {
-      if ((alert.id === alertId || alert.order_id === alertId) && (alert.status === 'active' || alert.status === 'escalated')) {
+      if (alert.id === alertId || alert.order_id === alertId || (targetOrderId && alert.order_id === targetOrderId)) {
         alert.status = 'acknowledged';
         alert.acknowledged_by = operatorName;
         alert.acknowledged_at = now;
         alert.updated_at = now;
-        return { success: true, alert };
+        matchedAlert = alert;
       }
     }
 
-    return { success: false, error: 'alert_not_found' };
+    if (matchedAlert) {
+      return { success: true, alert: matchedAlert };
+    }
+
+    // Even if not previously in ephemeral cache, record it as acknowledged
+    const synthAlert = {
+      id: alertId,
+      order_id: targetOrderId || alertId,
+      status: 'acknowledged',
+      acknowledged_by: operatorName,
+      acknowledged_at: now,
+      updated_at: now,
+    };
+    _ephemeralAlerts.set(`acked:${alertId}`, synthAlert);
+    return { success: true, alert: synthAlert };
   }
 
   /**
@@ -313,8 +414,11 @@ export class AdminAlertEngine {
 
   /**
    * Fetch all currently active, acknowledged, or escalated alerts.
+   * Merges persistent DB alerts, cross-instance order_events acks, and ephemeral alerts.
    */
   async getActiveAlerts() {
+    let list = [];
+
     if (_dbTableAvailable) {
       try {
         const { data, error } = await supabaseAdmin
@@ -331,88 +435,73 @@ export class AdminAlertEngine {
             throw error;
           }
         } else if (data) {
-          return data;
+          list = data;
         }
       } catch (err) {
         this.logger.error?.('[admin-alert-engine] getActiveAlerts error:', err.message);
       }
     }
 
-    // Ephemeral fallback
-    const list = [];
-    for (const alert of _ephemeralAlerts.values()) {
-      if (alert.status === 'active' || alert.status === 'acknowledged' || alert.status === 'escalated') {
-        list.push(alert);
+    if (!list.length) {
+      // Ephemeral fallback
+      for (const alert of _ephemeralAlerts.values()) {
+        if (alert.status === 'active' || alert.status === 'acknowledged' || alert.status === 'escalated') {
+          list.push(alert);
+        }
       }
     }
+
+    // Always merge persistent acknowledgements from order_events so ALL serverless instances stay synchronized!
+    try {
+      const { data: dbAcks } = await supabaseAdmin
+        .from('order_events')
+        .select('order_id, event_data, created_at')
+        .eq('event_type', 'updated')
+        .filter('event_data->>action', 'eq', 'admin_alert_acknowledged')
+        .gte('created_at', new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+        .limit(200);
+
+      if (dbAcks && dbAcks.length > 0) {
+        const ackedOrderIds = new Set(dbAcks.map((a) => a.order_id).filter(Boolean));
+        for (const alert of list) {
+          if (alert.order_id && ackedOrderIds.has(alert.order_id)) {
+            alert.status = 'acknowledged';
+          }
+        }
+        for (const ack of dbAcks) {
+          if (!list.some((a) => a.order_id === ack.order_id)) {
+            list.push({
+              id: `acked-${ack.order_id}`,
+              order_id: ack.order_id,
+              status: 'acknowledged',
+              severity: 'critical',
+              title: 'تنبيه مؤكد',
+              acknowledged_by: ack.event_data?.operator_name || 'Admin',
+              acknowledged_at: ack.created_at,
+              created_at: ack.created_at,
+            });
+          }
+        }
+      }
+    } catch (ackErr) {
+      this.logger.warn?.('[admin-alert-engine] dbAcks fetch error:', ackErr.message);
+    }
+
     return list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }
 
   /**
    * Register or refresh a Web Push device token for an admin operator.
    */
-  async registerWebDevice({ userId, token, deviceId, userAgent }) {
-    if (!token || !deviceId) {
-      return { success: false, error: 'token_and_device_id_required' };
-    }
-
-    const now = new Date().toISOString();
-    try {
-      // Find default admin user ID if none provided
-      let effectiveUserId = userId;
-      if (!effectiveUserId) {
-        const admins = await getActiveAdminUserIds(this.logger);
-        effectiveUserId = admins[0] || null;
-      }
-
-      if (!effectiveUserId) {
-        return { success: false, error: 'no_admin_user_profile_found' };
-      }
-
-      const { data: existing } = await supabaseAdmin
-        .from('user_device_tokens')
-        .select('id')
-        .eq('device_id', deviceId)
-        .maybeSingle();
-
-      if (existing?.id) {
-        const { error } = await supabaseAdmin
-          .from('user_device_tokens')
-          .update({
-            user_id: effectiveUserId,
-            token,
-            platform: 'web',
-            is_active: true,
-            last_seen_at: now,
-            updated_at: now,
-            push_paused: false,
-          })
-          .eq('id', existing.id);
-
-        if (error) throw error;
-        return { success: true, updated: true };
-      }
-
-      const { error: insertError } = await supabaseAdmin
-        .from('user_device_tokens')
-        .insert({
-          user_id: effectiveUserId,
-          token,
-          platform: 'web',
-          device_id: deviceId,
-          is_active: true,
-          last_seen_at: now,
-          created_at: now,
-          updated_at: now,
-          push_paused: false,
-        });
-
-      if (insertError) throw insertError;
-      return { success: true, inserted: true };
-    } catch (err) {
-      this.logger.error?.('[admin-alert-engine] registerWebDevice error:', err.message);
-      return { success: false, error: err.message };
-    }
+  async registerWebDevice({ userId, token, deviceId, userAgent, subscription, platform }) {
+    return adminWebPushService.registerSubscription({
+      userId,
+      deviceId,
+      token,
+      subscription,
+      platform,
+      userAgent,
+    });
   }
 
   /**

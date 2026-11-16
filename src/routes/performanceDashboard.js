@@ -8,6 +8,7 @@ import { runPreparingUnassignedRebroadcastOnce } from '../services/preparingUnas
 import { runPreparingAssignedDelayAdminAlertsOnce } from '../services/preparingAssignedDelayAdminAlertsPoller.js';
 import { supabasePushGateway } from '../modules/notifications/supabasePushGateway.js';
 import { adminAlertEngine } from '../modules/alerts/adminAlertEngine.js';
+import { adminWebPushService } from '../services/adminWebPushService.js';
 import {
   getRestaurantOpsUserIds,
   getOnlineAvailableCourierUserIds,
@@ -518,6 +519,7 @@ router.get('/meta', requirePerformanceAuth, async (req, res) => {
       admin_reviewer_label: reviewer.reviewedBy,
       supabase_url: process.env.SUPABASE_URL || null,
       supabase_anon_key: process.env.SUPABASE_ANON_KEY || null,
+      vapid_public_key: adminWebPushService.getVapidPublicKey(),
     });
   } catch (e) {
     console.error('performance /meta', e);
@@ -3519,12 +3521,35 @@ router.post('/devices/register', requirePerformanceAuth, async (req, res) => {
     const deviceId = String(req.body?.device_id || '').trim();
     const userAgent = String(req.body?.user_agent || req.headers['user-agent'] || '').trim();
     const userId = req.body?.user_id || null;
+    const subscription = req.body?.subscription || null;
+    const platform = String(req.body?.platform || 'web').trim();
 
-    const result = await adminAlertEngine.registerWebDevice({ userId, token, deviceId, userAgent });
+    const result = await adminAlertEngine.registerWebDevice({
+      userId,
+      token,
+      deviceId,
+      userAgent,
+      subscription,
+      platform,
+    });
     return res.json(result);
   } catch (e) {
     console.error('performance register device', e);
     return res.status(500).json({ success: false, error: e.message || 'Device registration failed' });
+  }
+});
+
+router.post('/alerts/test-push', requirePerformanceAuth, async (req, res) => {
+  try {
+    const deviceId = String(req.body?.device_id || '').trim();
+    if (!deviceId) {
+      return res.status(400).json({ success: false, error: 'device_id_required' });
+    }
+    const result = await adminWebPushService.sendTestPushToDevice({ deviceId });
+    return res.json(result);
+  } catch (e) {
+    console.error('performance test push', e);
+    return res.status(500).json({ success: false, error: e.message || 'Test push failed' });
   }
 });
 

@@ -2974,6 +2974,9 @@
             <button type="button" class="sahla-audio-btn" id="enableWebPushBtn" title="Enable System Push Notifications" onclick="requestWebPushPermission()">
               <span>🔔</span> <span>Push</span>
             </button>
+            <button type="button" class="sahla-audio-btn" id="sahlaTestLockBtn" title="Test Native Push on Locked Phone Screen" onclick="testLockScreenPush()" style="display:none;">
+              <span>📲</span> <span>Test Lock</span>
+            </button>
             <button type="button" class="sahla-audio-btn" id="sahlaTestAlertBtn" title="Test Alarm Sound & Notification Popup" onclick="triggerTestAlert()">
               <span>🧪</span> <span>Test</span>
             </button>
@@ -5243,6 +5246,9 @@
 
       async function loadMeta() {
         const m = await api('/meta');
+        if (m.vapid_public_key) {
+          _vapidPublicKey = m.vapid_public_key;
+        }
         if (m.supabase_url && m.supabase_anon_key && !_supabaseRealtime) {
           initSupabaseRealtime(m);
         }
@@ -6177,6 +6183,14 @@
       }
 
       function snoozeDashboardAudio(minutes = 5) {
+        if (_snoozeUntil > Date.now()) {
+          // Toggle off snooze
+          _snoozeUntil = 0;
+          localStorage.removeItem('sahla_admin_snooze_until');
+          updateSnoozeButtonUI();
+          syncCriticalAlarmState();
+          return;
+        }
         _snoozeUntil = Date.now() + minutes * 60_000;
         localStorage.setItem('sahla_admin_snooze_until', String(_snoozeUntil));
         stopRepeatingAlarm();
@@ -6217,41 +6231,83 @@
         }
       }
 
+      function getLocalAckedOrders() {
+        try {
+          const raw = localStorage.getItem('sahla_acked_orders');
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          const now = Date.now();
+          const clean = {};
+          for (const [id, ts] of Object.entries(parsed)) {
+            if (now - Number(ts) < 24 * 3600 * 1000) {
+              clean[id] = ts;
+            }
+          }
+          return clean;
+        } catch (_) {
+          return {};
+        }
+      }
+
+      function persistLocalAckedOrder(orderId) {
+        if (!orderId) return;
+        const idStr = String(orderId);
+        const acks = getLocalAckedOrders();
+        acks[idStr] = Date.now();
+        try {
+          localStorage.setItem('sahla_acked_orders', JSON.stringify(acks));
+        } catch (_) {}
+        latestAckedOrderIds.add(idStr);
+        _activeCriticalAlerts.delete(idStr);
+        syncCriticalAlarmState();
+      }
+
       async function acknowledgeAdminAlert(alertId, btnEl) {
         if (!alertId) return;
+        const idStr = String(alertId);
         const operatorName = localStorage.getItem('sahla_operator_name') || 'Admin';
+
+        // 1. Immediately persist locally, silence the repeating alarm, and lock the UI button
+        persistLocalAckedOrder(idStr);
         if (btnEl) {
           btnEl.disabled = true;
-          btnEl.textContent = '...';
+          btnEl.textContent = '✓ Ack';
+          btnEl.classList.remove('ack-btn');
+          btnEl.classList.add('muted');
         }
+
+        // 2. Synchronize to server order_events & admin_alerts
         try {
-          const res = await api(`/alerts/${encodeURIComponent(alertId)}/acknowledge`, {
+          await api(`/alerts/${encodeURIComponent(idStr)}/acknowledge`, {
             method: 'POST',
             body: JSON.stringify({ operator_name: operatorName }),
           });
-          if (res.success) {
-            _activeCriticalAlerts.delete(alertId);
-            syncCriticalAlarmState();
-            if (btnEl) {
-              btnEl.textContent = '✓ Ack';
-              btnEl.classList.remove('ack-btn');
-              btnEl.classList.add('muted');
-            }
-          }
         } catch (e) {
-          alert('Could not acknowledge alert: ' + (e.message || 'Error'));
-          if (btnEl) {
-            btnEl.disabled = false;
-            btnEl.textContent = '✋ Ack';
-          }
+          console.warn('Alert acknowledge API response note:', e.message);
         }
+      }
+
+      const DEFAULT_VAPID_PUBLIC_KEY = 'BH8-UB75DtVmMapkbdTsnG36JiUH67mvcebkl7a0Lu0z4YAkTfDTkQA7ftd_aiXSwBB5tQGUxyYuM8Hgr85XD3g';
+      let _vapidPublicKey = DEFAULT_VAPID_PUBLIC_KEY;
+
+      function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
       }
 
       async function initWebPushState() {
         const btn = $('enableWebPushBtn');
+        const testBtn = $('sahlaTestLockBtn');
         if (!btn) return;
         if (!('Notification' in window)) {
           btn.style.display = 'none';
+          if (testBtn) testBtn.style.display = 'none';
           return;
         }
 
@@ -6260,6 +6316,7 @@
           btn.classList.add('active');
           btn.classList.remove('muted');
           btn.title = 'Push notifications are active on this device';
+          if (testBtn) testBtn.style.display = 'inline-flex';
           localStorage.setItem('sahla_admin_push_enabled', 'true');
           syncWebPushRegistrationSilently().catch(() => {});
         } else if (Notification.permission === 'denied') {
@@ -6267,17 +6324,19 @@
           btn.classList.add('muted');
           btn.classList.remove('active');
           btn.title = 'Push notifications are blocked in browser settings';
+          if (testBtn) testBtn.style.display = 'none';
         } else {
           btn.innerHTML = '<span>🔔</span> <span>Push</span>';
           btn.classList.remove('active', 'muted');
           btn.title = 'Enable Push Notifications';
+          if (testBtn) testBtn.style.display = 'none';
         }
       }
 
       async function syncWebPushRegistrationSilently() {
         if (!('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return;
         try {
-          await navigator.serviceWorker.register('/admin-sw.js');
+          const reg = await navigator.serviceWorker.register('/admin-sw.js');
           await navigator.serviceWorker.ready;
 
           let deviceId = localStorage.getItem('sahla_admin_device_id');
@@ -6288,11 +6347,32 @@
 
           localStorage.setItem('sahla_admin_push_enabled', 'true');
 
+          let subscription = null;
+          if ('PushManager' in window && reg.pushManager) {
+            try {
+              subscription = await reg.pushManager.getSubscription();
+              if (!subscription) {
+                const convertedKey = urlBase64ToUint8Array(_vapidPublicKey);
+                subscription = await reg.pushManager.subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey: convertedKey,
+                });
+              }
+            } catch (subErr) {
+              console.warn('[WebPush] Subscribe error:', subErr);
+            }
+          }
+
+          const subJson = subscription ? subscription.toJSON() : null;
+          const tokenPayload = subJson ? JSON.stringify(subJson) : ('sw-active-' + deviceId);
+
           await api('/devices/register', {
             method: 'POST',
             body: JSON.stringify({
               device_id: deviceId,
-              token: 'sw-active-' + deviceId,
+              token: tokenPayload,
+              subscription: subJson,
+              platform: subJson ? 'web_push' : 'web',
               user_agent: navigator.userAgent,
             }),
             silentError: true,
@@ -6309,17 +6389,25 @@
           return;
         }
 
+        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
         if (Notification.permission === 'denied') {
-          alert('Notifications are blocked in your browser settings. Please enable notifications for this site in your browser permissions.');
+          alert('الإشعارات محظورة في إعدادات المتصفح. يرجى تفعيل الإشعارات للموقع من إعدادات المتصفح أو إعدادات الآيفون.');
           return;
+        }
+
+        if (isIos && !isStandalone) {
+          alert('📱 تنبيه لأجهزة الآيفون:\nلتلقي التنبيهات حتى وشاشة الهاتف مقفلة، يرجى أولاً إضافة الصفحة إلى الشاشة الرئيسية (اضغط زر المشاركة ⎋ ثم "إضافة إلى الشاشة الرئيسية ➕")، ثم افتح تطبيق "Sahla Admin" من شاشة هاتفك.');
         }
 
         if (Notification.permission === 'granted') {
           await syncWebPushRegistrationSilently();
           initWebPushState();
-          new Notification('Sahla Notifications Active', {
-            body: 'Push notifications are active and ready on this device.',
-            icon: '/sahla-logo-circle.png',
+          dispatchAdminDesktopNotification({
+            title: '🔔 تم تفعيل إشعارات Sahla',
+            body: 'إشعارات النظام تعمل الآن بنجاح على هذا الجهاز.',
+            tag: 'sahla-active-' + Date.now(),
           });
           return;
         }
@@ -6329,12 +6417,48 @@
           localStorage.setItem('sahla_admin_push_enabled', 'true');
           await syncWebPushRegistrationSilently();
           initWebPushState();
-          new Notification('Sahla Notifications Enabled', {
-            body: 'You will now receive emergency alert banners on this device.',
-            icon: '/sahla-logo-circle.png',
+          dispatchAdminDesktopNotification({
+            title: '🚨 Sahla Notifications Enabled',
+            body: 'ستصلك الآن تنبيهات الطوارئ للطلبات المتأخرة على هذا الجهاز.',
+            tag: 'sahla-enabled-' + Date.now(),
           });
         } else {
           initWebPushState();
+        }
+      }
+
+      async function testLockScreenPush() {
+        const btn = $('sahlaTestLockBtn');
+        const deviceId = localStorage.getItem('sahla_admin_device_id');
+        if (!deviceId) {
+          alert('يرجى تفعيل زر Push 🔔 أولاً لربط الجهاز.');
+          return;
+        }
+
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span>⏳</span> <span>إرسال...</span>';
+        }
+
+        try {
+          await syncWebPushRegistrationSilently();
+          const res = await api('/alerts/test-push', {
+            method: 'POST',
+            body: JSON.stringify({ device_id: deviceId }),
+          });
+
+          if (res.success) {
+            alert('🔒 اقفل شاشة هاتفك الآن فوراً!\nسيصلك تنبيه تجريبي خلال لحظات مع الصوت والاهتزاز لاختبار قفل الشاشة.');
+          } else {
+            alert('تعذر إرسال التنبيه: ' + (res.error || res.hint || 'يرجى التأكد من تشغيل التطبيق من الشاشة الرئيسية PWA'));
+          }
+        } catch (e) {
+          alert('خطأ أثناء إرسال إشعار التجربة: ' + (e.message || 'Error'));
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>📲</span> <span>Test Lock</span>';
+          }
         }
       }
 
@@ -6921,7 +7045,11 @@
 
         latestStaleOrders = mo;
         latestEngineAlerts = data.engineAlerts || [];
-        latestAckedOrderIds = new Set(data.acknowledgedAlertOrderIds || []);
+        const localAcks = getLocalAckedOrders();
+        latestAckedOrderIds = new Set([
+          ...(data.acknowledgedAlertOrderIds || []).map(String),
+          ...Object.keys(localAcks),
+        ]);
 
         const critIds = new Set();
         mo.forEach((o) => {
