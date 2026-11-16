@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Sahla — Performance</title>
     <link rel="icon" type="image/png" href="/sahla-logo-circle.png" />
     <link rel="manifest" href="/manifest.json" />
@@ -2457,80 +2457,217 @@
         z-index: 998;
       }
 
+      /* ========================================================================= */
+      /* Mobile Alerts Architecture & Touch Design                                 */
+      /* ========================================================================= */
       .mobile-alerts-container {
         display: none;
         flex-direction: column;
         gap: 12px;
-        margin-top: 10px;
+        margin-top: 8px;
+        width: 100%;
+        box-sizing: border-box;
       }
       .mobile-alert-card {
         background: #ffffff;
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 14px;
-        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+        border-inline-start: 5px solid #cbd5e1;
+        border-radius: 14px;
+        padding: 13px 14px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
         display: flex;
         flex-direction: column;
         gap: 10px;
         position: relative;
-        border-left: 5px solid #cbd5e1;
+        box-sizing: border-box;
       }
       .mobile-alert-card.critical {
-        border-left-color: #ef4444;
-        background: #fffcfc;
+        border-inline-start-color: #ef4444;
+        background: #fffafa;
+        box-shadow: 0 4px 14px rgba(239, 68, 68, 0.09);
       }
       .mobile-alert-card.acknowledged {
-        border-left-color: #f59e0b;
-        background: #fffdf5;
+        border-inline-start-color: #f59e0b;
+        background: #fffdf7;
       }
-      .mobile-alert-header {
+
+      .mobile-alert-top-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        font-size: 0.92rem;
-        font-weight: 800;
-      }
-      .mobile-alert-body {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
         gap: 8px;
-        font-size: 0.82rem;
-        color: var(--muted);
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f1f5f9;
       }
-      .mobile-alert-actions {
+      .mobile-alert-id-group {
         display: flex;
         align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-        padding-top: 8px;
-        border-top: 1px solid var(--border-light);
+        gap: 6px;
       }
+      .mobile-alert-order-num {
+        font-weight: 800;
+        font-size: 0.95rem;
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .mobile-alert-age-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 999px;
+      }
+      .mobile-alert-age-pill.warn {
+        background: #fef2f2;
+        color: #ef4444;
+        border: 1px solid #fecaca;
+      }
+      .mobile-alert-age-pill.normal {
+        background: #f1f5f9;
+        color: #64748b;
+      }
+
+      .mobile-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: capitalize;
+      }
+      .mobile-status-pill.pending {
+        background: #fef3c7;
+        color: #b45309;
+        border: 1px solid #fde68a;
+      }
+      .mobile-status-pill.preparing {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+      }
+      .mobile-status-pill.ready {
+        background: #e0e7ff;
+        color: #4338ca;
+        border: 1px solid #c7d2fe;
+      }
+      .mobile-status-pill.picked_up {
+        background: #ccfbf1;
+        color: #0f766e;
+        border: 1px solid #99f6e4;
+      }
+      .mobile-status-pill.delivered {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+      }
+      .mobile-status-pill.cancelled {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+      }
+
+      .mobile-alert-items-summary {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #d97706;
+        background: #fffbeb;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px dashed #fde68a;
+      }
+
+      .mobile-alert-body-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .mobile-alert-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 0.82rem;
+        padding: 2px 0;
+      }
+      .mobile-alert-label {
+        color: var(--muted);
+        font-weight: 600;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .mobile-alert-val {
+        color: var(--text);
+        font-weight: 700;
+        text-align: end;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mobile-alert-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+        gap: 6px;
+        padding-top: 8px;
+        border-top: 1px solid #f1f5f9;
+      }
+
       .mobile-action-btn {
-        flex: 1;
-        min-width: 80px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 4px;
-        padding: 8px 10px;
-        border-radius: 8px;
-        font-size: 0.78rem;
+        height: 38px;
+        padding: 0 10px;
+        border-radius: 9px;
+        font-size: 0.8rem;
         font-weight: 700;
         text-decoration: none;
         border: 1px solid var(--border);
         background: #ffffff;
         color: var(--text);
         cursor: pointer;
+        transition: all 0.12s ease;
+        -webkit-tap-highlight-color: transparent;
       }
-      .mobile-action-btn.ack-btn {
-        background: #ecfdf5;
-        color: #065f46;
-        border-color: #a7f3d0;
+      .mobile-action-btn:active {
+        transform: scale(0.96);
       }
       .mobile-action-btn.call-btn {
         background: #f0fdf4;
         color: #166534;
         border-color: #bbf7d0;
+      }
+      .mobile-action-btn.ack-btn {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fde68a;
+      }
+      .mobile-action-btn.delivered-btn {
+        background: #16a34a;
+        color: #ffffff;
+        border-color: #15803d;
+      }
+      .mobile-action-btn.pickup-btn {
+        background: #0284c7;
+        color: #ffffff;
+        border-color: #0369a1;
+      }
+      .mobile-action-btn.accept-btn {
+        background: #0284c7;
+        color: #ffffff;
+        border-color: #0369a1;
+      }
+      .mobile-action-btn.cancel-btn {
+        background: #fff1f2;
+        color: #e11d48;
+        border-color: #fecdd3;
       }
 
       .alert-ack-pill {
@@ -2546,12 +2683,233 @@
         border: 1px solid #fde68a;
       }
 
+      .mobile-empty-state {
+        text-align: center;
+        padding: 20px 14px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 600;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px dashed var(--border);
+        margin: 4px 0 12px;
+      }
+
+      .sahla-header-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+
+      /* ========================================================================= */
+      /* Responsive Mobile Viewport Overrides (<= 768px)                           */
+      /* ========================================================================= */
       @media (max-width: 768px) {
+        html, body {
+          max-width: 100vw !important;
+          overflow-x: hidden !important;
+          -webkit-text-size-adjust: 100%;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        body {
+          padding-top: env(safe-area-inset-top, 0px) !important;
+          padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
+          padding-left: env(safe-area-inset-left, 0px) !important;
+          padding-right: env(safe-area-inset-right, 0px) !important;
+        }
+
+        /* 1. Header Layout - Zero horizontal overflow */
+        .sahla-brand-header {
+          padding: max(10px, env(safe-area-inset-top)) 12px 12px !important;
+          gap: 10px !important;
+          flex-direction: column !important;
+          align-items: stretch !important;
+          width: 100% !important;
+          max-width: 100vw !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+
+        .sahla-brand-left {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          width: 100% !important;
+        }
+
+        .sahla-hdr-logo-circle {
+          width: 38px !important;
+          height: 38px !important;
+        }
+
+        .sahla-arabic-brand {
+          font-size: 1.25rem !important;
+        }
+
+        .sahla-latin-brand {
+          font-size: 0.92rem !important;
+        }
+
+        .sahla-badge-ops {
+          font-size: 0.62rem !important;
+          padding: 2px 7px !important;
+        }
+
+        .sahla-brand-right {
+          width: 100% !important;
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 8px !important;
+          align-items: stretch !important;
+        }
+
+        .sahla-brand-actions {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          gap: 6px !important;
+          width: 100% !important;
+        }
+
+        .sahla-lang-switcher {
+          flex-shrink: 0 !important;
+          gap: 2px !important;
+          padding: 2px 4px !important;
+        }
+
+        .sahla-lang-btn {
+          padding: 5px 8px !important;
+          font-size: 0.72rem !important;
+        }
+
+        .sahla-hdr-btn {
+          flex: 1 !important;
+          padding: 6px 8px !important;
+          font-size: 0.76rem !important;
+          justify-content: center !important;
+          white-space: nowrap !important;
+          min-width: 0 !important;
+        }
+
+        /* 4-button responsive audio toolbar */
+        .sahla-audio-hud {
+          display: grid !important;
+          grid-template-columns: repeat(4, 1fr) !important;
+          gap: 6px !important;
+          width: 100% !important;
+          background: rgba(0, 0, 0, 0.25) !important;
+          padding: 6px !important;
+          border-radius: 10px !important;
+          border: 1px solid rgba(255, 255, 255, 0.12) !important;
+          box-sizing: border-box !important;
+        }
+
+        .sahla-audio-btn {
+          padding: 8px 4px !important;
+          font-size: 0.72rem !important;
+          min-width: 0 !important;
+          justify-content: center !important;
+          border-radius: 8px !important;
+          white-space: nowrap !important;
+        }
+
+        .sahla-audio-btn span {
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+
+        /* Status meta bar (Live, Alerts, Clock) */
+        .sahla-header-meta {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          width: 100% !important;
+          gap: 6px !important;
+        }
+
+        .sahla-header-meta .sahla-conn-pill,
+        .sahla-header-meta .sahla-brand-metric,
+        .sahla-header-meta .sahla-brand-time {
+          flex: 1 !important;
+          justify-content: center !important;
+          text-align: center !important;
+          padding: 5px 6px !important;
+          font-size: 0.72rem !important;
+          margin: 0 !important;
+          white-space: nowrap !important;
+        }
+
+        /* 2. Swipeable Pill Navigation Bar */
+        .tabs {
+          display: flex !important;
+          flex-wrap: nowrap !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          gap: 6px !important;
+          padding: 8px 12px !important;
+          margin: 0 0 12px !important;
+          background: #ffffff !important;
+          border-bottom: 1px solid var(--border) !important;
+          scrollbar-width: none !important;
+        }
+        .tabs::-webkit-scrollbar {
+          display: none !important;
+        }
+        .tabs button {
+          flex-shrink: 0 !important;
+          white-space: nowrap !important;
+          padding: 7px 14px !important;
+          font-size: 0.78rem !important;
+          border-radius: 999px !important;
+        }
+
+        /* 3. Hide Wide Desktop Tables & Expand Mobile Cards */
+        .order-box-wrap table,
+        .order-box-wrap {
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+
         .order-box-wrap table {
           display: none !important;
         }
+
         .mobile-alerts-container {
           display: flex !important;
+        }
+
+        /* 4. Filter Toolbar Grid on Mobile */
+        .toolbar {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 8px !important;
+          align-items: end !important;
+        }
+        .toolbar .field {
+          min-width: 0 !important;
+        }
+        .toolbar .btn-refresh {
+          grid-column: span 2 !important;
+          width: 100% !important;
+          height: 38px !important;
+          justify-content: center !important;
+        }
+
+        /* 5. Typography & Headings */
+        .alerts-head {
+          font-size: 1rem !important;
+          margin: 16px 12px 6px !important;
+        }
+
+        .meta {
+          margin: 0 12px 10px !important;
+          font-size: 0.78rem !important;
         }
       }
     </style>
@@ -2606,9 +2964,6 @@
               <span data-i18n="hdr_push_notif">Push Notification</span>
             </button>
           </div>
-          <div class="sahla-conn-pill live" id="adminConnectionPill" title="Connection status">
-            <span>●</span> <span id="adminConnectionText">Live</span>
-          </div>
           <div class="sahla-audio-hud" id="adminAudioHud">
             <button type="button" class="sahla-audio-btn active" id="sahlaAudioToggleBtn" title="Toggle Alarm Sound" onclick="toggleDashboardAudio()">
               <span id="sahlaAudioIcon">🔊</span> <span id="sahlaAudioText">Sound</span>
@@ -2623,11 +2978,16 @@
               <span>🧪</span> <span>Test</span>
             </button>
           </div>
-          <div class="sahla-brand-metric" id="headerActiveOrdersPill" data-i18n-title="hdr_alerts_title">
-            <span class="sahla-metric-label" data-i18n="hdr_alerts">Alerts</span>
-            <span class="sahla-metric-val" id="headerActiveOrdersCount">0</span>
+          <div class="sahla-header-meta" id="sahlaHeaderMeta">
+            <div class="sahla-conn-pill live" id="adminConnectionPill" title="Connection status">
+              <span>●</span> <span id="adminConnectionText">Live</span>
+            </div>
+            <div class="sahla-brand-metric" id="headerActiveOrdersPill" data-i18n-title="hdr_alerts_title">
+              <span class="sahla-metric-label" data-i18n="hdr_alerts">Alerts</span>
+              <span class="sahla-metric-val" id="headerActiveOrdersCount">0</span>
+            </div>
+            <div class="sahla-brand-time" id="sahlaBrandClock" data-i18n-title="hdr_clock_title">--:--:--</div>
           </div>
-          <div class="sahla-brand-time" id="sahlaBrandClock" data-i18n-title="hdr_clock_title">--:--:--</div>
         </div>
       </header>
 
@@ -2811,6 +3171,7 @@
               </thead>
               <tbody id="alertsPreparingUnassignedBody"></tbody>
             </table>
+            <div class="mobile-alerts-container" id="alertsMobilePrepUnassignedContainer"></div>
           </div>
 
           <!-- 3. Preparing — Courier assigned not picked up (≥ 20 min) -->
@@ -2838,6 +3199,7 @@
               </thead>
               <tbody id="alertsPreparingAssignedBody"></tbody>
             </table>
+            <div class="mobile-alerts-container" id="alertsMobilePrepAssignedContainer"></div>
           </div>
 
           <!-- 4. Picked up — not delivered (≥ delay) -->
@@ -2865,6 +3227,7 @@
               </thead>
               <tbody id="alertsPickedUpBody"></tbody>
             </table>
+            <div class="mobile-alerts-container" id="alertsMobilePickedUpContainer"></div>
           </div>
           <h3 class="alerts-head"><span class="head-icon">🚫</span> <span data-i18n="sec_cancelled_orders">Cancelled orders</span></h3>
           <div class="toolbar">
@@ -2905,6 +3268,7 @@
               </thead>
               <tbody id="cancelledOrdersBody"></tbody>
             </table>
+            <div class="mobile-alerts-container" id="cancelledOrdersMobileContainer"></div>
           </div>
           <h3 class="alerts-head"><span class="head-icon">📋</span> <span data-i18n="sec_tasks_no_offers">Open tasks with no cost offers (≥ threshold)</span></h3>
           <p class="meta" id="alertsTasksMeta"></p>
@@ -6115,6 +6479,151 @@
         }
       }
 
+      function buildMobileOrderCard(o, { isStale = false, isAcked = false, alertCategory = 'general' } = {}) {
+        const card = document.createElement('div');
+        const oid = o.id;
+        const stLc = String(o.status || '').toLowerCase();
+        const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
+        const ageDisplay = o.ageMinutes != null ? o.ageMinutes : (o.created_at ? Math.max(0, Math.floor((Date.now() - new Date(o.created_at).getTime()) / 60000)) : '—');
+        const isCritical = isStale || alertCategory === 'critical' || alertCategory === 'prep_assigned' || alertCategory === 'prep_unassigned' || alertCategory === 'picked_up';
+        const noCourier = !o.delivery_person_id;
+        const canPickupAssigned = !noCourier && (stLc === 'pending' || stLc === 'confirmed' || stLc === 'preparing' || stLc === 'ready');
+
+        card.className = 'mobile-alert-card' + (isCritical ? (isAcked ? ' acknowledged' : ' critical') : '');
+
+        let ackBadge = '';
+        if (isCritical) {
+          if (isAcked) {
+            const aInfo = (latestEngineAlerts || []).find((a) => String(a.order_id) === String(oid));
+            const byName = aInfo?.acknowledged_by ? esc(aInfo.acknowledged_by) : (typeof t === 'function' ? t('hdr_admin', 'Admin') : 'Admin');
+            ackBadge = '<span class="alert-ack-pill">✓ ' + byName + '</span>';
+          } else {
+            ackBadge = '<button type="button" class="mobile-action-btn ack-btn" style="height:28px;padding:2px 8px;font-size:0.74rem;" onclick="acknowledgeAdminAlert(\'' + esc(oid) + '\', this)">✋ ' + (typeof t === 'function' ? t('btn_ack', 'Ack') : 'Ack') + '</button>';
+          }
+        }
+
+        const ageBadgeClass = isCritical ? 'warn' : 'normal';
+        const agePill = '<span class="mobile-alert-age-pill ' + ageBadgeClass + '">' + (isCritical ? '⚠️ ' : '⏱️ ') + esc(ageDisplay) + 'm</span>';
+        const stLabel = typeof orderStatusLabel === 'function' ? orderStatusLabel(stLc) : stLc.replace(/_/g, ' ');
+        const stPill = '<span class="mobile-status-pill ' + esc(stLc) + '">' + esc(stLabel) + '</span>';
+
+        const destObj = deliveryDestination(o);
+        const destLink = destObj.lookupUrl
+          ? '<a href="' + esc(destObj.lookupUrl) + '" target="_blank" rel="noopener" style="color:#0284c7;font-weight:700;">' + esc(destObj.text || 'Look up') + ' 📍</a>'
+          : esc(destObj.text || '—');
+
+        const restLabel = typeof t === 'function' ? t('th_restaurant', 'المطعم') : 'المطعم';
+        const totalLabel = typeof t === 'function' ? t('th_total', 'المجموع') : 'المجموع';
+        const courierLabel = typeof t === 'function' ? t('th_courier', 'السائق') : 'السائق';
+        const destLabel = typeof t === 'function' ? t('th_destination', 'الوجهة') : 'الوجهة';
+
+        let html =
+          '<div class="mobile-alert-top-row">' +
+            '<div class="mobile-alert-id-group">' +
+              '<button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(oid) + '\')" title="' + esc(typeof t === 'function' ? t('th_eye_title', 'View details') : 'View details') + '">👁️</button>' +
+              '<span class="mobile-alert-order-num" dir="ltr">#' + esc(o.order_number || oid) + '</span>' +
+              agePill +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:6px;">' +
+              ackBadge +
+              stPill +
+            '</div>' +
+          '</div>';
+
+        if (o.order_items_summary) {
+          html += '<div class="mobile-alert-items-summary">' + renderOrderSummaryInlineHtml(o.order_items_summary) + '</div>';
+        }
+
+        html +=
+          '<div class="mobile-alert-body-list">' +
+            '<div class="mobile-alert-row">' +
+              '<span class="mobile-alert-label">🏬 ' + esc(restLabel) + '</span>' +
+              '<span class="mobile-alert-val">' + esc(rest || o.restaurant_id || '—') + '</span>' +
+            '</div>' +
+            '<div class="mobile-alert-row">' +
+              '<span class="mobile-alert-label">💰 ' + esc(totalLabel) + '</span>' +
+              '<span class="mobile-alert-val">' + (o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') + '</span>' +
+            '</div>' +
+            '<div class="mobile-alert-row">' +
+              '<span class="mobile-alert-label">🛵 ' + esc(courierLabel) + '</span>' +
+              '<span class="mobile-alert-val">' + esc(o.courier_display_name || '—') + '</span>' +
+            '</div>' +
+            '<div class="mobile-alert-row">' +
+              '<span class="mobile-alert-label">📍 ' + esc(destLabel) + '</span>' +
+              '<span class="mobile-alert-val">' + destLink + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mobile-alert-actions" id="mob-act-' + esc(oid) + '"></div>';
+
+        card.innerHTML = html;
+
+        const actContainer = card.querySelector('#mob-act-' + CSS.escape(oid));
+        if (actContainer) {
+          if (o.courier_display_phone) {
+            const callCour = document.createElement('a');
+            callCour.href = 'tel:' + o.courier_display_phone;
+            callCour.className = 'mobile-action-btn call-btn';
+            callCour.textContent = '📞 ' + (typeof t === 'function' ? t('th_courier', 'السائق') : 'السائق');
+            actContainer.appendChild(callCour);
+          }
+          if (o.customer_display_phone) {
+            const callCust = document.createElement('a');
+            callCust.href = 'tel:' + o.customer_display_phone;
+            callCust.className = 'mobile-action-btn call-btn';
+            callCust.textContent = '📞 ' + (typeof t === 'function' ? t('th_customer', 'الزبون') : 'الزبون');
+            actContainer.appendChild(callCust);
+          }
+
+          if (stLc === 'pending') {
+            const acceptBtn = document.createElement('button');
+            acceptBtn.type = 'button';
+            acceptBtn.className = 'mobile-action-btn accept-btn';
+            acceptBtn.textContent = '✓ ' + (typeof t === 'function' ? t('btn_accept_order', 'Accept') : 'Accept');
+            acceptBtn.addEventListener('click', () => acceptOrder(oid, acceptBtn));
+            actContainer.appendChild(acceptBtn);
+
+            const rbBtn = document.createElement('button');
+            rbBtn.type = 'button';
+            rbBtn.className = 'mobile-action-btn';
+            rbBtn.textContent = '📢 ' + (typeof t === 'function' ? t('btn_rebroadcast', 'Re-broadcast') : 'Re-broadcast');
+            rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
+            actContainer.appendChild(rbBtn);
+          } else if (canPickupAssigned) {
+            const pickupBtn = document.createElement('button');
+            pickupBtn.type = 'button';
+            pickupBtn.className = 'mobile-action-btn pickup-btn';
+            pickupBtn.textContent = '📦 ' + (typeof t === 'function' ? t('btn_mark_pickup', 'Pick-up') : 'Pick-up');
+            pickupBtn.addEventListener('click', () => markPickedUp(oid, pickupBtn));
+            actContainer.appendChild(pickupBtn);
+          } else if ((stLc === 'preparing' || stLc === 'ready') && noCourier) {
+            const rbBtn = document.createElement('button');
+            rbBtn.type = 'button';
+            rbBtn.className = 'mobile-action-btn';
+            rbBtn.textContent = '📢 ' + (typeof t === 'function' ? t('btn_rebroadcast', 'Re-broadcast') : 'Re-broadcast');
+            rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
+            actContainer.appendChild(rbBtn);
+          } else if (stLc === 'picked_up') {
+            const doneBtn = document.createElement('button');
+            doneBtn.type = 'button';
+            doneBtn.className = 'mobile-action-btn delivered-btn';
+            doneBtn.textContent = '✅ ' + (typeof t === 'function' ? t('btn_mark_delivered', 'Delivered') : 'Delivered');
+            doneBtn.addEventListener('click', () => markDelivered(oid, doneBtn));
+            actContainer.appendChild(doneBtn);
+          }
+
+          if (orderCanCancelFromDashboard(o)) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.className = 'mobile-action-btn cancel-btn';
+            cancelBtn.textContent = '✕ ' + (typeof t === 'function' ? t('btn_cancel', 'Cancel') : 'Cancel');
+            cancelBtn.addEventListener('click', () => openCancelOrderModal(oid, o.order_number || oid));
+            actContainer.appendChild(cancelBtn);
+          }
+        }
+
+        return card;
+      }
+
       function renderMergedPendingAndNewOrders() {
         const ob = $('alertsOrdersBody');
         const om = $('alertsOrdersMeta');
@@ -6354,127 +6863,12 @@
         if (mobContainer) {
           mobContainer.innerHTML = '';
           if (!list.length) {
-            mobContainer.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-weight:600;">' + esc(typeof t === 'function' ? t('sec_pending_and_new_none', 'No pending or new orders.') : 'No pending or new orders.') + '</div>';
+            mobContainer.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_pending_and_new_none', 'No pending or new orders.') : 'No pending or new orders.') + '</div>';
           } else {
             list.forEach((o) => {
-              const card = document.createElement('div');
               const isStale = !!o._isStaleAlert;
               const isAcked = latestAckedOrderIds.has(String(o.id));
-              card.className = 'mobile-alert-card' + (isStale ? (isAcked ? ' acknowledged' : ' critical') : '');
-
-              const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
-              const ageDisplay = o.ageMinutes != null ? o.ageMinutes : (o.created_at ? Math.max(0, Math.floor((Date.now() - new Date(o.created_at).getTime()) / 60000)) : '—');
-              const oid = o.id;
-              const stLc = String(o.status || '').toLowerCase();
-              const noCourier = !o.delivery_person_id;
-              const canPickupAssigned =
-                !noCourier &&
-                (stLc === 'pending' || stLc === 'confirmed' || stLc === 'preparing' || stLc === 'ready');
-
-              let ackBadge = '';
-              if (isStale) {
-                if (isAcked) {
-                  const aInfo = (latestEngineAlerts || []).find((a) => String(a.order_id) === String(oid));
-                  const byName = aInfo?.acknowledged_by ? esc(aInfo.acknowledged_by) : 'Admin';
-                  ackBadge = '<span class="alert-ack-pill">✓ ' + byName + '</span>';
-                } else {
-                  ackBadge = '<button type="button" class="mobile-action-btn ack-btn" style="padding:4px 8px;" onclick="acknowledgeAdminAlert(\'' + esc(oid) + '\', this)">✋ Ack</button>';
-                }
-              }
-
-              card.innerHTML =
-                '<div class="mobile-alert-header">' +
-                  '<div style="display:flex;align-items:center;gap:6px;">' +
-                    '<button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(oid) + '\')" title="View details">👁️</button>' +
-                    '<span>#' + esc(o.order_number || oid) + '</span>' +
-                    (isStale ? '<span style="color:#ef4444;font-weight:800;font-size:0.8rem;">⚠️ ' + esc(ageDisplay) + 'm</span>' : '<span style="color:var(--muted);font-size:0.78rem;">' + esc(ageDisplay) + 'm</span>') +
-                  '</div>' +
-                  '<div style="display:flex;align-items:center;gap:6px;">' +
-                    ackBadge +
-                    '<span class="badge" style="text-transform:capitalize;">' + esc(stLc) + '</span>' +
-                  '</div>' +
-                '</div>' +
-                (o.order_items_summary ? '<div style="font-size:0.8rem;color:var(--text);padding:4px 0;">' + renderOrderSummaryInlineHtml(o.order_items_summary) + '</div>' : '') +
-                '<div class="mobile-alert-body">' +
-                  '<div><strong>🏬 ' + esc(typeof t === 'function' ? t('th_restaurant', 'Restaurant') : 'Restaurant') + ':</strong> ' + esc(rest || '—') + '</div>' +
-                  '<div><strong>💰 ' + esc(typeof t === 'function' ? t('th_total', 'Total') : 'Total') + ':</strong> ' + esc(o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') + '</div>' +
-                  '<div><strong>🛵 ' + esc(typeof t === 'function' ? t('th_courier', 'Courier') : 'Courier') + ':</strong> ' + esc(o.courier_display_name || '—') + '</div>' +
-                  '<div><strong>📍 ' + esc(typeof t === 'function' ? t('th_destination', 'Destination') : 'Destination') + ':</strong> ' + destinationCellHtml(o) + '</div>' +
-                '</div>' +
-                '<div class="mobile-alert-actions" id="mob-actions-' + esc(oid) + '"></div>';
-
-              const actContainer = card.querySelector('#mob-actions-' + CSS.escape(oid));
-              if (actContainer) {
-                if (o.courier_display_phone) {
-                  const callCour = document.createElement('a');
-                  callCour.href = 'tel:' + o.courier_display_phone;
-                  callCour.className = 'mobile-action-btn call-btn';
-                  callCour.textContent = '📞 Courier';
-                  actContainer.appendChild(callCour);
-                }
-                if (o.customer_display_phone) {
-                  const callCust = document.createElement('a');
-                  callCust.href = 'tel:' + o.customer_display_phone;
-                  callCust.className = 'mobile-action-btn call-btn';
-                  callCust.textContent = '📞 Customer';
-                  actContainer.appendChild(callCust);
-                }
-
-                if (stLc === 'pending') {
-                  const acceptBtn = document.createElement('button');
-                  acceptBtn.type = 'button';
-                  acceptBtn.className = 'mobile-action-btn';
-                  acceptBtn.style.background = '#0284c7';
-                  acceptBtn.style.color = '#fff';
-                  acceptBtn.textContent = typeof t === 'function' ? t('btn_accept_order', 'Accept') : 'Accept';
-                  acceptBtn.addEventListener('click', () => acceptOrder(oid, acceptBtn));
-                  actContainer.appendChild(acceptBtn);
-
-                  const rbBtn = document.createElement('button');
-                  rbBtn.type = 'button';
-                  rbBtn.className = 'mobile-action-btn';
-                  rbBtn.textContent = '📢 Re-broadcast';
-                  rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
-                  actContainer.appendChild(rbBtn);
-                } else if (canPickupAssigned) {
-                  const pickupBtn = document.createElement('button');
-                  pickupBtn.type = 'button';
-                  pickupBtn.className = 'mobile-action-btn';
-                  pickupBtn.style.background = '#16a34a';
-                  pickupBtn.style.color = '#fff';
-                  pickupBtn.textContent = '📦 Pick-up';
-                  pickupBtn.addEventListener('click', () => markPickedUp(oid, pickupBtn));
-                  actContainer.appendChild(pickupBtn);
-                } else if ((stLc === 'preparing' || stLc === 'ready') && noCourier) {
-                  const rbBtn = document.createElement('button');
-                  rbBtn.type = 'button';
-                  rbBtn.className = 'mobile-action-btn';
-                  rbBtn.textContent = '📢 Re-broadcast';
-                  rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
-                  actContainer.appendChild(rbBtn);
-                } else if (stLc === 'picked_up') {
-                  const doneBtn = document.createElement('button');
-                  doneBtn.type = 'button';
-                  doneBtn.className = 'mobile-action-btn';
-                  doneBtn.style.background = '#16a34a';
-                  doneBtn.style.color = '#fff';
-                  doneBtn.textContent = '✅ Delivered';
-                  doneBtn.addEventListener('click', () => markDelivered(oid, doneBtn));
-                  actContainer.appendChild(doneBtn);
-                }
-
-                if (orderCanCancelFromDashboard(o)) {
-                  const cancelBtn = document.createElement('button');
-                  cancelBtn.type = 'button';
-                  cancelBtn.className = 'mobile-action-btn';
-                  cancelBtn.style.color = '#ef4444';
-                  cancelBtn.textContent = '✕ Cancel';
-                  cancelBtn.addEventListener('click', () => openCancelOrderModal(oid, o.order_number || oid));
-                  actContainer.appendChild(cancelBtn);
-                }
-              }
-
-              mobContainer.appendChild(card);
+              mobContainer.appendChild(buildMobileOrderCard(o, { isStale, isAcked, alertCategory: isStale ? 'critical' : 'general' }));
             });
           }
         }
@@ -6641,31 +7035,42 @@
 
         renderMergedPendingAndNewOrders();
 
-        $('alertsPickedUpMeta').textContent = mp.length
-          ? mp.length +
-            ' delayed picked-up order(s).'
-          : 'No picked-up alerts.';
-        $('alertsTasksMeta').textContent = mt.length
-          ? mt.length + ' task(s) need attention.'
-          : 'No tasks waiting for first offer.';
+        const isAr = (window.currentSahlaLang || 'ar') === 'ar';
+
+        const puMetaEl = $('alertsPickedUpMeta');
+        if (puMetaEl) {
+          puMetaEl.textContent = mp.length
+            ? (isAr ? `${mp.length} طلب(ات) تم استلامها ولم يتم تسليمها (تأخير ≥ ${pickupDelayMin} د).` : `${mp.length} delayed picked-up order(s).`)
+            : (isAr ? 'لا توجد تنبيهات لطلبات متأخرة بعد الاستلام.' : 'No picked-up alerts.');
+        }
+
+        const tasksMetaEl = $('alertsTasksMeta');
+        if (tasksMetaEl) {
+          tasksMetaEl.textContent = mt.length
+            ? (isAr ? `${mt.length} مهمة(مهام) تنتظر عروض أسعار.` : `${mt.length} task(s) need attention.`)
+            : (isAr ? 'لا توجد مهام تنتظر عروض أسعار.' : 'No tasks waiting for first offer.');
+        }
+
         const prepAssignedMetaEl = $('alertsPreparingAssignedMeta');
         if (prepAssignedMetaEl) {
           prepAssignedMetaEl.textContent = mpa.length
-            ? mpa.length + ' order(s) in preparing with courier assigned not picked up (≥ ' + prepAssignedMin + ' min).'
-            : 'No delayed preparing assigned alerts.';
+            ? (isAr ? `${mpa.length} طلب(ات) قيد التحضير، السائق معيّن ولم يستلم (≥ ${prepAssignedMin} د).` : `${mpa.length} order(s) in preparing with courier assigned not picked up (≥ ${prepAssignedMin} min).`)
+            : (isAr ? 'لا توجد تنبيهات لطلبات متأخرة قيد التحضير.' : 'No delayed preparing assigned alerts.');
         }
+
         const prepUnassignedMetaEl = $('alertsPreparingUnassignedMeta');
         if (prepUnassignedMetaEl) {
           prepUnassignedMetaEl.textContent = mpu.length
-            ? mpu.length + ' order(s) in preparing waiting for courier (≥ ' + prepUnassignedMin + ' min).'
-            : 'No preparing unassigned alerts.';
+            ? (isAr ? `${mpu.length} طلب(ات) قيد التحضير بانتظار سائق (≥ ${prepUnassignedMin} د).` : `${mpu.length} order(s) in preparing waiting for courier (≥ ${prepUnassignedMin} min).`)
+            : (isAr ? 'لا توجد تنبيهات لطلبات بدون سائق.' : 'No preparing unassigned alerts.');
         }
-        updateAlertsBadge(mo.length + mp.length + mpa.length + mpu.length, mt.length);
-        parcelAlertCount = mw.length;
-        updateParcelAlertsBadge();
-        $('alertsParcelMeta').textContent = mw.length
-          ? mw.length + ' parcel order(s) waiting ≥ ' + parcelWaitMin + ' min.'
-          : 'No parcel waiting alerts.';
+
+        const parcelMetaEl = $('alertsParcelMeta');
+        if (parcelMetaEl) {
+          parcelMetaEl.textContent = mw.length
+            ? (isAr ? `${mw.length} طرد(ات) بريدية معلقة منذ ≥ ${parcelWaitMin} د.` : `${mw.length} parcel order(s) waiting ≥ ${parcelWaitMin} min.`)
+            : (isAr ? 'لا توجد طرود بريدية معلقة.' : 'No parcel waiting alerts.');
+        }
         if (data.pending_delivery_man_requests != null && data.pending_restaurant_requests != null) {
           updateRequestBadges(
             data.pending_delivery_man_requests,
@@ -6752,6 +7157,18 @@
         if (!mp.length) {
           pb.innerHTML = renderEmptyRow(14, 'sec_picked_up_none');
         }
+        const mobPickedUp = $('alertsMobilePickedUpContainer');
+        if (mobPickedUp) {
+          mobPickedUp.innerHTML = '';
+          if (!mp.length) {
+            mobPickedUp.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_picked_up_none', 'لا توجد طلبات متأخرة بعد الاستلام.') : 'لا توجد طلبات متأخرة بعد الاستلام.') + '</div>';
+          } else {
+            mp.forEach((o) => {
+              const isAcked = latestAckedOrderIds.has(String(o.id));
+              mobPickedUp.appendChild(buildMobileOrderCard(o, { alertCategory: 'picked_up', isAcked }));
+            });
+          }
+        }
 
         const pab = $('alertsPreparingAssignedBody');
         if (pab) {
@@ -6824,6 +7241,18 @@
           if (!mpa.length) {
             pab.innerHTML = renderEmptyRow(14, 'sec_prep_assigned_none');
           }
+          const mobPrepAssigned = $('alertsMobilePrepAssignedContainer');
+          if (mobPrepAssigned) {
+            mobPrepAssigned.innerHTML = '';
+            if (!mpa.length) {
+              mobPrepAssigned.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_prep_assigned_none', 'لا توجد طلبات قيد التحضير متأخرة عن الاستلام.') : 'لا توجد طلبات قيد التحضير متأخرة عن الاستلام.') + '</div>';
+            } else {
+              mpa.forEach((o) => {
+                const isAcked = latestAckedOrderIds.has(String(o.id));
+                mobPrepAssigned.appendChild(buildMobileOrderCard(o, { alertCategory: 'prep_assigned', isAcked }));
+              });
+            }
+          }
         }
 
         const pub = $('alertsPreparingUnassignedBody');
@@ -6894,6 +7323,18 @@
           });
           if (!mpu.length) {
             pub.innerHTML = renderEmptyRow(12, 'sec_prep_unassigned_none');
+          }
+          const mobPrepUnassigned = $('alertsMobilePrepUnassignedContainer');
+          if (mobPrepUnassigned) {
+            mobPrepUnassigned.innerHTML = '';
+            if (!mpu.length) {
+              mobPrepUnassigned.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_prep_unassigned_none', 'لا توجد طلبات قيد التحضير بانتظار سائق.') : 'لا توجد طلبات قيد التحضير بانتظار سائق.') + '</div>';
+            } else {
+              mpu.forEach((o) => {
+                const isAcked = latestAckedOrderIds.has(String(o.id));
+                mobPrepUnassigned.appendChild(buildMobileOrderCard(o, { alertCategory: 'prep_unassigned', isAcked }));
+              });
+            }
           }
         }
 
@@ -7298,11 +7739,23 @@
           const rows = data.orders || [];
           const cm = $('cancelledOrdersMeta');
           if (cm) {
-            cm.textContent =
-              rows.length +
-              ' cancelled order(s). “Today” follows Africa/Algiers (UTC+1). Use “All” for all dates.';
+            const isAr = (window.currentSahlaLang || 'ar') === 'ar';
+            cm.textContent = isAr
+              ? `${rows.length} طلب(ات) ملغاة. "اليوم" يعتمد توقيت الجزائر (UTC+1). استخدم "الكل" لعرض جميع التواريخ.`
+              : `${rows.length} cancelled order(s). “Today” follows Africa/Algiers (UTC+1). Use “All” for all dates.`;
           }
           const cb = $('cancelledOrdersBody');
+          const mobCancelled = $('cancelledOrdersMobileContainer');
+          if (mobCancelled) {
+            mobCancelled.innerHTML = '';
+            if (!rows.length) {
+              mobCancelled.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_cancelled_none', 'لا توجد طلبات ملغاة.') : 'لا توجد طلبات ملغاة.') + '</div>';
+            } else {
+              rows.forEach((o) => {
+                mobCancelled.appendChild(buildMobileOrderCard(o, { alertCategory: 'cancelled' }));
+              });
+            }
+          }
           if (!cb) return;
           cb.innerHTML = '';
           if (!rows.length) {
