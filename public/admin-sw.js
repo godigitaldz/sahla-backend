@@ -39,8 +39,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body,
-    icon: '/images/sahla-logo.png',
-    badge: '/images/sahla-logo.png',
+    icon: '/sahla-logo-circle.png',
+    badge: '/sahla-logo-circle.png',
     tag,
     renotify: true,
     requireInteraction: isCritical,
@@ -59,6 +59,13 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, options } = event.data;
+    event.waitUntil(self.registration.showNotification(title, options));
+  }
 });
 
 self.addEventListener('notificationclick', (event) => {

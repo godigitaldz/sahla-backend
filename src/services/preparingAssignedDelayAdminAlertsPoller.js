@@ -154,7 +154,7 @@ export async function runPreparingAssignedDelayAdminAlertsOnce({ logger = consol
         const courierSent = await sendPushWithDispatch({
           dispatchKey: courierDispatchKey,
           orderId,
-          cohort: 'delivery_man',
+          cohort: 'courier',
           userIds: [courierUserId],
           title: 'تذكير باستلام الطلب',
           body: `الطلب #${orderNumber} جاهز أو قيد التحضير في (${restaurantName})، يرجى استلامه من المطعم.`,

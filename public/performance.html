@@ -2619,6 +2619,9 @@
             <button type="button" class="sahla-audio-btn" id="enableWebPushBtn" title="Enable System Push Notifications" onclick="requestWebPushPermission()">
               <span>🔔</span> <span>Push</span>
             </button>
+            <button type="button" class="sahla-audio-btn" id="sahlaTestAlertBtn" title="Test Alarm Sound & Notification Popup" onclick="triggerTestAlert()">
+              <span>🧪</span> <span>Test</span>
+            </button>
           </div>
           <div class="sahla-brand-metric" id="headerActiveOrdersPill" data-i18n-title="hdr_alerts_title">
             <span class="sahla-metric-label" data-i18n="hdr_alerts">Alerts</span>
@@ -5641,11 +5644,136 @@
       }
 
       function playAlertChime() {
-        playTonePulse(880, 1174.66, 0.35, 0.2);
+        if (_isAudioMuted || Date.now() < _snoozeUntil) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const doPlay = () => {
+            if (_isAudioMuted || Date.now() < _snoozeUntil) return;
+            const now = ctx.currentTime;
+            [
+              { f: 659.25, start: 0, dur: 0.15 },
+              { f: 880, start: 0.16, dur: 0.25 },
+            ].forEach(({ f, start, dur }) => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(f, now + start);
+              gain.gain.setValueAtTime(0.35, now + start);
+              gain.gain.exponentialRampToValueAtTime(0.01, now + start + dur);
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(now + start);
+              osc.stop(now + start + dur + 0.02);
+            });
+          };
+
+          if (ctx.state === 'suspended') {
+            ctx.resume().then(() => {
+              if (ctx.state === 'running') doPlay();
+            }).catch(() => {});
+          } else {
+            doPlay();
+          }
+        } catch (_) {}
       }
 
       function playEmergencySirenPulse() {
-        playTonePulse(880, 1174.66, 0.45, 0.35);
+        if (_isAudioMuted || Date.now() < _snoozeUntil) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const doPlay = () => {
+            if (_isAudioMuted || Date.now() < _snoozeUntil) return;
+            // 4-tone loud oscillating emergency siren
+            const now = ctx.currentTime;
+            [
+              { f: 880, start: 0, dur: 0.18 },
+              { f: 1174.66, start: 0.20, dur: 0.18 },
+              { f: 880, start: 0.40, dur: 0.18 },
+              { f: 1174.66, start: 0.60, dur: 0.28 },
+            ].forEach(({ f, start, dur }) => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(f, now + start);
+              gain.gain.setValueAtTime(0.5, now + start);
+              gain.gain.exponentialRampToValueAtTime(0.01, now + start + dur);
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(now + start);
+              osc.stop(now + start + dur + 0.02);
+            });
+          };
+
+          if (ctx.state === 'suspended') {
+            ctx.resume().then(() => {
+              if (ctx.state === 'running') doPlay();
+            }).catch(() => {});
+          } else {
+            doPlay();
+          }
+        } catch (_) {}
+      }
+
+      let _notifiedAlertKeys = new Set();
+
+      function dispatchAdminDesktopNotification({ title, body, tag, url }) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        const cleanTitle = title || '⚠️ تنبيه جديد';
+        const cleanTag = tag || 'sahla-admin-alert';
+        const options = {
+          body: body || 'طلب بحاجة لتدخل فوري',
+          icon: '/sahla-logo-circle.png',
+          badge: '/sahla-logo-circle.png',
+          tag: cleanTag,
+          renotify: true,
+          requireInteraction: true,
+          data: { url: url || window.location.href },
+        };
+
+        // 1. Direct Notification constructor (synchronous & reliable on macOS / desktop Safari)
+        let shown = false;
+        try {
+          const n = new Notification(cleanTitle, options);
+          n.onclick = () => {
+            window.focus();
+            if (url) window.location.href = url;
+            n.close();
+          };
+          shown = true;
+        } catch (_) {
+          shown = false;
+        }
+
+        // 2. Service Worker showNotification (for Mobile PWA and background tabs)
+        try {
+          if (navigator.serviceWorker) {
+            if (navigator.serviceWorker.controller) {
+              navigator.serviceWorker.controller.postMessage({
+                type: 'SHOW_NOTIFICATION',
+                title: cleanTitle,
+                options,
+              });
+            } else if (!shown && navigator.serviceWorker.getRegistration) {
+              navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg && typeof reg.showNotification === 'function') {
+                  reg.showNotification(cleanTitle, options);
+                }
+              }).catch(() => {});
+            }
+          }
+        } catch (_) {}
+      }
+
+      async function triggerTestAlert() {
+        await unlockDashboardAudio();
+        playEmergencySirenPulse();
+        dispatchAdminDesktopNotification({
+          title: '🚨 فحص تنبيه ساهلة (Test Alert)',
+          body: 'إنذار الصوت والإشعار المنبثق يعملان بنجاح على هذا الجهاز!',
+          tag: 'test-alert-' + Date.now(),
+        });
       }
 
       function syncCriticalAlarmState() {
@@ -5882,8 +6010,18 @@
                     _activeCriticalAlerts.add(rec.id);
                     if (rec.order_id) _activeCriticalAlerts.add(rec.order_id);
                     syncCriticalAlarmState();
+                    dispatchAdminDesktopNotification({
+                      title: '🚨 ' + (rec.title || 'تنبيه طارئ جديد'),
+                      body: rec.message || 'طلب بحاجة لتدخل فوري',
+                      tag: `admin-alert-${rec.id}`,
+                    });
                   } else if (rec.severity === 'high') {
                     playAlertChime();
+                    dispatchAdminDesktopNotification({
+                      title: '⚠️ ' + (rec.title || 'تنبيه إداري'),
+                      body: rec.message || 'طلب بحاجة لمتابعة',
+                      tag: `admin-alert-${rec.id}`,
+                    });
                   }
                 } else if (payload.eventType === 'UPDATE') {
                   if (rec.status === 'acknowledged' || rec.status === 'resolved') {
@@ -6398,11 +6536,108 @@
         mpu.forEach((o) => {
           if (o && o.id && !latestAckedOrderIds.has(String(o.id))) critIds.add(String(o.id));
         });
+        mpa.forEach((o) => {
+          if (o && o.id && !latestAckedOrderIds.has(String(o.id))) critIds.add(String(o.id));
+        });
         mp.forEach((o) => {
           if (o && o.id && !latestAckedOrderIds.has(String(o.id))) critIds.add(String(o.id));
         });
         _activeCriticalAlerts = critIds;
         syncCriticalAlarmState();
+
+        // Dispatch desktop notifications and sounds for newly detected alerts
+        let hasNewCriticalAlert = false;
+        let hasNewHighAlert = false;
+
+        mo.forEach((o) => {
+          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
+          const k = `mo_${o.id}`;
+          if (!_notifiedAlertKeys.has(k)) {
+            _notifiedAlertKeys.add(k);
+            hasNewCriticalAlert = true;
+            dispatchAdminDesktopNotification({
+              title: `🚨 طلب معلق متأخر: ${o.order_number || o.id}`,
+              body: `الطلب معلق منذ ${o.ageMinutes || 5}+ دقيقة بانتظار قبول المطعم!`,
+              tag: `sahla-order-${o.id}`,
+            });
+          }
+        });
+
+        mpu.forEach((o) => {
+          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
+          const k = `mpu_${o.id}`;
+          if (!_notifiedAlertKeys.has(k)) {
+            _notifiedAlertKeys.add(k);
+            hasNewCriticalAlert = true;
+            dispatchAdminDesktopNotification({
+              title: `🚨 قيد التحضير بدون سائق: ${o.order_number || o.id}`,
+              body: `الطلب قيد التحضير منذ ${o.ageMinutes || 5}+ دقيقة بدون سائق معين!`,
+              tag: `sahla-order-${o.id}`,
+            });
+          }
+        });
+
+        mpa.forEach((o) => {
+          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
+          const k = `mpa_${o.id}`;
+          if (!_notifiedAlertKeys.has(k)) {
+            _notifiedAlertKeys.add(k);
+            hasNewCriticalAlert = true;
+            const courier = o.courier_display_name ? `السائق (${o.courier_display_name})` : 'السائق';
+            dispatchAdminDesktopNotification({
+              title: `🚨 تأخر استلام الطلب: ${o.order_number || o.id}`,
+              body: `الطلب قيد التحضير منذ ${o.ageMinutes || 20}+ دقيقة، ${courier} لم يستلم بعد!`,
+              tag: `sahla-order-${o.id}`,
+            });
+          }
+        });
+
+        mp.forEach((o) => {
+          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
+          const k = `mp_${o.id}`;
+          if (!_notifiedAlertKeys.has(k)) {
+            _notifiedAlertKeys.add(k);
+            hasNewCriticalAlert = true;
+            dispatchAdminDesktopNotification({
+              title: `🚨 تأخر التوصيل بعد الاستلام: ${o.order_number || o.id}`,
+              body: `تم استلام الطلب منذ ${o.ageMinutes || 15}+ دقيقة ولم يتم تسليمه للزبون!`,
+              tag: `sahla-order-${o.id}`,
+            });
+          }
+        });
+
+        mw.forEach((o) => {
+          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
+          const k = `mw_${o.id}`;
+          if (!_notifiedAlertKeys.has(k)) {
+            _notifiedAlertKeys.add(k);
+            hasNewHighAlert = true;
+            dispatchAdminDesktopNotification({
+              title: `📦 طرد بريدي معلق: ${o.order_number || o.id}`,
+              body: `طلب الطرد معلق منذ ${o.ageMinutes || 5}+ دقيقة بحاجة لمتابعة.`,
+              tag: `sahla-order-${o.id}`,
+            });
+          }
+        });
+
+        // Prune resolved or acknowledged alerts from _notifiedAlertKeys
+        const currentAlertKeys = new Set();
+        mo.forEach((o) => o?.id && currentAlertKeys.add(`mo_${o.id}`));
+        mpu.forEach((o) => o?.id && currentAlertKeys.add(`mpu_${o.id}`));
+        mpa.forEach((o) => o?.id && currentAlertKeys.add(`mpa_${o.id}`));
+        mp.forEach((o) => o?.id && currentAlertKeys.add(`mp_${o.id}`));
+        mw.forEach((o) => o?.id && currentAlertKeys.add(`mw_${o.id}`));
+        _notifiedAlertKeys.forEach((k) => {
+          if (!currentAlertKeys.has(k)) {
+            _notifiedAlertKeys.delete(k);
+          }
+        });
+
+        if (hasNewCriticalAlert) {
+          playEmergencySirenPulse();
+        } else if (hasNewHighAlert) {
+          playAlertChime();
+        }
 
         renderMergedPendingAndNewOrders();
 
