@@ -111,41 +111,22 @@ export async function runPreparingAssignedDelayAdminAlertsOnce({ logger = consol
         ? Math.max(thresholdMinutes, Math.floor((now - assignedMs) / 60_000))
         : thresholdMinutes;
 
-      adminAlertEngine.raiseAlert({
+      const alertRes = await adminAlertEngine.raiseAlert({
         orderId,
         alertType: 'prep_assigned_delay',
         severity: 'high',
         title: 'سائق معيَّن ولم يستلم',
-        body: `الطلب #${orderNumber} (${restaurantName}) مُعيَّن للسائق (${courierName}) منذ ${ageMinutes} دقيقة ولم يتم استلامه بعد.`,
+        message: `الطلب #${orderNumber} (${restaurantName}) مُعيَّن للسائق (${courierName}) منذ ${ageMinutes} دقيقة ولم يتم استلامه بعد.`,
         metadata: { order_number: orderNumber, restaurant_name: restaurantName, courier_name: courierName, age_minutes: ageMinutes },
-        episodeTimestamp: order.courier_assigned_at || order.updated_at,
-      }).catch(() => {});
+        episodeTimestamp: order.courier_assigned_at || order.delivery_person_id || 'assigned',
+        incidentKey: `order:${orderId}:prep_assigned_delay:${order.delivery_person_id || 'assigned'}`,
+      }).catch((err) => {
+        logger.warn?.(`[prep-assigned-delay] raiseAlert failed for order=${orderId}:`, err?.message);
+        return null;
+      });
 
-      // 1. Admin Alert
-      if (adminIds.length > 0) {
-        const adminDispatchKey = `order:${orderId}:preparing_assigned:20m:admin`;
-        const adminSent = await sendPushWithDispatch({
-          dispatchKey: adminDispatchKey,
-          orderId,
-          cohort: 'admin',
-          userIds: adminIds,
-          title: 'سائق معيَّن ولم يستلم',
-          body: `الطلب #${orderNumber} (${restaurantName}) مُعيَّن للسائق (${courierName}) منذ ${ageMinutes} دقيقة ولم يتم استلامه بعد.`,
-          data: {
-            type: 'admin_order_alert',
-            stage: 'preparing_assigned_no_pickup',
-            flow: 'admin_preparing_assigned_20m',
-            order_id: orderId,
-            order_number: orderNumber,
-            assigned_age_minutes: String(ageMinutes),
-          },
-        });
-
-        if (pushSendSucceeded(adminSent)) {
-          stats.sent_admin_alerts += 1;
-        }
-      } else {
-        stats.skipped_no_recipients = true;
+      if (alertRes?.isNew) {
+        stats.sent_admin_alerts += 1;
       }
 
       // 2. Courier Pickup Reminder Push

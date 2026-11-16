@@ -6287,8 +6287,7 @@
         }
       }
 
-      const DEFAULT_VAPID_PUBLIC_KEY = 'BH8-UB75DtVmMapkbdTsnG36JiUH67mvcebkl7a0Lu0z4YAkTfDTkQA7ftd_aiXSwBB5tQGUxyYuM8Hgr85XD3g';
-      let _vapidPublicKey = DEFAULT_VAPID_PUBLIC_KEY;
+      let _vapidPublicKey = null;
 
       function urlBase64ToUint8Array(base64String) {
         const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -6348,7 +6347,7 @@
           localStorage.setItem('sahla_admin_push_enabled', 'true');
 
           let subscription = null;
-          if ('PushManager' in window && reg.pushManager) {
+          if ('PushManager' in window && reg.pushManager && _vapidPublicKey) {
             try {
               subscription = await reg.pushManager.getSubscription();
               if (!subscription) {

@@ -3379,7 +3379,7 @@ async function fetchFreshAlerts() {
       title: 'تحضير بدون سائق',
       message: `الطلب #${o.order_number || o.id} قيد التحضير بدون تعيين سائق`,
       metadata: { order_number: o.order_number, restaurant_name: o.restaurant?.name, age_minutes: o.ageMinutes },
-      episodeTimestamp: o.courier_unassigned_episode_at || o.updated_at || o.created_at,
+      episodeTimestamp: o.courier_unassigned_episode_at || o.preparing_started_at || o.created_at,
     }).catch(() => {});
   }
 
@@ -3391,7 +3391,7 @@ async function fetchFreshAlerts() {
       title: 'سائق معيَّن لم يستلم',
       message: `الطلب #${o.order_number || o.id} عُيِّن له سائق ولم يُستلم منذ ${preparingAssignedDelayMin} دقيقة`,
       metadata: { order_number: o.order_number, courier_name: o.courier?.delivery_name, age_minutes: o.ageMinutes },
-      episodeTimestamp: o.courier_assigned_at || o.updated_at,
+      episodeTimestamp: o.courier_assigned_at || o.delivery_person_id || 'assigned',
     }).catch(() => {});
   }
 
@@ -3403,7 +3403,7 @@ async function fetchFreshAlerts() {
       title: 'تأخر تسليم الطلب',
       message: `الطلب #${o.order_number || o.id} تم استلامه ولم يُسلَّم منذ ${pickupDelayMin} دقيقة`,
       metadata: { order_number: o.order_number, courier_name: o.courier?.delivery_name, age_minutes: o.ageMinutes },
-      episodeTimestamp: o.picked_up_at || o.updated_at,
+      episodeTimestamp: o.picked_up_at || o.delivery_person_id || 'picked_up',
     }).catch(() => {});
   }
 

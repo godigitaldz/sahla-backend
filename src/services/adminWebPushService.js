@@ -2,20 +2,49 @@ import * as webpush from 'web-push';
 import { supabaseAdmin } from '../config/supabase.js';
 import { getActiveAdminUserIds } from './adminRecipients.js';
 
-const DEFAULT_VAPID_PUBLIC_KEY =
-  'BH8-UB75DtVmMapkbdTsnG36JiUH67mvcebkl7a0Lu0z4YAkTfDTkQA7ftd_aiXSwBB5tQGUxyYuM8Hgr85XD3g';
-const DEFAULT_VAPID_PRIVATE_KEY =
-  'RQbJmzZWD2OVL-YY0HLYDDhWnTwuG16rVjT1iraYKQw';
-const DEFAULT_VAPID_SUBJECT = 'mailto:admin@sahla-delivery.com';
+function getVapidConfig() {
+  const publicKey = process.env.ADMIN_VAPID_PUBLIC_KEY?.trim() || null;
+  const privateKey = process.env.ADMIN_VAPID_PRIVATE_KEY?.trim() || null;
+  const subject = process.env.ADMIN_VAPID_SUBJECT?.trim() || 'mailto:admin@sahla-delivery.com';
 
-const VAPID_PUBLIC_KEY = process.env.ADMIN_VAPID_PUBLIC_KEY?.trim() || DEFAULT_VAPID_PUBLIC_KEY;
-const VAPID_PRIVATE_KEY = process.env.ADMIN_VAPID_PRIVATE_KEY?.trim() || DEFAULT_VAPID_PRIVATE_KEY;
-const VAPID_SUBJECT = process.env.ADMIN_VAPID_SUBJECT?.trim() || DEFAULT_VAPID_SUBJECT;
+  const isConfigured = Boolean(
+    publicKey &&
+    privateKey &&
+    publicKey.length > 20 &&
+    privateKey.length > 10
+  );
 
-try {
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-} catch (e) {
-  console.error('[adminWebPushService] Failed to set VAPID details:', e?.message || e);
+  return { publicKey, privateKey, subject, isConfigured };
+}
+
+let _vapidInitialized = false;
+
+function ensureVapidConfigured(logger = console) {
+  if (_vapidInitialized) return true;
+  const cfg = getVapidConfig();
+  if (!cfg.isConfigured) {
+    return false;
+  }
+  try {
+    webpush.setVapidDetails(cfg.subject, cfg.publicKey, cfg.privateKey);
+    _vapidInitialized = true;
+    return true;
+  } catch (err) {
+    logger.error?.('[adminWebPushService] Failed to set VAPID details:', err?.message);
+    return false;
+  }
+}
+
+/**
+ * Validate that an object is a well-formed W3C PushSubscription.
+ */
+export function isValidPushSubscription(sub) {
+  if (!sub || typeof sub !== 'object') return false;
+  if (typeof sub.endpoint !== 'string' || !sub.endpoint.startsWith('https://')) return false;
+  if (!sub.keys || typeof sub.keys !== 'object') return false;
+  if (typeof sub.keys.p256dh !== 'string' || sub.keys.p256dh.length < 10) return false;
+  if (typeof sub.keys.auth !== 'string' || sub.keys.auth.length < 5) return false;
+  return true;
 }
 
 export class AdminWebPushService {
@@ -23,30 +52,54 @@ export class AdminWebPushService {
     this.logger = logger;
   }
 
+  isConfigured() {
+    return ensureVapidConfigured(this.logger);
+  }
+
   getVapidPublicKey() {
-    return VAPID_PUBLIC_KEY;
+    const cfg = getVapidConfig();
+    return cfg.isConfigured ? cfg.publicKey : null;
   }
 
   /**
-   * Register or update a Web Push subscription in user_device_tokens.
+   * Register or update a verified Web Push subscription for an administrator device.
+   * Rejects dummy/placeholder tokens from being saved as native push subscriptions.
    */
   async registerSubscription({ userId, deviceId, token, subscription, platform, userAgent }) {
-    if (!deviceId) {
+    if (!deviceId || typeof deviceId !== 'string' || !deviceId.trim()) {
       return { success: false, error: 'device_id_required' };
     }
 
-    let subJson = null;
-    let finalPlatform = platform || 'web';
+    const cleanDeviceId = deviceId.trim();
+    let parsedSub = null;
 
-    if (subscription && typeof subscription === 'object' && subscription.endpoint) {
-      subJson = JSON.stringify(subscription);
-      finalPlatform = 'web_push';
-    } else if (typeof token === 'string' && token.startsWith('{') && token.includes('"endpoint"')) {
-      subJson = token;
-      finalPlatform = 'web_push';
+    if (subscription && typeof subscription === 'object') {
+      parsedSub = subscription;
+    } else if (typeof token === 'string' && token.trim().startsWith('{')) {
+      try {
+        parsedSub = JSON.parse(token);
+      } catch (_) {
+        parsedSub = null;
+      }
     }
 
-    const finalToken = subJson || token || `sw-active-${deviceId}`;
+    const hasValidPushSub = isValidPushSubscription(parsedSub);
+    const finalPlatform = hasValidPushSub ? 'web_push' : (platform === 'web_push' ? 'web' : (platform || 'web'));
+
+    if (platform === 'web_push' && !hasValidPushSub) {
+      return {
+        success: false,
+        error: 'invalid_push_subscription',
+        hint: 'A valid PushSubscription with endpoint and cryptographic keys (p256dh, auth) is required for web_push platform',
+      };
+    }
+
+    const serializedToken = hasValidPushSub ? JSON.stringify(parsedSub) : (typeof token === 'string' ? token.trim() : null);
+
+    if (!serializedToken) {
+      return { success: false, error: 'token_or_subscription_required' };
+    }
+
     const now = new Date().toISOString();
 
     try {
@@ -62,8 +115,8 @@ export class AdminWebPushService {
 
       const { data: existing } = await supabaseAdmin
         .from('user_device_tokens')
-        .select('id')
-        .eq('device_id', deviceId)
+        .select('id, user_id, platform')
+        .eq('device_id', cleanDeviceId)
         .maybeSingle();
 
       if (existing?.id) {
@@ -71,7 +124,7 @@ export class AdminWebPushService {
           .from('user_device_tokens')
           .update({
             user_id: effectiveUserId,
-            token: finalToken,
+            token: serializedToken,
             platform: finalPlatform,
             is_active: true,
             last_seen_at: now,
@@ -81,16 +134,21 @@ export class AdminWebPushService {
           .eq('id', existing.id);
 
         if (updateErr) throw updateErr;
-        return { success: true, updated: true, is_web_push: finalPlatform === 'web_push' };
+        return {
+          success: true,
+          updated: true,
+          platform: finalPlatform,
+          is_web_push: finalPlatform === 'web_push',
+        };
       }
 
       const { error: insertErr } = await supabaseAdmin
         .from('user_device_tokens')
         .insert({
           user_id: effectiveUserId,
-          token: finalToken,
+          token: serializedToken,
           platform: finalPlatform,
-          device_id: deviceId,
+          device_id: cleanDeviceId,
           is_active: true,
           last_seen_at: now,
           created_at: now,
@@ -99,7 +157,12 @@ export class AdminWebPushService {
         });
 
       if (insertErr) throw insertErr;
-      return { success: true, inserted: true, is_web_push: finalPlatform === 'web_push' };
+      return {
+        success: true,
+        inserted: true,
+        platform: finalPlatform,
+        is_web_push: finalPlatform === 'web_push',
+      };
     } catch (err) {
       this.logger.error?.('[adminWebPushService] registerSubscription error:', err.message);
       return { success: false, error: err.message };
@@ -110,13 +173,22 @@ export class AdminWebPushService {
    * Dispatch native Web Push to all active admin devices (iPhone PWA lock screen, desktop, Android Web).
    */
   async sendWebPushToAllAdmins({ title, body, data = {}, severity = 'critical' }) {
+    if (!this.isConfigured()) {
+      this.logger.warn?.('[adminWebPushService] sendWebPushToAllAdmins: VAPID is not configured in environment');
+      return {
+        success: false,
+        delivered: 0,
+        failed: 0,
+        reason: 'vapid_not_configured',
+      };
+    }
+
     try {
-      // Find all active web push device tokens
       const { data: devices, error } = await supabaseAdmin
         .from('user_device_tokens')
         .select('id, device_id, token, platform')
         .eq('is_active', true)
-        .or('platform.eq.web_push,token.ilike.%endpoint%');
+        .eq('platform', 'web_push');
 
       if (error) {
         this.logger.error?.('[adminWebPushService] fetch devices error:', error.message);
@@ -124,60 +196,83 @@ export class AdminWebPushService {
       }
 
       if (!devices || devices.length === 0) {
-        return { success: true, delivered: 0, reason: 'no_web_push_devices' };
+        return { success: true, delivered: 0, failed: 0, reason: 'no_web_push_devices' };
       }
 
       const payload = JSON.stringify({
         notification: {
-          title: title || '🚨 Sahla Admin Alert',
+          title: title || '⚠️ Sahla Admin Alert',
           body: body || 'Emergency operational alert requires immediate attention',
           icon: '/sahla-logo-circle.png',
           badge: '/sahla-logo-circle.png',
         },
         data: {
           ...data,
-          title: title || '🚨 Sahla Admin Alert',
+          title: title || '⚠️ Sahla Admin Alert',
           body: body || 'Emergency operational alert requires immediate attention',
           severity: severity || 'critical',
           click_url: data?.click_url || '/performance?view=alerts',
-          tag: data?.tag || `admin-alert-${Date.now()}`,
+          tag: data?.tag || `admin-alert-${data?.incident_key || Date.now()}`,
         },
       });
 
       let delivered = 0;
       let failed = 0;
+      const results = [];
 
-      await Promise.all(
-        devices.map(async (dev) => {
-          try {
-            let sub = null;
-            if (typeof dev.token === 'string' && dev.token.startsWith('{')) {
-              sub = JSON.parse(dev.token);
-            }
-            if (!sub || !sub.endpoint) return;
+      for (const dev of devices) {
+        let sub = null;
+        try {
+          if (typeof dev.token === 'string') {
+            sub = JSON.parse(dev.token);
+          }
+        } catch (_) {
+          sub = null;
+        }
 
-            await webpush.sendNotification(sub, payload, {
-              urgency: 'high',
-              TTL: 3600,
-            });
-            delivered++;
-          } catch (sendErr) {
-            failed++;
-            if (sendErr?.statusCode === 410 || sendErr?.statusCode === 404) {
-              // Deactivate expired or unsubscribed token
+        if (!isValidPushSubscription(sub)) {
+          failed++;
+          results.push({ deviceId: dev.device_id, status: 'invalid_token' });
+          continue;
+        }
+
+        try {
+          await webpush.sendNotification(sub, payload, {
+            urgency: 'high',
+            TTL: 3600,
+          });
+          delivered++;
+          results.push({ deviceId: dev.device_id, status: 'provider_accepted' });
+        } catch (sendErr) {
+          failed++;
+          const statusCode = sendErr?.statusCode;
+          results.push({
+            deviceId: dev.device_id,
+            status: 'failed',
+            statusCode,
+            error: sendErr?.message || 'provider_error',
+          });
+
+          if (statusCode === 410 || statusCode === 404) {
+            // Subscription has expired or user unsubscribed; deactivate token
+            try {
               await supabaseAdmin
                 .from('user_device_tokens')
                 .update({ is_active: false, updated_at: new Date().toISOString() })
-                .eq('id', dev.id)
-                .catch(() => {});
-            } else {
-              this.logger.warn?.(`[adminWebPushService] Failed to send to dev ${dev.device_id}:`, sendErr.message);
-            }
+                .eq('id', dev.id);
+            } catch (_) {}
+          } else {
+            this.logger.warn?.(`[adminWebPushService] Push failed for device ${dev.device_id}: status=${statusCode}`);
           }
-        })
-      );
+        }
+      }
 
-      return { success: true, delivered, failed };
+      return {
+        success: delivered > 0 || failed === 0,
+        delivered,
+        failed,
+        results,
+      };
     } catch (err) {
       this.logger.error?.('[adminWebPushService] sendWebPushToAllAdmins error:', err.message);
       return { success: false, error: err.message };
@@ -189,6 +284,14 @@ export class AdminWebPushService {
    */
   async sendTestPushToDevice({ deviceId }) {
     if (!deviceId) return { success: false, error: 'device_id_required' };
+
+    if (!this.isConfigured()) {
+      return {
+        success: false,
+        error: 'vapid_not_configured',
+        hint: 'Server VAPID keys (ADMIN_VAPID_PUBLIC_KEY, ADMIN_VAPID_PRIVATE_KEY) must be configured in environment variables.',
+      };
+    }
 
     try {
       const { data: dev, error } = await supabaseAdmin
@@ -202,15 +305,19 @@ export class AdminWebPushService {
       }
 
       let sub = null;
-      if (typeof dev.token === 'string' && dev.token.startsWith('{')) {
-        sub = JSON.parse(dev.token);
+      try {
+        if (typeof dev.token === 'string') {
+          sub = JSON.parse(dev.token);
+        }
+      } catch (_) {
+        sub = null;
       }
 
-      if (!sub || !sub.endpoint) {
+      if (!isValidPushSubscription(sub)) {
         return {
           success: false,
           error: 'device_not_web_push_enabled',
-          hint: 'Device has not subscribed to native Web Push with VAPID key yet',
+          hint: 'Device has not subscribed to native Web Push with VAPID key yet.',
         };
       }
 
@@ -235,7 +342,7 @@ export class AdminWebPushService {
         TTL: 3600,
       });
 
-      return { success: true, message: 'Test push delivered to device' };
+      return { success: true, message: 'Test push accepted by push provider' };
     } catch (err) {
       this.logger.error?.('[adminWebPushService] sendTestPushToDevice error:', err.message);
       return { success: false, error: err.message };

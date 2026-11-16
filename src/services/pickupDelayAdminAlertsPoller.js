@@ -68,33 +68,21 @@ export async function runPickupDelayAdminAlertsOnce({ logger = console } = {}) {
       const stageMinutes = isSecondStage ? secondMinutes : firstMinutes;
       const flow = isSecondStage ? FLOW_10M : FLOW_5M;
 
-      adminAlertEngine.raiseAlert({
+      const alertRes = await adminAlertEngine.raiseAlert({
         orderId,
         alertType: 'parcel_waiting',
         severity: isSecondStage ? 'critical' : 'high',
         title: `طرد — تأخر الاستلام ${stageMinutes} دقائق`,
-        body: `الطلب #${orderNumber} (طرد) لم يُستلم من التوصيل بعد ${stageMinutes} دقائق من بدء التحضير.`,
-        metadata: { order_number: orderNumber, stage_minutes: stageMinutes },
+        message: `الطلب #${orderNumber} (طرد) لم يُستلم من التوصيل بعد ${stageMinutes} دقائق من بدء التحضير.`,
+        metadata: { order_number: orderNumber, stage_minutes: stageMinutes, flow },
         episodeTimestamp: order.preparing_started_at,
-      }).catch(() => {});
-      const sent = await sendPushWithDispatch({
-        dispatchKey: `pickup-delay:${flow}:${orderId}`,
-        orderId,
-        cohort: 'admin',
-        userIds,
-        title: `طرد — تأخر الاستلام ${stageMinutes} دقائق`,
-        body: `الطلب #${orderNumber} (طرد) لم يُستلم من التوصيل بعد ${stageMinutes} دقائق من بدء التحضير.`,
-        data: {
-          type: 'admin_order_alert',
-          stage: isSecondStage ? 'no_pickup_after_preparing_10m' : 'no_pickup_after_preparing_5m',
-          flow,
-          order_id: orderId,
-          order_number: orderNumber,
-          status: String(order.status ?? ''),
-          source: 'pickup_delay_admin_alerts_poller',
-        },
+        incidentKey: `order:${orderId}:parcel_waiting:${stageMinutes}m`,
+      }).catch((err) => {
+        logger.warn?.(`[pickup-delay-alerts] raiseAlert failed for order=${orderId}:`, err?.message);
+        return null;
       });
-      if (pushSendSucceeded(sent)) {
+
+      if (alertRes?.isNew) {
         if (isSecondStage) stats.sent_10m += 1;
         else stats.sent_5m += 1;
       }

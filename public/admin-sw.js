@@ -33,16 +33,21 @@ self.addEventListener('push', (event) => {
   const body = notification.body || data.body || payload.body || 'Operational notification requires attention.';
   const clickUrl = data.click_url || data.click_action || '/performance?view=alerts';
   const severity = data.severity || 'critical';
-  const tag = data.tag || `admin-alert-${data.order_id || Date.now()}`;
+
+  // Stable incident tag: derived from business incident identity, never timestamps
+  const incidentIdentity = data.incident_key || (data.alert_type ? `${data.alert_type}:${data.order_id || data.task_id || 'incident'}` : null);
+  const tag = data.tag || (incidentIdentity ? `admin-alert-${incidentIdentity}` : `admin-alert-${data.order_id || 'general'}`);
 
   const isCritical = severity === 'critical';
+  const isInitial = data.is_new === true || data.is_initial === true;
 
   const options = {
     body,
     icon: '/sahla-logo-circle.png',
     badge: '/sahla-logo-circle.png',
     tag,
-    renotify: true,
+    // Stable tag replacement: do not re-sound if updating an existing incident
+    renotify: isInitial,
     requireInteraction: isCritical,
     silent: false,
     vibrate: isCritical ? [250, 100, 250, 100, 500] : [200, 100, 200],
@@ -50,6 +55,8 @@ self.addEventListener('push', (event) => {
       clickUrl,
       orderId: data.order_id || null,
       alertId: data.alert_id || null,
+      incidentKey: data.incident_key || null,
+      alertType: data.alert_type || null,
       severity,
     },
     actions: [
@@ -73,15 +80,27 @@ self.addEventListener('notificationclick', (event) => {
 
   const data = event.notification.data || {};
   const targetUrl = data.clickUrl || '/performance?view=alerts';
+  const targetAckId = data.alertId || data.orderId;
 
-  // Handle direct in-notification acknowledgement
-  if (event.action === 'ack' && data.alertId) {
+  // Handle direct in-notification acknowledgement with credentials
+  if (event.action === 'ack' && targetAckId) {
     event.waitUntil(
-      fetch(`/api/performance/alerts/${encodeURIComponent(data.alertId)}/acknowledge`, {
+      fetch(`/api/performance/alerts/${encodeURIComponent(targetAckId)}/acknowledge`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operator_name: 'Notification Action' }),
-      }).catch(() => {})
+        body: JSON.stringify({
+          operator_name: 'Notification Action',
+          incident_key: data.incidentKey || null,
+          alert_type: data.alertType || null,
+        }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          console.error('[admin-sw] notification ack rejected by server status:', res.status);
+        }
+      }).catch((err) => {
+        console.error('[admin-sw] notification ack network error:', err);
+      })
     );
     return;
   }

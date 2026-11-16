@@ -8,12 +8,27 @@ const _ephemeralAlerts = new Map();
 let _dbTableAvailable = true;
 
 /**
- * Generate a canonical deduplication key for an operational breach.
- * E.g. 'order:1042:stale_pending:2026-11-16T06:00:00.000Z'
+ * Generate a canonical, concurrency-safe incident key based on stable business identity.
+ * Format: '<entity_type>:<entity_id>:<alert_type>[:<episode_ref>]'
+ * Never relies on dynamic updated_at or Date.now().
  */
-export function buildDedupeKey(orderId, alertType, episodeTimestamp) {
-  const ts = episodeTimestamp ? new Date(episodeTimestamp).toISOString() : 'current';
-  return `order:${String(orderId || 'none')}:${String(alertType)}:${ts}`;
+export function buildIncidentKey({ entityType = 'order', entityId, alertType, episodeRef = null }) {
+  const cleanEntity = String(entityId || 'none').trim();
+  const cleanType = String(alertType || 'generic').trim();
+  const epPart = episodeRef ? `:${String(episodeRef).trim()}` : '';
+  return `${entityType}:${cleanEntity}:${cleanType}${epPart}`;
+}
+
+/**
+ * Backwards-compatible deduplication key builder.
+ */
+export function buildDedupeKey(orderId, alertType, episodeTimestamp = null) {
+  const epRef = episodeTimestamp
+    ? (typeof episodeTimestamp === 'string' && episodeTimestamp.length === 36
+        ? episodeTimestamp
+        : new Date(episodeTimestamp).toISOString())
+    : null;
+  return buildIncidentKey({ entityType: 'order', entityId: orderId, alertType, episodeRef: epRef });
 }
 
 export class AdminAlertEngine {
@@ -22,7 +37,8 @@ export class AdminAlertEngine {
   }
 
   /**
-   * Raise a canonical operational alert if not already active/acknowledged.
+   * Raise a canonical operational alert if not already active or acknowledged.
+   * Concurrency-safe: claims an atomic dispatch slot in notification_dispatch_log to prevent duplicate pushes.
    */
   async raiseAlert({
     orderId = null,
@@ -33,16 +49,18 @@ export class AdminAlertEngine {
     message,
     metadata = {},
     episodeTimestamp = null,
+    incidentKey = null,
   }) {
     if (!alertType || (!orderId && !taskId)) {
-      this.logger.warn?.('[admin-alert-engine] Missing required alert fields');
+      this.logger.warn?.('[admin-alert-engine] Missing required alert fields (alertType, orderId/taskId)');
       return null;
     }
 
-    const dedupeKey = buildDedupeKey(orderId, alertType, episodeTimestamp);
+    const dedupeKey = incidentKey || buildDedupeKey(orderId || taskId, alertType, episodeTimestamp);
+    const now = new Date().toISOString();
 
     try {
-      // Check if order was already acknowledged by an admin in persistent order_events (cross-serverless instance sync)
+      // 1. Check if this specific incident was already acknowledged in persistent order_events
       if (orderId) {
         try {
           const { data: dbAck } = await supabaseAdmin
@@ -51,18 +69,20 @@ export class AdminAlertEngine {
             .eq('order_id', orderId)
             .eq('event_type', 'updated')
             .filter('event_data->>action', 'eq', 'admin_alert_acknowledged')
+            .filter('event_data->>alert_type', 'eq', alertType)
             .gte('created_at', new Date(Date.now() - 24 * 3600 * 1000).toISOString())
             .limit(1)
             .maybeSingle();
 
           if (dbAck) {
             const existingAlert = {
-              id: `acked-${orderId}`,
+              id: `acked-${orderId}-${alertType}`,
               order_id: orderId,
               task_id: taskId,
               alert_type: alertType,
               severity,
               dedupe_key: dedupeKey,
+              incident_key: dedupeKey,
               title,
               message,
               metadata,
@@ -74,73 +94,73 @@ export class AdminAlertEngine {
               updated_at: dbAck.created_at,
             };
             _ephemeralAlerts.set(dedupeKey, existingAlert);
-            return { alert: existingAlert, isNew: false };
+            return { alert: existingAlert, isNew: false, reason: 'already_acknowledged' };
           }
-        } catch (_) {}
-      }
-
-      if (_dbTableAvailable) {
-        // 1. Check if active or acknowledged alert already exists with this dedupe_key
-        const { data: existing, error: checkError } = await supabaseAdmin
-          .from('admin_alerts')
-          .select('id, status, severity, created_at')
-          .eq('dedupe_key', dedupeKey)
-          .maybeSingle();
-
-        if (checkError) {
-          if (checkError.code === 'PGRST205' || checkError.message?.includes('admin_alerts')) {
-            _dbTableAvailable = false;
-            this.logger.warn?.('[admin-alert-engine] admin_alerts table pending deployment. Using fallback mode.');
-          } else {
-            this.logger.error?.('[admin-alert-engine] Check error:', checkError.message);
-          }
-        } else if (existing) {
-          // Already recorded
-          if (existing.status === 'active' || existing.status === 'acknowledged' || existing.status === 'escalated') {
-            return { alert: existing, isNew: false };
-          }
+        } catch (ackCheckErr) {
+          this.logger.warn?.('[admin-alert-engine] order_events ack check error:', ackCheckErr.message);
         }
       }
 
-      // If DB table is active, insert row
+      // 2. Check if active/acknowledged alert exists in admin_alerts
       let createdAlert = null;
-      if (_dbTableAvailable) {
-        const { data: inserted, error: insertError } = await supabaseAdmin
-          .from('admin_alerts')
-          .insert({
-            order_id: orderId,
-            task_id: taskId,
-            alert_type: alertType,
-            severity,
-            dedupe_key: dedupeKey,
-            title,
-            message,
-            metadata,
-            status: 'active',
-            escalation_level: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .select('*')
-          .maybeSingle();
 
-        if (insertError) {
-          // On unique constraint collision, treat as already created
-          if (insertError.code === '23505') {
-            return { alert: null, isNew: false };
+      if (_dbTableAvailable) {
+        try {
+          const { data: inserted, error: insertError } = await supabaseAdmin
+            .from('admin_alerts')
+            .insert({
+              order_id: orderId,
+              task_id: taskId,
+              alert_type: alertType,
+              severity,
+              dedupe_key: dedupeKey,
+              incident_key: dedupeKey,
+              title,
+              message,
+              metadata,
+              status: 'active',
+              escalation_level: 0,
+              created_at: now,
+              updated_at: now,
+            })
+            .select('*')
+            .maybeSingle();
+
+          if (insertError) {
+            if (insertError.code === 'PGRST205' || insertError.message?.includes('admin_alerts')) {
+              _dbTableAvailable = false;
+              this.logger.warn?.('[admin-alert-engine] admin_alerts table pending deployment. Using fallback mode.');
+            } else if (insertError.code === '23505') {
+              // Unique constraint collision: already created by concurrent worker
+              const { data: existing } = await supabaseAdmin
+                .from('admin_alerts')
+                .select('*')
+                .eq('dedupe_key', dedupeKey)
+                .maybeSingle();
+
+              if (existing) {
+                return { alert: existing, isNew: false, reason: 'already_exists' };
+              }
+            } else {
+              this.logger.error?.('[admin-alert-engine] Insert error:', insertError.message);
+            }
+          } else {
+            createdAlert = inserted;
           }
-          this.logger.error?.('[admin-alert-engine] Insert error:', insertError.message);
-        } else {
-          createdAlert = inserted;
+        } catch (dbErr) {
+          this.logger.error?.('[admin-alert-engine] DB error on raiseAlert:', dbErr.message);
         }
       }
 
-      // Ephemeral fallback storage
+      // Ephemeral fallback storage if table is not yet migrated
       if (!createdAlert) {
         if (_ephemeralAlerts.has(dedupeKey)) {
           const ex = _ephemeralAlerts.get(dedupeKey);
           if (ex.status === 'active' || ex.status === 'acknowledged') {
-            return { alert: ex, isNew: false };
+            return { alert: ex, isNew: false, reason: 'already_exists_ephemeral' };
+          }
+          if (ex.status === 'resolved') {
+            return { alert: ex, isNew: false, reason: 'already_resolved' };
           }
         }
         createdAlert = {
@@ -150,18 +170,49 @@ export class AdminAlertEngine {
           alert_type: alertType,
           severity,
           dedupe_key: dedupeKey,
+          incident_key: dedupeKey,
           title,
           message,
           metadata,
           status: 'active',
           escalation_level: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: now,
+          updated_at: now,
         };
         _ephemeralAlerts.set(dedupeKey, createdAlert);
       }
 
-      // 2. Dispatch Web Push & Mobile Push Notifications to all active administrators
+      // 3. Concurrency-Safe Dispatch Claim: Atomically claim dispatch slot in notification_dispatch_log
+      const dispatchClaimKey = `admin-alert:${dedupeKey}`;
+      try {
+        const { error: claimErr } = await supabaseAdmin
+          .from('notification_dispatch_log')
+          .insert({
+            dispatch_key: dispatchClaimKey,
+            order_id: orderId || null,
+            cohort: 'admin',
+            channel: 'push',
+            status: 'sent',
+            provider_response: {
+              incident_key: dedupeKey,
+              alert_type: alertType,
+              severity,
+              queued_at: now,
+            },
+          });
+
+        if (claimErr) {
+          if (claimErr.code === '23505') {
+            // Already claimed by a concurrent serverless invocation
+            return { alert: createdAlert, isNew: false, reason: 'dispatch_already_claimed' };
+          }
+          this.logger.warn?.('[admin-alert-engine] notification_dispatch_log claim error:', claimErr.message);
+        }
+      } catch (claimEx) {
+        this.logger.warn?.('[admin-alert-engine] Dispatch claim exception:', claimEx.message);
+      }
+
+      // 4. Dispatch Push Notifications to all active administrators (FCM + Web Push)
       if (severity === 'critical' || severity === 'high') {
         this.dispatchPushToAdmins({
           alert: createdAlert,
@@ -170,6 +221,7 @@ export class AdminAlertEngine {
           orderId,
           severity,
           alertType,
+          dedupeKey,
         }).catch((err) => {
           this.logger.error?.('[admin-alert-engine] Push dispatch error:', err.message);
         });
@@ -183,14 +235,15 @@ export class AdminAlertEngine {
   }
 
   /**
-   * Dispatch push notifications to all configured & online admin devices
+   * Dispatch push notifications to all configured & online admin devices with durable logging.
    */
-  async dispatchPushToAdmins({ alert, title, message, orderId, severity, alertType }) {
+  async dispatchPushToAdmins({ alert, title, message, orderId, severity, alertType, dedupeKey }) {
+    const dispatchClaimKey = `admin-alert:${dedupeKey || alert?.dedupe_key || alert?.id}`;
+    let webPushResult = { delivered: 0, failed: 0 };
+    let fcmResult = { success: false, total_sent: 0 };
+
     try {
       const adminUserIds = await getActiveAdminUserIds(this.logger);
-      if (!adminUserIds || adminUserIds.length === 0) {
-        return;
-      }
 
       const clickUrl = orderId
         ? `/performance?view=alerts&order_id=${encodeURIComponent(orderId)}`
@@ -201,34 +254,69 @@ export class AdminAlertEngine {
         order_id: String(orderId || ''),
         alert_type: String(alertType || ''),
         severity: String(severity || 'critical'),
+        incident_key: String(dedupeKey || ''),
         click_url: clickUrl,
         click_action: clickUrl,
         sound: severity === 'critical' ? 'emergency_siren' : 'default',
-        tag: `admin-alert-${orderId || alertType}`,
-        renotify: 'true',
+        tag: `admin-alert-${alertType || 'emergency'}-${orderId || 'general'}`,
+        renotify: 'false',
       };
 
-      // 1. Send push to Android mobile app couriers/admins via Supabase Edge Function
-      await supabasePushGateway.sendPush({
-        userIds: adminUserIds,
-        title: title || '⚠️ Sahla Admin Alert',
-        body: message || 'Operational threshold exceeded',
-        data: payloadData,
-      }).catch((err) => {
-        this.logger.warn?.('[admin-alert-engine] FCM push dispatch warning:', err?.message);
-      });
+      // 1. Send push to Android mobile app couriers/admins via Supabase Edge Function (FCM)
+      if (adminUserIds && adminUserIds.length > 0) {
+        fcmResult = await supabasePushGateway.sendPush({
+          userIds: adminUserIds,
+          title: title || '⚠️ Sahla Admin Alert',
+          body: message || 'Operational threshold exceeded',
+          data: payloadData,
+        }).catch((err) => {
+          this.logger.warn?.('[admin-alert-engine] FCM push dispatch warning:', err?.message);
+          return { success: false, total_sent: 0, error: err?.message };
+        });
+      }
 
-      // 2. Send native Web Push to locked iOS PWAs and Web Dashboards
-      await adminWebPushService.sendWebPushToAllAdmins({
+      // 2. Send native Web Push to locked iOS PWAs and Web Dashboards via VAPID
+      webPushResult = await adminWebPushService.sendWebPushToAllAdmins({
         title: title || '⚠️ Sahla Admin Alert',
         body: message || 'Operational threshold exceeded',
         data: payloadData,
         severity,
       }).catch((err) => {
         this.logger.warn?.('[admin-alert-engine] Web Push dispatch warning:', err?.message);
+        return { success: false, delivered: 0, failed: 0, error: err?.message };
       });
+
+      // 3. Update dispatch log with provider acceptance status
+      const providerAccepted = (webPushResult.delivered > 0) || (fcmResult?.total_sent > 0);
+      try {
+        await supabaseAdmin
+          .from('notification_dispatch_log')
+          .update({
+            status: providerAccepted ? 'sent' : 'failed',
+            updated_at: new Date().toISOString(),
+            provider_response: {
+              incident_key: dedupeKey,
+              alert_type: alertType,
+              severity,
+              provider_accepted: providerAccepted,
+              web_push: {
+                delivered: webPushResult.delivered || 0,
+                failed: webPushResult.failed || 0,
+                reason: webPushResult.reason || null,
+              },
+              fcm: {
+                total_sent: fcmResult?.total_sent || 0,
+                error: fcmResult?.error || null,
+              },
+              completed_at: new Date().toISOString(),
+            },
+          })
+          .eq('dispatch_key', dispatchClaimKey);
+      } catch (logUpdateErr) {
+        this.logger.warn?.('[admin-alert-engine] Error updating dispatch log:', logUpdateErr?.message);
+      }
     } catch (err) {
-      this.logger.warn?.('[admin-alert-engine] Push dispatch warning:', err?.message);
+      this.logger.warn?.('[admin-alert-engine] Push dispatch logging warning:', err?.message);
     }
   }
 
@@ -236,22 +324,27 @@ export class AdminAlertEngine {
    * Acknowledge an alert on behalf of an operator.
    * Silences repeating sirens and synchronizes state across all admin screens.
    */
-  async acknowledgeAlert({ alertId, operatorName = 'Operator', operatorUserId = null }) {
+  async acknowledgeAlert({ alertId, incidentKey = null, alertType = null, operatorName = 'Operator', operatorUserId = null }) {
     if (!alertId) return { success: false, error: 'alert_id_required' };
 
     const now = new Date().toISOString();
 
     let targetOrderId = (typeof alertId === 'string' && /^[0-9a-f-]{36}$/i.test(alertId)) ? alertId : null;
-    if (!targetOrderId) {
+    let targetAlertType = alertType || null;
+    let targetIncidentKey = incidentKey || null;
+
+    if (!targetOrderId || !targetAlertType) {
       for (const a of _ephemeralAlerts.values()) {
-        if (a.id === alertId && a.order_id) {
-          targetOrderId = a.order_id;
+        if (a.id === alertId || a.order_id === alertId) {
+          if (!targetOrderId) targetOrderId = a.order_id;
+          if (!targetAlertType) targetAlertType = a.alert_type;
+          if (!targetIncidentKey) targetIncidentKey = a.dedupe_key;
           break;
         }
       }
     }
 
-    // Persist acknowledgement into order_events so all serverless instances and devices stay synchronized
+    // Persist acknowledgement into order_events so all serverless instances stay synchronized!
     if (targetOrderId) {
       try {
         await supabaseAdmin.from('order_events').insert({
@@ -260,6 +353,9 @@ export class AdminAlertEngine {
           changed_by_role: 'admin',
           event_data: {
             action: 'admin_alert_acknowledged',
+            alert_type: targetAlertType || 'generic_alert',
+            incident_key: targetIncidentKey || `order:${targetOrderId}:${targetAlertType || 'alert'}`,
+            alert_id: alertId,
             operator_name: operatorName,
             operator_user_id: operatorUserId,
             acked_at: now,
@@ -318,6 +414,8 @@ export class AdminAlertEngine {
     const synthAlert = {
       id: alertId,
       order_id: targetOrderId || alertId,
+      alert_type: targetAlertType || 'generic_alert',
+      dedupe_key: targetIncidentKey || `order:${targetOrderId || alertId}`,
       status: 'acknowledged',
       acknowledged_by: operatorName,
       acknowledged_at: now,
@@ -328,9 +426,9 @@ export class AdminAlertEngine {
   }
 
   /**
-   * Resolve an alert explicitly or on order resolution.
+   * Resolve an alert explicitly.
    */
-  async resolveAlert({ alertId, resolvedBy = 'System', reason = 'manual_resolve' }) {
+  async resolveAlert({ alertId, resolvedBy = 'Operator', reason = 'manual_resolve' }) {
     if (!alertId) return { success: false, error: 'alert_id_required' };
     const now = new Date().toISOString();
 
@@ -349,10 +447,17 @@ export class AdminAlertEngine {
           .select('*')
           .maybeSingle();
 
-        if (error) throw error;
-        if (data) return { success: true, alert: data };
+        if (error) {
+          if (error.code === 'PGRST205' || error.message?.includes('admin_alerts')) {
+            _dbTableAvailable = false;
+          } else {
+            throw error;
+          }
+        } else if (data) {
+          return { success: true, alert: data };
+        }
       } catch (err) {
-        this.logger.error?.('[admin-alert-engine] Resolve error:', err.message);
+        this.logger.error?.('[admin-alert-engine] resolveAlert error:', err.message);
       }
     }
 
@@ -462,17 +567,23 @@ export class AdminAlertEngine {
         .limit(200);
 
       if (dbAcks && dbAcks.length > 0) {
-        const ackedOrderIds = new Set(dbAcks.map((a) => a.order_id).filter(Boolean));
-        for (const alert of list) {
-          if (alert.order_id && ackedOrderIds.has(alert.order_id)) {
-            alert.status = 'acknowledged';
-          }
-        }
         for (const ack of dbAcks) {
-          if (!list.some((a) => a.order_id === ack.order_id)) {
+          const ackAlertType = ack.event_data?.alert_type || null;
+          const ackIncidentKey = ack.event_data?.incident_key || null;
+
+          for (const alert of list) {
+            if (alert.order_id === ack.order_id) {
+              if (!ackAlertType || alert.alert_type === ackAlertType || alert.dedupe_key === ackIncidentKey) {
+                alert.status = 'acknowledged';
+              }
+            }
+          }
+
+          if (!list.some((a) => a.order_id === ack.order_id && (!ackAlertType || a.alert_type === ackAlertType))) {
             list.push({
-              id: `acked-${ack.order_id}`,
+              id: `acked-${ack.order_id}-${ackAlertType || 'gen'}`,
               order_id: ack.order_id,
+              alert_type: ackAlertType || 'alert',
               status: 'acknowledged',
               severity: 'critical',
               title: 'تنبيه مؤكد',

@@ -1,8 +1,13 @@
 -- =============================================================================
--- Migration: Centralized Admin Alert Engine
+-- Migration: Centralized Admin Alert Engine & Outbox Dispatches
 -- Author: Sahla Systems Engineering
 -- Date: 2026-11-16
--- Target: public.admin_alerts and user_device_tokens platform expansion
+-- Target: public.admin_alerts, public.admin_alert_dispatches
+--
+-- Rollback Instructions (Safe down-migration):
+--   ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS public.admin_alerts;
+--   DROP TABLE IF EXISTS public.admin_alert_dispatches;
+--   DROP TABLE IF EXISTS public.admin_alerts;
 -- =============================================================================
 
 BEGIN;
@@ -19,9 +24,9 @@ CREATE TABLE IF NOT EXISTS public.admin_alerts (
   alert_type varchar(64) NOT NULL,
   severity varchar(16) NOT NULL CHECK (severity IN ('critical', 'high', 'info')),
   
-  -- Deduplication Key: Prevents duplicate alert records for the same breach episode
-  -- format: 'order:<uuid>:<alert_type>:<timestamp_hash>'
+  -- Deduplication & Stable Incident Keys
   dedupe_key varchar(160) NOT NULL UNIQUE,
+  incident_key varchar(160) DEFAULT NULL,
   
   -- Display Content
   title text NOT NULL,
@@ -48,7 +53,39 @@ CREATE TABLE IF NOT EXISTS public.admin_alerts (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- 2. Indexes for High-Frequency Operational Queries
+-- Ensure incident_key column exists if table was partially created
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'admin_alerts' 
+      AND column_name = 'incident_key'
+  ) THEN
+    ALTER TABLE public.admin_alerts ADD COLUMN incident_key varchar(160) DEFAULT NULL;
+  END IF;
+END $$;
+
+-- 2. Create admin_alert_dispatches table for durable per-device outbox tracking
+CREATE TABLE IF NOT EXISTS public.admin_alert_dispatches (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  alert_id uuid REFERENCES public.admin_alerts(id) ON DELETE CASCADE,
+  incident_key varchar(160) NOT NULL,
+  device_id varchar(128) NOT NULL,
+  user_id uuid DEFAULT NULL,
+  channel varchar(32) NOT NULL DEFAULT 'web_push' CHECK (channel IN ('web_push', 'fcm', 'desktop')),
+  status varchar(32) NOT NULL DEFAULT 'queued' 
+    CHECK (status IN ('queued', 'attempted', 'provider_accepted', 'failed', 'skipped')),
+  attempt_count int NOT NULL DEFAULT 1,
+  provider_status int DEFAULT NULL,
+  provider_response jsonb DEFAULT '{}'::jsonb,
+  error_message text DEFAULT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT uq_admin_alert_dispatch UNIQUE (incident_key, device_id, channel)
+);
+
+-- 3. Indexes for High-Frequency Operational Queries
 CREATE INDEX IF NOT EXISTS idx_admin_alerts_status_created 
   ON public.admin_alerts(status, created_at DESC)
   WHERE status IN ('active', 'acknowledged', 'escalated');
@@ -60,16 +97,32 @@ CREATE INDEX IF NOT EXISTS idx_admin_alerts_order_id
 CREATE INDEX IF NOT EXISTS idx_admin_alerts_dedupe 
   ON public.admin_alerts(dedupe_key);
 
+CREATE INDEX IF NOT EXISTS idx_admin_alerts_incident 
+  ON public.admin_alerts(incident_key)
+  WHERE incident_key IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_admin_alerts_type_status 
   ON public.admin_alerts(alert_type, status);
 
--- 3. Row Level Security (RLS)
+CREATE INDEX IF NOT EXISTS idx_admin_dispatches_incident 
+  ON public.admin_alert_dispatches(incident_key, status);
+
+-- 4. Row Level Security (RLS)
 ALTER TABLE public.admin_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_alert_dispatches ENABLE ROW LEVEL SECURITY;
 
 -- Service role has unrestricted access (backend uses service role)
 DROP POLICY IF EXISTS "service_role_admin_alerts_all" ON public.admin_alerts;
 CREATE POLICY "service_role_admin_alerts_all" 
   ON public.admin_alerts 
+  FOR ALL 
+  TO service_role 
+  USING (true) 
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "service_role_admin_dispatches_all" ON public.admin_alert_dispatches;
+CREATE POLICY "service_role_admin_dispatches_all" 
+  ON public.admin_alert_dispatches 
   FOR ALL 
   TO service_role 
   USING (true) 
@@ -118,7 +171,7 @@ CREATE POLICY "admins_update_alerts"
     )
   );
 
--- 4. Enable Supabase Realtime Publication for admin_alerts
+-- 5. Enable Supabase Realtime Publication for admin_alerts
 DO $$
 BEGIN
   IF NOT EXISTS (
