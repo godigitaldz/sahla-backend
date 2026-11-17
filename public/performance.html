@@ -9311,9 +9311,10 @@
         });
       }
 
-      /** Alerts + global badges (incl. request & review counts): ~real-time while dashboard is open. */
-      const REALTIME_POLL_MS = 5000;
+      /** Alerts + global badges: throttled to 15s to protect database resources; paused when tab is hidden. */
+      const REALTIME_POLL_MS = 15000;
       setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
         if ($('app').classList.contains('hidden')) return;
         if (Date.now() < pollBackoffUntil) return;
         loadAlerts().catch(() => {});
@@ -9322,8 +9323,9 @@
         if (tab === 'delivery-reviews') loadDeliveryReviews().catch(() => {});
       }, REALTIME_POLL_MS);
 
-      /** Other tabs: lighter refresh interval. */
+      /** Other tabs: lighter refresh interval (30s); paused when tab is hidden. */
       setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
         if ($('app').classList.contains('hidden')) return;
         if (Date.now() < pollBackoffUntil) return;
         const tab = document.querySelector('.tab.active')?.getAttribute('data-tab');
@@ -9333,7 +9335,16 @@
         if (tab === 'delivery-history') loadDeliveryHistory().catch(() => {});
         if (tab === 'tasks') loadTasks().catch(() => {});
         if (tab === 'partner-requests') loadPartnerRequests().catch(() => {});
-      }, 15000);
+      }, 30000);
+
+      /** Immediately fetch fresh data when admin returns to a backgrounded tab. */
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && !$('app').classList.contains('hidden') && Date.now() >= pollBackoffUntil) {
+          loadAlerts().catch(() => {});
+          const tab = document.querySelector('.tab.active')?.getAttribute('data-tab');
+          if (tab === 'alerts') loadOrders().catch(() => {});
+        }
+      });
 
       $('deliveryHistoryDate').value = sahlaTodayYmd();
       $('cancelledOrdersDate').value = sahlaTodayYmd();
