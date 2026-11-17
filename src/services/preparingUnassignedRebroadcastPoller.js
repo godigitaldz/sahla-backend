@@ -7,7 +7,6 @@ import {
 import {
   PREPARING_UNASSIGNED_EPISODE_MAX_SECONDS,
 } from '../modules/orders/domain/preparingUnassignedEpisode.js';
-import { adminAlertEngine } from '../modules/alerts/adminAlertEngine.js';
 
 const COURIER_REBROADCAST_INTERVAL_MS = 3 * 60_000;
 const ADMIN_UNASSIGNED_THRESHOLD_MS = 5 * 60_000;
@@ -143,22 +142,35 @@ export async function runPreparingUnassignedRebroadcastOnce({ logger = console }
 
       // Admin escalation alert at 5 minutes
       if (ageMs >= ADMIN_UNASSIGNED_THRESHOLD_MS && adminIds.length > 0) {
-        const alertRes = await adminAlertEngine.raiseAlert({
-          orderId,
-          alertType: 'prep_unassigned',
-          severity: 'critical',
-          title: 'تحضير بدون سائق',
-          message: `الطلب #${orderNumber} قيد التحضير/الجاهزية ولم يُعيَّن أي عامل توصيل — منذ 5 دقائق.`,
-          metadata: { order_number: orderNumber, restaurant_id: String(order.restaurant_id || '') },
-          episodeTimestamp: episodeRef,
-          incidentKey: `order:${orderId}:prep_unassigned:${episodeRef}`,
-        }).catch((err) => {
-          logger.warn?.(`[preparing-unassigned-rebroadcast] raiseAlert failed order=${orderId}:`, err?.message);
-          return null;
-        });
+        const alreadyAlerted = logs.some(
+          (l) => l?.data?.order_id === orderId && l?.data?.flow === ADMIN_UNASSIGNED_ALERT_TYPE,
+        );
 
-        if (alertRes?.isNew) {
-          stats.sent_admin_alerts += 1;
+        if (!alreadyAlerted) {
+          const adminRes = await supabaseAdmin.functions.invoke('send-push-notification', {
+            body: {
+              user_ids: adminIds,
+              title: 'تحضير بدون سائق',
+              body: `الطلب #${orderNumber} قيد التحضير/الجاهزية ولم يُعيَّن أي عامل توصيل — منذ 5 دقائق.`,
+              data: {
+                type: 'admin_order_alert',
+                stage: 'preparing_unassigned_5m',
+                flow: ADMIN_UNASSIGNED_ALERT_TYPE,
+                order_id: orderId,
+                order_number: orderNumber,
+                source: 'backend_preparing_unassigned_rebroadcast',
+              },
+              force_activate_inactive_tokens: true,
+            },
+          });
+
+          if (!adminRes.error && adminRes.data?.success === true) {
+            stats.sent_admin_alerts += 1;
+          } else {
+            logger.error?.(
+              `[preparing-unassigned-rebroadcast] admin alert push failed order=${orderId}: ${adminRes.error?.message ?? 'unknown'}`,
+            );
+          }
         }
       }
     }

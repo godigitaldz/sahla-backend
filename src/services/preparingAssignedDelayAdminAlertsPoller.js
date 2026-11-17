@@ -2,7 +2,6 @@ import { pushSendSucceeded } from '../modules/notifications/pushSendResult.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { getActiveAdminUserIds } from './adminRecipients.js';
 import { sendPushWithDispatch } from './notificationDispatchService.js';
-import { adminAlertEngine } from '../modules/alerts/adminAlertEngine.js';
 
 const DEFAULT_PREPARING_ASSIGNED_DELAY_MINUTES = 20;
 const LOOKBACK_HOURS = 24;
@@ -111,22 +110,31 @@ export async function runPreparingAssignedDelayAdminAlertsOnce({ logger = consol
         ? Math.max(thresholdMinutes, Math.floor((now - assignedMs) / 60_000))
         : thresholdMinutes;
 
-      const alertRes = await adminAlertEngine.raiseAlert({
-        orderId,
-        alertType: 'prep_assigned_delay',
-        severity: 'high',
-        title: 'سائق معيَّن ولم يستلم',
-        message: `الطلب #${orderNumber} (${restaurantName}) مُعيَّن للسائق (${courierName}) منذ ${ageMinutes} دقيقة ولم يتم استلامه بعد.`,
-        metadata: { order_number: orderNumber, restaurant_name: restaurantName, courier_name: courierName, age_minutes: ageMinutes },
-        episodeTimestamp: order.courier_assigned_at || order.delivery_person_id || 'assigned',
-        incidentKey: `order:${orderId}:prep_assigned_delay:${order.delivery_person_id || 'assigned'}`,
-      }).catch((err) => {
-        logger.warn?.(`[prep-assigned-delay] raiseAlert failed for order=${orderId}:`, err?.message);
-        return null;
-      });
+      // 1. Admin Alert
+      if (adminIds.length > 0) {
+        const adminDispatchKey = `order:${orderId}:preparing_assigned:20m:admin`;
+        const adminSent = await sendPushWithDispatch({
+          dispatchKey: adminDispatchKey,
+          orderId,
+          cohort: 'admin',
+          userIds: adminIds,
+          title: 'سائق معيَّن ولم يستلم',
+          body: `الطلب #${orderNumber} (${restaurantName}) مُعيَّن للسائق (${courierName}) منذ ${ageMinutes} دقيقة ولم يتم استلامه بعد.`,
+          data: {
+            type: 'admin_order_alert',
+            stage: 'preparing_assigned_no_pickup',
+            flow: 'admin_preparing_assigned_20m',
+            order_id: orderId,
+            order_number: orderNumber,
+            assigned_age_minutes: String(ageMinutes),
+          },
+        });
 
-      if (alertRes?.isNew) {
-        stats.sent_admin_alerts += 1;
+        if (pushSendSucceeded(adminSent)) {
+          stats.sent_admin_alerts += 1;
+        }
+      } else {
+        stats.skipped_no_recipients = true;
       }
 
       // 2. Courier Pickup Reminder Push
@@ -135,7 +143,7 @@ export async function runPreparingAssignedDelayAdminAlertsOnce({ logger = consol
         const courierSent = await sendPushWithDispatch({
           dispatchKey: courierDispatchKey,
           orderId,
-          cohort: 'courier',
+          cohort: 'delivery_man',
           userIds: [courierUserId],
           title: 'تذكير باستلام الطلب',
           body: `الطلب #${orderNumber} جاهز أو قيد التحضير في (${restaurantName})، يرجى استلامه من المطعم.`,

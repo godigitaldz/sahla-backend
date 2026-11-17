@@ -7,8 +7,6 @@ import { runPickupDelayAdminAlertsOnce } from '../services/pickupDelayAdminAlert
 import { runPreparingUnassignedRebroadcastOnce } from '../services/preparingUnassignedRebroadcastPoller.js';
 import { runPreparingAssignedDelayAdminAlertsOnce } from '../services/preparingAssignedDelayAdminAlertsPoller.js';
 import { supabasePushGateway } from '../modules/notifications/supabasePushGateway.js';
-import { adminAlertEngine } from '../modules/alerts/adminAlertEngine.js';
-import { adminWebPushService } from '../services/adminWebPushService.js';
 import {
   getRestaurantOpsUserIds,
   getOnlineAvailableCourierUserIds,
@@ -517,9 +515,6 @@ router.get('/meta', requirePerformanceAuth, async (req, res) => {
       admin_phone: reviewer.adminPhone,
       admin_profile: reviewer.adminProfile,
       admin_reviewer_label: reviewer.reviewedBy,
-      supabase_url: process.env.SUPABASE_URL || null,
-      supabase_anon_key: process.env.SUPABASE_ANON_KEY || null,
-      vapid_public_key: adminWebPushService.getVapidPublicKey(),
     });
   } catch (e) {
     console.error('performance /meta', e);
@@ -1228,14 +1223,6 @@ const handleOrderStatusUpdate = async (req, res) => {
       .maybeSingle();
     if (error) throw error;
 
-    if (status === 'picked_up') {
-      adminAlertEngine.resolveOrderAlerts(id, 'courier_picked_up').catch(() => {});
-    } else if (['delivered', 'collected'].includes(status)) {
-      adminAlertEngine.resolveOrderAlerts(id, 'order_completed').catch(() => {});
-    } else if (status === 'cancelled') {
-      adminAlertEngine.resolveOrderAlerts(id, 'order_cancelled').catch(() => {});
-    }
-
     if (
       ['preparing', 'ready'].includes(status) &&
       !updatedOrder?.delivery_person_id &&
@@ -1285,8 +1272,6 @@ router.post('/orders/:id/assign', requirePerformanceAuth, async (req, res) => {
       })
       .eq('id', id);
     if (error) throw error;
-
-    adminAlertEngine.resolveOrderAlerts(id, 'courier_assigned').catch(() => {});
 
     return res.json({ success: true });
   } catch (e) {
@@ -1368,8 +1353,6 @@ router.post('/orders/:id/cancel', requirePerformanceAuth, async (req, res) => {
       }
     }
 
-    adminAlertEngine.resolveOrderAlerts(id, 'order_cancelled').catch(() => {});
-
     return res.json({ success: true });
   } catch (e) {
     console.error('performance order cancel', e);
@@ -1435,8 +1418,6 @@ router.post('/orders/:id/pickup', requirePerformanceAuth, async (req, res) => {
       .eq('id', id);
     if (error) throw error;
 
-    adminAlertEngine.resolveOrderAlerts(id, 'courier_picked_up').catch(() => {});
-
     return res.json({ success: true });
   } catch (e) {
     console.error('performance order pickup', e);
@@ -1458,8 +1439,6 @@ router.post('/orders/:id/deliver', requirePerformanceAuth, async (req, res) => {
       })
       .eq('id', id);
     if (error) throw error;
-
-    adminAlertEngine.resolveOrderAlerts(id, 'order_delivered').catch(() => {});
 
     return res.json({ success: true });
   } catch (e) {
@@ -3358,66 +3337,9 @@ async function fetchFreshAlerts() {
     ...preparingUnassignedDelayed.map((o) => o.id),
   ].filter(Boolean);
 
-  // Synchronize threshold crossings into centralized admin alert engine
-  for (const o of stalePendingOrders) {
-    adminAlertEngine.raiseAlert({
-      orderId: o.id,
-      alertType: 'stale_pending',
-      severity: 'critical',
-      title: 'طلب معلق متأخر',
-      message: `الطلب #${o.order_number || o.id} معلق لأكثر من ${minutes} دقائق`,
-      metadata: { order_number: o.order_number, restaurant_name: o.restaurant?.name, age_minutes: o.ageMinutes },
-      episodeTimestamp: o.created_at,
-    }).catch(() => {});
-  }
-
-  for (const o of preparingUnassignedDelayed) {
-    adminAlertEngine.raiseAlert({
-      orderId: o.id,
-      alertType: 'prep_unassigned',
-      severity: 'critical',
-      title: 'تحضير بدون سائق',
-      message: `الطلب #${o.order_number || o.id} قيد التحضير بدون تعيين سائق`,
-      metadata: { order_number: o.order_number, restaurant_name: o.restaurant?.name, age_minutes: o.ageMinutes },
-      episodeTimestamp: o.courier_unassigned_episode_at || o.preparing_started_at || o.created_at,
-    }).catch(() => {});
-  }
-
-  for (const o of preparingAssignedDelayed) {
-    adminAlertEngine.raiseAlert({
-      orderId: o.id,
-      alertType: 'prep_assigned_delay',
-      severity: 'high',
-      title: 'سائق معيَّن لم يستلم',
-      message: `الطلب #${o.order_number || o.id} عُيِّن له سائق ولم يُستلم منذ ${preparingAssignedDelayMin} دقيقة`,
-      metadata: { order_number: o.order_number, courier_name: o.courier?.delivery_name, age_minutes: o.ageMinutes },
-      episodeTimestamp: o.courier_assigned_at || o.delivery_person_id || 'assigned',
-    }).catch(() => {});
-  }
-
-  for (const o of pickedUpDeliveryDelayed) {
-    adminAlertEngine.raiseAlert({
-      orderId: o.id,
-      alertType: 'pickup_delay',
-      severity: 'critical',
-      title: 'تأخر تسليم الطلب',
-      message: `الطلب #${o.order_number || o.id} تم استلامه ولم يُسلَّم منذ ${pickupDelayMin} دقيقة`,
-      metadata: { order_number: o.order_number, courier_name: o.courier?.delivery_name, age_minutes: o.ageMinutes },
-      episodeTimestamp: o.picked_up_at || o.delivery_person_id || 'picked_up',
-    }).catch(() => {});
-  }
-
-  const engineAlerts = await adminAlertEngine.getActiveAlerts().catch(() => []);
-  const acknowledgedAlertOrderIds = (engineAlerts || [])
-    .filter((a) => a.status === 'acknowledged')
-    .map((a) => a.order_id)
-    .filter(Boolean);
-
   return {
     thresholdMinutes: minutes,
     activeAlertOrderIds,
-    acknowledgedAlertOrderIds,
-    engineAlerts,
     stalePendingOrders: stalePendingOrdersWithItems,
     tasksWithoutOffers,
     parcelWaitingOrders: parcelWaitingOrdersWithItems,
@@ -3470,98 +3392,6 @@ router.get('/alerts', requirePerformanceAuth, async (req, res) => {
   } catch (e) {
     console.error('performance /alerts', e);
     return res.status(500).json({ success: false, error: e.message || 'Query failed' });
-  }
-});
-
-router.get('/alerts/active', requirePerformanceAuth, async (req, res) => {
-  try {
-    const alerts = await adminAlertEngine.getActiveAlerts();
-    return res.json({ success: true, alerts });
-  } catch (e) {
-    console.error('performance /alerts/active', e);
-    return res.status(500).json({ success: false, error: e.message || 'Failed to fetch active alerts' });
-  }
-});
-
-router.post('/alerts/:id/acknowledge', requirePerformanceAuth, async (req, res) => {
-  try {
-    const alertId = req.params.id;
-    const operatorName = String(req.body?.operator_name || 'Operator').trim();
-    const operatorUserId = req.body?.operator_user_id || null;
-    const result = await adminAlertEngine.acknowledgeAlert({ alertId, operatorName, operatorUserId });
-    if (!result.success) {
-      return res.status(400).json(result);
-    }
-    return res.json(result);
-  } catch (e) {
-    console.error('performance acknowledge alert', e);
-    return res.status(500).json({ success: false, error: e.message || 'Acknowledge failed' });
-  }
-});
-
-router.post('/alerts/:id/resolve', requirePerformanceAuth, async (req, res) => {
-  try {
-    const alertId = req.params.id;
-    const resolvedBy = String(req.body?.resolved_by || 'Operator').trim();
-    const reason = String(req.body?.reason || 'manual_resolve').trim();
-    const result = await adminAlertEngine.resolveAlert({ alertId, resolvedBy, reason });
-    if (!result.success) {
-      return res.status(400).json(result);
-    }
-    return res.json(result);
-  } catch (e) {
-    console.error('performance resolve alert', e);
-    return res.status(500).json({ success: false, error: e.message || 'Resolve failed' });
-  }
-});
-
-router.post('/devices/register', requirePerformanceAuth, async (req, res) => {
-  try {
-    const token = String(req.body?.token || '').trim();
-    const deviceId = String(req.body?.device_id || '').trim();
-    const userAgent = String(req.body?.user_agent || req.headers['user-agent'] || '').trim();
-    const userId = req.body?.user_id || null;
-    const subscription = req.body?.subscription || null;
-    const platform = String(req.body?.platform || 'web').trim();
-
-    const result = await adminAlertEngine.registerWebDevice({
-      userId,
-      token,
-      deviceId,
-      userAgent,
-      subscription,
-      platform,
-    });
-    return res.json(result);
-  } catch (e) {
-    console.error('performance register device', e);
-    return res.status(500).json({ success: false, error: e.message || 'Device registration failed' });
-  }
-});
-
-router.post('/alerts/test-push', requirePerformanceAuth, async (req, res) => {
-  try {
-    const deviceId = String(req.body?.device_id || '').trim();
-    if (!deviceId) {
-      return res.status(400).json({ success: false, error: 'device_id_required' });
-    }
-    const result = await adminWebPushService.sendTestPushToDevice({ deviceId });
-    return res.json(result);
-  } catch (e) {
-    console.error('performance test push', e);
-    return res.status(500).json({ success: false, error: e.message || 'Test push failed' });
-  }
-});
-
-router.post('/devices/revoke', requirePerformanceAuth, async (req, res) => {
-  try {
-    const token = String(req.body?.token || '').trim();
-    const deviceId = String(req.body?.device_id || '').trim();
-    const result = await adminAlertEngine.revokeWebDevice({ deviceId, token });
-    return res.json(result);
-  } catch (e) {
-    console.error('performance revoke device', e);
-    return res.status(500).json({ success: false, error: e.message || 'Device revocation failed' });
   }
 });
 

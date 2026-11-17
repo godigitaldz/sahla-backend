@@ -139,7 +139,7 @@ router.post('/orders/lifecycle-sync', express.json(), async (req, res) => {
   const bearer = String(req.headers.authorization || '')
     .replace(/^Bearer\s+/i, '')
     .trim();
-  const secret = String(process.env.CRON_SECRET || process.env.SAHLA_CRON_SECRET || '').trim();
+  const secret = String(process.env.CRON_SECRET || '').trim();
   if (!secret || bearer !== secret) {
     return res.status(401).json({ success: false, error: 'Unauthorized' });
   }
@@ -221,7 +221,7 @@ async function runCronTick(req, res) {
     .replace(/^Bearer\s+/i, '')
     .trim();
   const querySecret = typeof req.query?.secret === 'string' ? req.query.secret.trim() : '';
-  const secret = String(process.env.CRON_SECRET || process.env.SAHLA_CRON_SECRET || '').trim();
+  const secret = String(process.env.CRON_SECRET || '').trim();
   if (!secret || (bearer !== secret && querySecret !== secret)) {
     return res.status(401).json({ success: false, error: 'Unauthorized' });
   }
@@ -394,7 +394,7 @@ async function handleSyncWorkingHours(req, res) {
     .replace(/^Bearer\s+/i, '')
     .trim();
   const querySecret = typeof req.query?.secret === 'string' ? req.query.secret.trim() : '';
-  const secret = String(process.env.CRON_SECRET || process.env.SAHLA_CRON_SECRET || '').trim();
+  const secret = String(process.env.CRON_SECRET || '').trim();
   if (!secret || (bearer !== secret && querySecret !== secret)) {
     return res.status(401).json({ success: false, error: 'Unauthorized' });
   }

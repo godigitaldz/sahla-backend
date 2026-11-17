@@ -3,7 +3,6 @@ import { getActiveAdminUserIds } from './adminRecipients.js';
 import { getRestaurantOpsUserIds } from '../modules/notifications/orderRebroadcastRecipients.js';
 import { runPickupDelayAdminAlertsOnce } from './pickupDelayAdminAlertsPoller.js';
 import { runPreparingUnassignedRebroadcastOnce } from './preparingUnassignedRebroadcastPoller.js';
-import { adminAlertEngine } from '../modules/alerts/adminAlertEngine.js';
 
 const DEFAULT_INTERVAL_MS = 60_000;
 const FIRST_ADMIN_THRESHOLD_MS = 2 * 60_000;
@@ -297,23 +296,33 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
       }
 
       if (isSecondStageDue && !sentSecondStageOrderIds.has(orderId) && adminIds.length > 0) {
-        const alertRes = await adminAlertEngine.raiseAlert({
-          orderId,
-          alertType: 'stale_pending',
-          severity: 'critical',
-          title: 'Order Still Pending',
-          message: `Order #${orderNumber} is still pending after 5 minutes.`,
-          metadata: { order_number: orderNumber, restaurant_id: restaurantId },
-          episodeTimestamp: order.created_at,
-          incidentKey: `order:${orderId}:stale_pending`,
-        }).catch((err) => {
-          logger.error?.(`[pending-orders-poller] raiseAlert failed order=${orderId}:`, err?.message);
-          return null;
+        const adminSecondInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
+          body: {
+            user_ids: adminIds,
+            title: 'Order Still Pending',
+            body: `Order #${orderNumber} is still pending after 5 minutes.`,
+            data: {
+              type: 'admin_order_alert',
+              stage: 'second',
+              flow: ADMIN_SECOND_ALERT_TYPE,
+              order_id: orderId,
+              order_number: orderNumber,
+              source: 'backend_pending_orders_poller',
+            },
+            force_activate_inactive_tokens: true,
+          },
         });
 
-        if (alertRes?.isNew) {
-          sentSecondStageCount += 1;
-          sentSecondStageOrderIds.add(orderId);
+        if (!adminSecondInvoke.error && adminSecondInvoke.data?.success === true) {
+          if (Number(adminSecondInvoke.data?.summary?.total_sent ?? 0) > 0) {
+            sentSecondStageCount += 1;
+            sentSecondStageOrderIds.add(orderId);
+          }
+        } else {
+          logger.error?.(
+            `[pending-orders-poller] second-stage admin push failed order=${orderId}: ${adminSecondInvoke.error?.message ?? 'unknown_error'
+            }`,
+          );
         }
       }
 

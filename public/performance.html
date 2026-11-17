@@ -2,18 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sahla — Performance</title>
     <link rel="icon" type="image/png" href="/sahla-logo-circle.png" />
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Sahla Admin" />
-    <link rel="apple-touch-icon" href="/sahla-logo-circle.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/performance-i18n.js"></script>
     <style>
       :root {
@@ -2373,546 +2367,7 @@
         overflow: hidden;
         border-radius: 16px;
       }
-
-      /* === Centralized Admin Alert Cockpit Styles === */
-      .sahla-conn-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 0.74rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        transition: all 0.2s ease;
-      }
-      .sahla-conn-pill.live {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-      }
-      .sahla-conn-pill.reconnecting {
-        background: #fffbeb;
-        color: #92400e;
-        border: 1px solid #fde68a;
-      }
-      .sahla-conn-pill.offline {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-      }
-
-      .sahla-audio-hud {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .sahla-audio-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 5px 10px;
-        border-radius: 8px;
-        background: #ffffff;
-        border: 1px solid var(--border);
-        color: var(--text);
-        font-size: 0.78rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.15s ease;
-      }
-      .sahla-audio-btn.muted {
-        background: #f8fafc;
-        color: var(--muted);
-        border-style: dashed;
-      }
-      .sahla-audio-btn.active {
-        background: #eff6ff;
-        color: #1e40af;
-        border-color: #bfdbfe;
-      }
-
-      .audio-unlock-banner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 18px;
-        background: linear-gradient(135deg, #1e3a8a, #2563eb);
-        color: #ffffff;
-        font-size: 0.88rem;
-        font-weight: 700;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-        z-index: 999;
-      }
-      .ios-pwa-banner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 18px;
-        background: #0f172a;
-        color: #f8fafc;
-        font-size: 0.82rem;
-        border-bottom: 2px solid #0ea5e9;
-        z-index: 998;
-      }
-
-      /* ========================================================================= */
-      /* Mobile Alerts Architecture & Touch Design                                 */
-      /* ========================================================================= */
-      .mobile-alerts-container {
-        display: none;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 8px;
-        width: 100%;
-        box-sizing: border-box;
-      }
-      .mobile-alert-card {
-        background: #ffffff;
-        border: 1px solid var(--border);
-        border-inline-start: 5px solid #cbd5e1;
-        border-radius: 14px;
-        padding: 13px 14px;
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        position: relative;
-        box-sizing: border-box;
-      }
-      .mobile-alert-card.critical {
-        border-inline-start-color: #ef4444;
-        background: #fffafa;
-        box-shadow: 0 4px 14px rgba(239, 68, 68, 0.09);
-      }
-      .mobile-alert-card.acknowledged {
-        border-inline-start-color: #f59e0b;
-        background: #fffdf7;
-      }
-
-      .mobile-alert-top-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #f1f5f9;
-      }
-      .mobile-alert-id-group {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .mobile-alert-order-num {
-        font-weight: 800;
-        font-size: 0.95rem;
-        color: var(--text);
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      }
-      .mobile-alert-age-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        font-size: 0.75rem;
-        font-weight: 800;
-        padding: 2px 7px;
-        border-radius: 999px;
-      }
-      .mobile-alert-age-pill.warn {
-        background: #fef2f2;
-        color: #ef4444;
-        border: 1px solid #fecaca;
-      }
-      .mobile-alert-age-pill.normal {
-        background: #f1f5f9;
-        color: #64748b;
-      }
-
-      .mobile-status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 9px;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        font-weight: 800;
-        text-transform: capitalize;
-      }
-      .mobile-status-pill.pending {
-        background: #fef3c7;
-        color: #b45309;
-        border: 1px solid #fde68a;
-      }
-      .mobile-status-pill.preparing {
-        background: #e0f2fe;
-        color: #0369a1;
-        border: 1px solid #bae6fd;
-      }
-      .mobile-status-pill.ready {
-        background: #e0e7ff;
-        color: #4338ca;
-        border: 1px solid #c7d2fe;
-      }
-      .mobile-status-pill.picked_up {
-        background: #ccfbf1;
-        color: #0f766e;
-        border: 1px solid #99f6e4;
-      }
-      .mobile-status-pill.delivered {
-        background: #dcfce7;
-        color: #15803d;
-        border: 1px solid #bbf7d0;
-      }
-      .mobile-status-pill.cancelled {
-        background: #fee2e2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-      }
-
-      .mobile-alert-items-summary {
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: #d97706;
-        background: #fffbeb;
-        padding: 6px 10px;
-        border-radius: 8px;
-        border: 1px dashed #fde68a;
-      }
-
-      .mobile-alert-body-list {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      .mobile-alert-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        font-size: 0.82rem;
-        padding: 2px 0;
-      }
-      .mobile-alert-label {
-        color: var(--muted);
-        font-weight: 600;
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-      }
-      .mobile-alert-val {
-        color: var(--text);
-        font-weight: 700;
-        text-align: end;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .mobile-alert-actions {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-        gap: 6px;
-        padding-top: 8px;
-        border-top: 1px solid #f1f5f9;
-      }
-
-      .mobile-action-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        height: 38px;
-        padding: 0 10px;
-        border-radius: 9px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        text-decoration: none;
-        border: 1px solid var(--border);
-        background: #ffffff;
-        color: var(--text);
-        cursor: pointer;
-        transition: all 0.12s ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .mobile-action-btn:active {
-        transform: scale(0.96);
-      }
-      .mobile-action-btn.call-btn {
-        background: #f0fdf4;
-        color: #166534;
-        border-color: #bbf7d0;
-      }
-      .mobile-action-btn.ack-btn {
-        background: #fef3c7;
-        color: #92400e;
-        border-color: #fde68a;
-      }
-      .mobile-action-btn.delivered-btn {
-        background: #16a34a;
-        color: #ffffff;
-        border-color: #15803d;
-      }
-      .mobile-action-btn.pickup-btn {
-        background: #0284c7;
-        color: #ffffff;
-        border-color: #0369a1;
-      }
-      .mobile-action-btn.accept-btn {
-        background: #0284c7;
-        color: #ffffff;
-        border-color: #0369a1;
-      }
-      .mobile-action-btn.cancel-btn {
-        background: #fff1f2;
-        color: #e11d48;
-        border-color: #fecdd3;
-      }
-
-      .alert-ack-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        font-weight: 700;
-        background: #fef3c7;
-        color: #92400e;
-        border: 1px solid #fde68a;
-      }
-
-      .mobile-empty-state {
-        text-align: center;
-        padding: 20px 14px;
-        color: var(--muted);
-        font-size: 0.84rem;
-        font-weight: 600;
-        background: #f8fafc;
-        border-radius: 12px;
-        border: 1px dashed var(--border);
-        margin: 4px 0 12px;
-      }
-
-      .sahla-header-meta {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-      }
-
-      /* ========================================================================= */
-      /* Responsive Mobile Viewport Overrides (<= 768px)                           */
-      /* ========================================================================= */
-      @media (max-width: 768px) {
-        html, body {
-          max-width: 100vw !important;
-          overflow-x: hidden !important;
-          -webkit-text-size-adjust: 100%;
-          -webkit-overflow-scrolling: touch;
-        }
-
-        body {
-          padding-top: env(safe-area-inset-top, 0px) !important;
-          padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
-          padding-left: env(safe-area-inset-left, 0px) !important;
-          padding-right: env(safe-area-inset-right, 0px) !important;
-        }
-
-        /* 1. Header Layout - Zero horizontal overflow */
-        .sahla-brand-header {
-          padding: max(10px, env(safe-area-inset-top)) 12px 12px !important;
-          gap: 10px !important;
-          flex-direction: column !important;
-          align-items: stretch !important;
-          width: 100% !important;
-          max-width: 100vw !important;
-          box-sizing: border-box !important;
-          overflow: hidden !important;
-        }
-
-        .sahla-brand-left {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: space-between !important;
-          width: 100% !important;
-        }
-
-        .sahla-hdr-logo-circle {
-          width: 38px !important;
-          height: 38px !important;
-        }
-
-        .sahla-arabic-brand {
-          font-size: 1.25rem !important;
-        }
-
-        .sahla-latin-brand {
-          font-size: 0.92rem !important;
-        }
-
-        .sahla-badge-ops {
-          font-size: 0.62rem !important;
-          padding: 2px 7px !important;
-        }
-
-        .sahla-brand-right {
-          width: 100% !important;
-          margin-left: 0 !important;
-          margin-right: 0 !important;
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 8px !important;
-          align-items: stretch !important;
-        }
-
-        .sahla-brand-actions {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: space-between !important;
-          gap: 6px !important;
-          width: 100% !important;
-        }
-
-        .sahla-lang-switcher {
-          flex-shrink: 0 !important;
-          gap: 2px !important;
-          padding: 2px 4px !important;
-        }
-
-        .sahla-lang-btn {
-          padding: 5px 8px !important;
-          font-size: 0.72rem !important;
-        }
-
-        .sahla-hdr-btn {
-          flex: 1 !important;
-          padding: 6px 8px !important;
-          font-size: 0.76rem !important;
-          justify-content: center !important;
-          white-space: nowrap !important;
-          min-width: 0 !important;
-        }
-
-        /* 4-button responsive audio toolbar */
-        .sahla-audio-hud {
-          display: grid !important;
-          grid-template-columns: repeat(4, 1fr) !important;
-          gap: 6px !important;
-          width: 100% !important;
-          background: rgba(0, 0, 0, 0.25) !important;
-          padding: 6px !important;
-          border-radius: 10px !important;
-          border: 1px solid rgba(255, 255, 255, 0.12) !important;
-          box-sizing: border-box !important;
-        }
-
-        .sahla-audio-btn {
-          padding: 8px 4px !important;
-          font-size: 0.72rem !important;
-          min-width: 0 !important;
-          justify-content: center !important;
-          border-radius: 8px !important;
-          white-space: nowrap !important;
-        }
-
-        .sahla-audio-btn span {
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-        }
-
-        /* Status meta bar (Live, Alerts, Clock) */
-        .sahla-header-meta {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: space-between !important;
-          width: 100% !important;
-          gap: 6px !important;
-        }
-
-        .sahla-header-meta .sahla-conn-pill,
-        .sahla-header-meta .sahla-brand-metric,
-        .sahla-header-meta .sahla-brand-time {
-          flex: 1 !important;
-          justify-content: center !important;
-          text-align: center !important;
-          padding: 5px 6px !important;
-          font-size: 0.72rem !important;
-          margin: 0 !important;
-          white-space: nowrap !important;
-        }
-
-        /* 2. Swipeable Pill Navigation Bar */
-        .tabs {
-          display: flex !important;
-          flex-wrap: nowrap !important;
-          overflow-x: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-          gap: 6px !important;
-          padding: 8px 12px !important;
-          margin: 0 0 12px !important;
-          background: #ffffff !important;
-          border-bottom: 1px solid var(--border) !important;
-          scrollbar-width: none !important;
-        }
-        .tabs::-webkit-scrollbar {
-          display: none !important;
-        }
-        .tabs button {
-          flex-shrink: 0 !important;
-          white-space: nowrap !important;
-          padding: 7px 14px !important;
-          font-size: 0.78rem !important;
-          border-radius: 999px !important;
-        }
-
-        /* 3. Hide Wide Desktop Tables & Expand Mobile Cards */
-        .order-box-wrap table,
-        .order-box-wrap {
-          border: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
-          padding: 0 !important;
-        }
-
-        .order-box-wrap table {
-          display: none !important;
-        }
-
-        .mobile-alerts-container {
-          display: flex !important;
-        }
-
-        /* 4. Filter Toolbar Grid on Mobile */
-        .toolbar {
-          display: grid !important;
-          grid-template-columns: 1fr 1fr !important;
-          gap: 8px !important;
-          align-items: end !important;
-        }
-        .toolbar .field {
-          min-width: 0 !important;
-        }
-        .toolbar .btn-refresh {
-          grid-column: span 2 !important;
-          width: 100% !important;
-          height: 38px !important;
-          justify-content: center !important;
-        }
-
-        /* 5. Typography & Headings */
-        .alerts-head {
-          font-size: 1rem !important;
-          margin: 16px 12px 6px !important;
-        }
-
-        .meta {
-          margin: 0 12px 10px !important;
-          font-size: 0.78rem !important;
-        }
-      }
-    </style>
+        </style>
   </head>
   <body>
     <div id="gate">
@@ -2964,50 +2419,17 @@
               <span data-i18n="hdr_push_notif">Push Notification</span>
             </button>
           </div>
-          <div class="sahla-audio-hud" id="adminAudioHud">
-            <button type="button" class="sahla-audio-btn active" id="sahlaAudioToggleBtn" title="Toggle Alarm Sound" onclick="toggleDashboardAudio()">
-              <span id="sahlaAudioIcon">🔊</span> <span id="sahlaAudioText">Sound</span>
-            </button>
-            <button type="button" class="sahla-audio-btn" id="sahlaSnoozeBtn" title="Snooze Audio for 5 minutes" onclick="snoozeDashboardAudio(5)">
-              <span>⏱️</span> <span>Snooze</span>
-            </button>
-            <button type="button" class="sahla-audio-btn" id="enableWebPushBtn" title="Enable System Push Notifications" onclick="requestWebPushPermission()">
-              <span>🔔</span> <span>Push</span>
-            </button>
-            <button type="button" class="sahla-audio-btn" id="sahlaTestLockBtn" title="Test Native Push on Locked Phone Screen" onclick="testLockScreenPush()" style="display:none;">
-              <span>📲</span> <span>Test Lock</span>
-            </button>
-            <button type="button" class="sahla-audio-btn" id="sahlaTestAlertBtn" title="Test Alarm Sound & Notification Popup" onclick="triggerTestAlert()">
-              <span>🧪</span> <span>Test</span>
-            </button>
+          <div class="sahla-live-status-pill">
+            <span class="pulse-beacon"><span class="pulse-core"></span></span>
+            <span data-i18n="hdr_live_system">LIVE SYSTEM</span>
           </div>
-          <div class="sahla-header-meta" id="sahlaHeaderMeta">
-            <div class="sahla-conn-pill live" id="adminConnectionPill" title="Connection status">
-              <span>●</span> <span id="adminConnectionText">Live</span>
-            </div>
-            <div class="sahla-brand-metric" id="headerActiveOrdersPill" data-i18n-title="hdr_alerts_title">
-              <span class="sahla-metric-label" data-i18n="hdr_alerts">Alerts</span>
-              <span class="sahla-metric-val" id="headerActiveOrdersCount">0</span>
-            </div>
-            <div class="sahla-brand-time" id="sahlaBrandClock" data-i18n-title="hdr_clock_title">--:--:--</div>
+          <div class="sahla-brand-metric" id="headerActiveOrdersPill" data-i18n-title="hdr_alerts_title">
+            <span class="sahla-metric-label" data-i18n="hdr_alerts">Alerts</span>
+            <span class="sahla-metric-val" id="headerActiveOrdersCount">0</span>
           </div>
+          <div class="sahla-brand-time" id="sahlaBrandClock" data-i18n-title="hdr_clock_title">--:--:--</div>
         </div>
       </header>
-
-      <!-- Autoplay Audio Unlock Banner -->
-      <div id="audioUnlockBanner" class="audio-unlock-banner hidden">
-        <div style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;" onclick="unlockDashboardAudio()">
-          <span>🔔 <strong>Audio Alerts Muted by Browser:</strong> Tap here to enable live audible alarms for critical orders.</span>
-          <button type="button" style="background:#fff;color:#1e3a8a;padding:4px 10px;border-radius:6px;font-weight:700;border:none;cursor:pointer;">Enable Sound</button>
-        </div>
-        <button type="button" style="background:transparent;color:#ffffff;border:none;font-size:1.2rem;padding:0 8px;cursor:pointer;" onclick="dismissAudioUnlockBanner(event)" title="Dismiss">✕</button>
-      </div>
-
-      <!-- iOS Home Screen PWA Install Banner -->
-      <div id="iosPwaBanner" class="ios-pwa-banner hidden">
-        <span>📲 <strong>iPhone Lock-Screen Alerts:</strong> Tap Share ➔ <strong>Add to Home Screen</strong> to receive order alarms when phone is locked.</span>
-        <button type="button" style="background:transparent;color:#94a3b8;font-size:1.1rem;padding:0 6px;" onclick="dismissIosPwaBanner()">✕</button>
-      </div>
 
       <main>
         <div id="dashboardErrorBanner" class="hidden dashboard-error-banner" role="alert">
@@ -3148,7 +2570,6 @@
               </thead>
               <tbody id="alertsOrdersBody"></tbody>
             </table>
-            <div class="mobile-alerts-container" id="alertsMobileOrdersContainer"></div>
           </div>
 
           <!-- 2. Preparing — Waiting for courier (≥ 5 min) -->
@@ -3174,7 +2595,6 @@
               </thead>
               <tbody id="alertsPreparingUnassignedBody"></tbody>
             </table>
-            <div class="mobile-alerts-container" id="alertsMobilePrepUnassignedContainer"></div>
           </div>
 
           <!-- 3. Preparing — Courier assigned not picked up (≥ 20 min) -->
@@ -3202,7 +2622,6 @@
               </thead>
               <tbody id="alertsPreparingAssignedBody"></tbody>
             </table>
-            <div class="mobile-alerts-container" id="alertsMobilePrepAssignedContainer"></div>
           </div>
 
           <!-- 4. Picked up — not delivered (≥ delay) -->
@@ -3230,7 +2649,6 @@
               </thead>
               <tbody id="alertsPickedUpBody"></tbody>
             </table>
-            <div class="mobile-alerts-container" id="alertsMobilePickedUpContainer"></div>
           </div>
           <h3 class="alerts-head"><span class="head-icon">🚫</span> <span data-i18n="sec_cancelled_orders">Cancelled orders</span></h3>
           <div class="toolbar">
@@ -3271,7 +2689,6 @@
               </thead>
               <tbody id="cancelledOrdersBody"></tbody>
             </table>
-            <div class="mobile-alerts-container" id="cancelledOrdersMobileContainer"></div>
           </div>
           <h3 class="alerts-head"><span class="head-icon">📋</span> <span data-i18n="sec_tasks_no_offers">Open tasks with no cost offers (≥ threshold)</span></h3>
           <p class="meta" id="alertsTasksMeta"></p>
@@ -4334,8 +3751,6 @@
       let otherActiveAlertIds = new Set();
       let latestStaleOrders = [];
       let latestAllOrders = [];
-      let latestEngineAlerts = [];
-      let latestAckedOrderIds = new Set();
       let pendingStuckThresholdMin = 5;
       let parcelAlertCount = 0;
       let parcelActiveOrderCount = 0;
@@ -4846,7 +4261,7 @@
           });
         } catch (networkErr) {
           const msg = 'Network error reaching ' + path + ': ' + (networkErr.message || 'Connection failed');
-          if (!opts?.silentError) showDashboardError(msg);
+          showDashboardError(msg);
           throw new Error(msg);
         }
         const j = await r.json().catch(() => ({}));
@@ -4856,7 +4271,7 @@
           }
           const detail = j.error || r.statusText || ('HTTP ' + r.status);
           const msg = detail + ' (' + path + ' [' + r.status + '])';
-          if (!opts?.silentError) showDashboardError(msg);
+          showDashboardError(msg);
           throw new Error(msg);
         }
         return j;
@@ -5162,7 +4577,7 @@
 
       async function tryBootstrap() {
         try {
-          await api('/meta', { method: 'GET', silentError: true });
+          await api('/meta', { method: 'GET' });
           showApp();
           await loadMeta();
           await loadAlerts();
@@ -5246,17 +4661,6 @@
 
       async function loadMeta() {
         const m = await api('/meta');
-        if (m.vapid_public_key) {
-          _vapidPublicKey = m.vapid_public_key;
-        }
-        if (m.supabase_url && m.supabase_anon_key && !_supabaseRealtime) {
-          initSupabaseRealtime(m);
-        }
-        checkAudioUnlockState();
-        checkIosPwaStatus();
-        updateAudioButtonUI();
-        initWebPushState();
-        updateSnoozeButtonUI();
         availableOrderCouriers = Array.isArray(m.available_order_couriers) && m.available_order_couriers.length > 0
           ? m.available_order_couriers
           : (Array.isArray(m.delivery_personnel_options) ? m.delivery_personnel_options : []);
@@ -5925,627 +5329,24 @@
         }
       }
 
-      // === Centralized Admin Notification & Audio Engine ===
-      let _isAudioMuted = localStorage.getItem('sahla_admin_audio_muted') === 'true';
-      let _snoozeUntil = Number(localStorage.getItem('sahla_admin_snooze_until') || 0);
-      let _repeatingAlarmInterval = null;
-      let _audioContext = null;
-      let _activeCriticalAlerts = new Set();
-      let _supabaseRealtime = null;
       let _lastAlertCount = -1;
-
-      function getAudioContext() {
-        if (!_audioContext) {
+      function playAlertChime() {
+        try {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (AudioContext) {
-            _audioContext = new AudioContext();
-          }
-        }
-        return _audioContext;
-      }
-
-      function checkAudioUnlockState() {
-        const ctx = getAudioContext();
-        const banner = $('audioUnlockBanner');
-        if (!banner) return;
-        const dismissed = localStorage.getItem('sahla_audio_banner_dismissed') === 'true';
-        const unlocked = localStorage.getItem('sahla_audio_unlocked') === 'true';
-        if (ctx && ctx.state === 'suspended' && !_isAudioMuted && !dismissed && !unlocked) {
-          banner.classList.remove('hidden');
-        } else {
-          banner.classList.add('hidden');
-        }
-      }
-
-      function dismissAudioUnlockBanner(e) {
-        if (e) e.stopPropagation();
-        const banner = $('audioUnlockBanner');
-        if (banner) banner.classList.add('hidden');
-        localStorage.setItem('sahla_audio_banner_dismissed', 'true');
-      }
-
-      async function unlockDashboardAudio() {
-        try {
-          const ctx = getAudioContext();
-          if (ctx && ctx.state === 'suspended') {
-            await ctx.resume();
-          }
-          localStorage.setItem('sahla_audio_unlocked', 'true');
-          localStorage.setItem('sahla_audio_banner_dismissed', 'true');
-          const banner = $('audioUnlockBanner');
-          if (banner) banner.classList.add('hidden');
-          playTonePulse(660, 880, 0.15, 0.15);
-        } catch (_) {}
-      }
-
-      function trySilentAudioUnlock() {
-        const ctx = getAudioContext();
-        if (ctx && ctx.state === 'suspended') {
-          ctx.resume().then(() => {
-            localStorage.setItem('sahla_audio_unlocked', 'true');
-            checkAudioUnlockState();
-          }).catch(() => {});
-        }
-      }
-
-      ['click', 'touchstart', 'pointerdown', 'keydown'].forEach((evt) => {
-        window.addEventListener(evt, trySilentAudioUnlock, { passive: true });
-      });
-
-      function playTonePulse(freq1, freq2, dur, gainVal = 0.25) {
-        if (_isAudioMuted || Date.now() < _snoozeUntil) return;
-        try {
-          const ctx = getAudioContext();
-          if (!ctx || ctx.state === 'suspended') return;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq1, ctx.currentTime);
-          if (freq2) {
-            osc.frequency.setValueAtTime(freq2, ctx.currentTime + dur * 0.4);
-          }
-          gain.gain.setValueAtTime(gainVal, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur);
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.start();
-          osc.stop(ctx.currentTime + dur + 0.01);
+          osc.stop(ctx.currentTime + 0.36);
         } catch (_) {}
-      }
-
-      function playAlertChime() {
-        if (_isAudioMuted || Date.now() < _snoozeUntil) return;
-        try {
-          const ctx = getAudioContext();
-          if (!ctx) return;
-          const doPlay = () => {
-            if (_isAudioMuted || Date.now() < _snoozeUntil) return;
-            const now = ctx.currentTime;
-            [
-              { f: 659.25, start: 0, dur: 0.15 },
-              { f: 880, start: 0.16, dur: 0.25 },
-            ].forEach(({ f, start, dur }) => {
-              const osc = ctx.createOscillator();
-              const gain = ctx.createGain();
-              osc.type = 'sine';
-              osc.frequency.setValueAtTime(f, now + start);
-              gain.gain.setValueAtTime(0.35, now + start);
-              gain.gain.exponentialRampToValueAtTime(0.01, now + start + dur);
-              osc.connect(gain);
-              gain.connect(ctx.destination);
-              osc.start(now + start);
-              osc.stop(now + start + dur + 0.02);
-            });
-          };
-
-          if (ctx.state === 'suspended') {
-            ctx.resume().then(() => {
-              if (ctx.state === 'running') doPlay();
-            }).catch(() => {});
-          } else {
-            doPlay();
-          }
-        } catch (_) {}
-      }
-
-      function playEmergencySirenPulse() {
-        if (_isAudioMuted || Date.now() < _snoozeUntil) return;
-        try {
-          const ctx = getAudioContext();
-          if (!ctx) return;
-          const doPlay = () => {
-            if (_isAudioMuted || Date.now() < _snoozeUntil) return;
-            // 4-tone loud oscillating emergency siren
-            const now = ctx.currentTime;
-            [
-              { f: 880, start: 0, dur: 0.18 },
-              { f: 1174.66, start: 0.20, dur: 0.18 },
-              { f: 880, start: 0.40, dur: 0.18 },
-              { f: 1174.66, start: 0.60, dur: 0.28 },
-            ].forEach(({ f, start, dur }) => {
-              const osc = ctx.createOscillator();
-              const gain = ctx.createGain();
-              osc.type = 'triangle';
-              osc.frequency.setValueAtTime(f, now + start);
-              gain.gain.setValueAtTime(0.5, now + start);
-              gain.gain.exponentialRampToValueAtTime(0.01, now + start + dur);
-              osc.connect(gain);
-              gain.connect(ctx.destination);
-              osc.start(now + start);
-              osc.stop(now + start + dur + 0.02);
-            });
-          };
-
-          if (ctx.state === 'suspended') {
-            ctx.resume().then(() => {
-              if (ctx.state === 'running') doPlay();
-            }).catch(() => {});
-          } else {
-            doPlay();
-          }
-        } catch (_) {}
-      }
-
-      let _notifiedAlertKeys = new Set();
-
-      function dispatchAdminDesktopNotification({ title, body, tag, url }) {
-        if (!('Notification' in window) || Notification.permission !== 'granted') return;
-        const cleanTitle = title || '⚠️ تنبيه جديد';
-        const cleanTag = tag || 'sahla-admin-alert';
-        const options = {
-          body: body || 'طلب بحاجة لتدخل فوري',
-          icon: '/sahla-logo-circle.png',
-          badge: '/sahla-logo-circle.png',
-          tag: cleanTag,
-          renotify: true,
-          requireInteraction: true,
-          data: { url: url || window.location.href },
-        };
-
-        // 1. Direct Notification constructor (synchronous & reliable on macOS / desktop Safari)
-        let shown = false;
-        try {
-          const n = new Notification(cleanTitle, options);
-          n.onclick = () => {
-            window.focus();
-            if (url) window.location.href = url;
-            n.close();
-          };
-          shown = true;
-        } catch (_) {
-          shown = false;
-        }
-
-        // 2. Service Worker showNotification (for Mobile PWA and background tabs)
-        try {
-          if (navigator.serviceWorker) {
-            if (navigator.serviceWorker.controller) {
-              navigator.serviceWorker.controller.postMessage({
-                type: 'SHOW_NOTIFICATION',
-                title: cleanTitle,
-                options,
-              });
-            } else if (!shown && navigator.serviceWorker.getRegistration) {
-              navigator.serviceWorker.getRegistration().then((reg) => {
-                if (reg && typeof reg.showNotification === 'function') {
-                  reg.showNotification(cleanTitle, options);
-                }
-              }).catch(() => {});
-            }
-          }
-        } catch (_) {}
-      }
-
-      async function triggerTestAlert() {
-        await unlockDashboardAudio();
-        playEmergencySirenPulse();
-        dispatchAdminDesktopNotification({
-          title: '🚨 فحص تنبيه ساهلة (Test Alert)',
-          body: 'إنذار الصوت والإشعار المنبثق يعملان بنجاح على هذا الجهاز!',
-          tag: 'test-alert-' + Date.now(),
-        });
-      }
-
-      function syncCriticalAlarmState() {
-        if (_activeCriticalAlerts.size > 0 && !_isAudioMuted && Date.now() >= _snoozeUntil) {
-          if (!_repeatingAlarmInterval) {
-            playEmergencySirenPulse();
-            _repeatingAlarmInterval = setInterval(() => {
-              if (_activeCriticalAlerts.size > 0 && !_isAudioMuted && Date.now() >= _snoozeUntil) {
-                playEmergencySirenPulse();
-              } else {
-                stopRepeatingAlarm();
-              }
-            }, 20_000);
-          }
-        } else {
-          stopRepeatingAlarm();
-        }
-      }
-
-      function stopRepeatingAlarm() {
-        if (_repeatingAlarmInterval) {
-          clearInterval(_repeatingAlarmInterval);
-          _repeatingAlarmInterval = null;
-        }
-      }
-
-      function toggleDashboardAudio() {
-        _isAudioMuted = !_isAudioMuted;
-        localStorage.setItem('sahla_admin_audio_muted', _isAudioMuted ? 'true' : 'false');
-        updateAudioButtonUI();
-        if (_isAudioMuted) {
-          stopRepeatingAlarm();
-        } else {
-          unlockDashboardAudio();
-          syncCriticalAlarmState();
-        }
-      }
-
-      function snoozeDashboardAudio(minutes = 5) {
-        if (_snoozeUntil > Date.now()) {
-          // Toggle off snooze
-          _snoozeUntil = 0;
-          localStorage.removeItem('sahla_admin_snooze_until');
-          updateSnoozeButtonUI();
-          syncCriticalAlarmState();
-          return;
-        }
-        _snoozeUntil = Date.now() + minutes * 60_000;
-        localStorage.setItem('sahla_admin_snooze_until', String(_snoozeUntil));
-        stopRepeatingAlarm();
-        updateSnoozeButtonUI();
-      }
-
-      function updateSnoozeButtonUI() {
-        const btn = $('sahlaSnoozeBtn');
-        if (!btn) return;
-        const remainingMs = _snoozeUntil - Date.now();
-        if (remainingMs > 0) {
-          const remMin = Math.ceil(remainingMs / 60_000);
-          btn.classList.add('muted');
-          btn.innerHTML = `<span>⏱️</span> <span>Snoozed ${remMin}m</span>`;
-          setTimeout(updateSnoozeButtonUI, 15_000);
-        } else {
-          btn.classList.remove('muted');
-          btn.innerHTML = `<span>⏱️</span> <span>Snooze</span>`;
-          syncCriticalAlarmState();
-        }
-      }
-
-      function updateAudioButtonUI() {
-        const btn = $('sahlaAudioToggleBtn');
-        const icon = $('sahlaAudioIcon');
-        const text = $('sahlaAudioText');
-        if (!btn) return;
-        if (_isAudioMuted) {
-          btn.classList.remove('active');
-          btn.classList.add('muted');
-          if (icon) icon.textContent = '🔇';
-          if (text) text.textContent = 'Muted';
-        } else {
-          btn.classList.add('active');
-          btn.classList.remove('muted');
-          if (icon) icon.textContent = '🔊';
-          if (text) text.textContent = 'Sound';
-        }
-      }
-
-      function getLocalAckedOrders() {
-        try {
-          const raw = localStorage.getItem('sahla_acked_orders');
-          if (!raw) return {};
-          const parsed = JSON.parse(raw);
-          const now = Date.now();
-          const clean = {};
-          for (const [id, ts] of Object.entries(parsed)) {
-            if (now - Number(ts) < 24 * 3600 * 1000) {
-              clean[id] = ts;
-            }
-          }
-          return clean;
-        } catch (_) {
-          return {};
-        }
-      }
-
-      function persistLocalAckedOrder(orderId) {
-        if (!orderId) return;
-        const idStr = String(orderId);
-        const acks = getLocalAckedOrders();
-        acks[idStr] = Date.now();
-        try {
-          localStorage.setItem('sahla_acked_orders', JSON.stringify(acks));
-        } catch (_) {}
-        latestAckedOrderIds.add(idStr);
-        _activeCriticalAlerts.delete(idStr);
-        syncCriticalAlarmState();
-      }
-
-      async function acknowledgeAdminAlert(alertId, btnEl) {
-        if (!alertId) return;
-        const idStr = String(alertId);
-        const operatorName = localStorage.getItem('sahla_operator_name') || 'Admin';
-
-        // 1. Immediately persist locally, silence the repeating alarm, and lock the UI button
-        persistLocalAckedOrder(idStr);
-        if (btnEl) {
-          btnEl.disabled = true;
-          btnEl.textContent = '✓ Ack';
-          btnEl.classList.remove('ack-btn');
-          btnEl.classList.add('muted');
-        }
-
-        // 2. Synchronize to server order_events & admin_alerts
-        try {
-          await api(`/alerts/${encodeURIComponent(idStr)}/acknowledge`, {
-            method: 'POST',
-            body: JSON.stringify({ operator_name: operatorName }),
-          });
-        } catch (e) {
-          console.warn('Alert acknowledge API response note:', e.message);
-        }
-      }
-
-      let _vapidPublicKey = null;
-
-      function urlBase64ToUint8Array(base64String) {
-        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-          outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-      }
-
-      async function initWebPushState() {
-        const btn = $('enableWebPushBtn');
-        const testBtn = $('sahlaTestLockBtn');
-        if (!btn) return;
-        if (!('Notification' in window)) {
-          btn.style.display = 'none';
-          if (testBtn) testBtn.style.display = 'none';
-          return;
-        }
-
-        if (Notification.permission === 'granted') {
-          btn.innerHTML = '<span>🔔</span> <span>Push Active</span>';
-          btn.classList.add('active');
-          btn.classList.remove('muted');
-          btn.title = 'Push notifications are active on this device';
-          if (testBtn) testBtn.style.display = 'inline-flex';
-          localStorage.setItem('sahla_admin_push_enabled', 'true');
-          syncWebPushRegistrationSilently().catch(() => {});
-        } else if (Notification.permission === 'denied') {
-          btn.innerHTML = '<span>🔕</span> <span>Push Blocked</span>';
-          btn.classList.add('muted');
-          btn.classList.remove('active');
-          btn.title = 'Push notifications are blocked in browser settings';
-          if (testBtn) testBtn.style.display = 'none';
-        } else {
-          btn.innerHTML = '<span>🔔</span> <span>Push</span>';
-          btn.classList.remove('active', 'muted');
-          btn.title = 'Enable Push Notifications';
-          if (testBtn) testBtn.style.display = 'none';
-        }
-      }
-
-      async function syncWebPushRegistrationSilently() {
-        if (!('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return;
-        try {
-          const reg = await navigator.serviceWorker.register('/admin-sw.js');
-          await navigator.serviceWorker.ready;
-
-          let deviceId = localStorage.getItem('sahla_admin_device_id');
-          if (!deviceId) {
-            deviceId = 'admin-dev-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
-            localStorage.setItem('sahla_admin_device_id', deviceId);
-          }
-
-          localStorage.setItem('sahla_admin_push_enabled', 'true');
-
-          let subscription = null;
-          if ('PushManager' in window && reg.pushManager && _vapidPublicKey) {
-            try {
-              subscription = await reg.pushManager.getSubscription();
-              if (!subscription) {
-                const convertedKey = urlBase64ToUint8Array(_vapidPublicKey);
-                subscription = await reg.pushManager.subscribe({
-                  userVisibleOnly: true,
-                  applicationServerKey: convertedKey,
-                });
-              }
-            } catch (subErr) {
-              console.warn('[WebPush] Subscribe error:', subErr);
-            }
-          }
-
-          const subJson = subscription ? subscription.toJSON() : null;
-          const tokenPayload = subJson ? JSON.stringify(subJson) : ('sw-active-' + deviceId);
-
-          await api('/devices/register', {
-            method: 'POST',
-            body: JSON.stringify({
-              device_id: deviceId,
-              token: tokenPayload,
-              subscription: subJson,
-              platform: subJson ? 'web_push' : 'web',
-              user_agent: navigator.userAgent,
-            }),
-            silentError: true,
-          });
-        } catch (err) {
-          console.debug('Silent push sync:', err);
-        }
-      }
-
-      async function requestWebPushPermission() {
-        const btn = $('enableWebPushBtn');
-        if (!('Notification' in window)) {
-          alert('Notifications are not supported by this browser.');
-          return;
-        }
-
-        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-
-        if (Notification.permission === 'denied') {
-          alert('الإشعارات محظورة في إعدادات المتصفح. يرجى تفعيل الإشعارات للموقع من إعدادات المتصفح أو إعدادات الآيفون.');
-          return;
-        }
-
-        if (isIos && !isStandalone) {
-          alert('📱 تنبيه لأجهزة الآيفون:\nلتلقي التنبيهات حتى وشاشة الهاتف مقفلة، يرجى أولاً إضافة الصفحة إلى الشاشة الرئيسية (اضغط زر المشاركة ⎋ ثم "إضافة إلى الشاشة الرئيسية ➕")، ثم افتح تطبيق "Sahla Admin" من شاشة هاتفك.');
-        }
-
-        if (Notification.permission === 'granted') {
-          await syncWebPushRegistrationSilently();
-          initWebPushState();
-          dispatchAdminDesktopNotification({
-            title: '🔔 تم تفعيل إشعارات Sahla',
-            body: 'إشعارات النظام تعمل الآن بنجاح على هذا الجهاز.',
-            tag: 'sahla-active-' + Date.now(),
-          });
-          return;
-        }
-
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          localStorage.setItem('sahla_admin_push_enabled', 'true');
-          await syncWebPushRegistrationSilently();
-          initWebPushState();
-          dispatchAdminDesktopNotification({
-            title: '🚨 Sahla Notifications Enabled',
-            body: 'ستصلك الآن تنبيهات الطوارئ للطلبات المتأخرة على هذا الجهاز.',
-            tag: 'sahla-enabled-' + Date.now(),
-          });
-        } else {
-          initWebPushState();
-        }
-      }
-
-      async function testLockScreenPush() {
-        const btn = $('sahlaTestLockBtn');
-        const deviceId = localStorage.getItem('sahla_admin_device_id');
-        if (!deviceId) {
-          alert('يرجى تفعيل زر Push 🔔 أولاً لربط الجهاز.');
-          return;
-        }
-
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = '<span>⏳</span> <span>إرسال...</span>';
-        }
-
-        try {
-          await syncWebPushRegistrationSilently();
-          const res = await api('/alerts/test-push', {
-            method: 'POST',
-            body: JSON.stringify({ device_id: deviceId }),
-          });
-
-          if (res.success) {
-            alert('🔒 اقفل شاشة هاتفك الآن فوراً!\nسيصلك تنبيه تجريبي خلال لحظات مع الصوت والاهتزاز لاختبار قفل الشاشة.');
-          } else {
-            alert('تعذر إرسال التنبيه: ' + (res.error || res.hint || 'يرجى التأكد من تشغيل التطبيق من الشاشة الرئيسية PWA'));
-          }
-        } catch (e) {
-          alert('خطأ أثناء إرسال إشعار التجربة: ' + (e.message || 'Error'));
-        } finally {
-          if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<span>📲</span> <span>Test Lock</span>';
-          }
-        }
-      }
-
-      function checkIosPwaStatus() {
-        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-        const dismissed = localStorage.getItem('sahla_ios_pwa_dismissed');
-        const banner = $('iosPwaBanner');
-        if (banner && isIos && !isStandalone && !dismissed) {
-          banner.classList.remove('hidden');
-        }
-      }
-
-      function dismissIosPwaBanner() {
-        const banner = $('iosPwaBanner');
-        if (banner) banner.classList.add('hidden');
-        localStorage.setItem('sahla_ios_pwa_dismissed', 'true');
-      }
-
-      function initSupabaseRealtime(meta) {
-        if (!meta?.supabase_url || !meta?.supabase_anon_key || !window.supabase) {
-          return;
-        }
-        try {
-          const client = window.supabase.createClient(meta.supabase_url, meta.supabase_anon_key);
-          _supabaseRealtime = client;
-          client.channel('sahla-admin-alerts-sync')
-            .on(
-              'postgres_changes',
-              { event: '*', schema: 'public', table: 'admin_alerts' },
-              (payload) => {
-                const rec = payload.new;
-                if (!rec) return;
-
-                if (payload.eventType === 'INSERT') {
-                  if (rec.status === 'active' && rec.severity === 'critical') {
-                    _activeCriticalAlerts.add(rec.id);
-                    if (rec.order_id) _activeCriticalAlerts.add(rec.order_id);
-                    syncCriticalAlarmState();
-                    dispatchAdminDesktopNotification({
-                      title: '🚨 ' + (rec.title || 'تنبيه طارئ جديد'),
-                      body: rec.message || 'طلب بحاجة لتدخل فوري',
-                      tag: `admin-alert-${rec.id}`,
-                    });
-                  } else if (rec.severity === 'high') {
-                    playAlertChime();
-                    dispatchAdminDesktopNotification({
-                      title: '⚠️ ' + (rec.title || 'تنبيه إداري'),
-                      body: rec.message || 'طلب بحاجة لمتابعة',
-                      tag: `admin-alert-${rec.id}`,
-                    });
-                  }
-                } else if (payload.eventType === 'UPDATE') {
-                  if (rec.status === 'acknowledged' || rec.status === 'resolved') {
-                    _activeCriticalAlerts.delete(rec.id);
-                    if (rec.order_id) {
-                      _activeCriticalAlerts.delete(rec.order_id);
-                      if (rec.status === 'acknowledged') {
-                        latestAckedOrderIds.add(rec.order_id);
-                      } else {
-                        latestAckedOrderIds.delete(rec.order_id);
-                      }
-                    }
-                    syncCriticalAlarmState();
-                    renderMergedPendingAndNewOrders();
-                  }
-                }
-                loadAlerts().catch(() => {});
-              }
-            )
-            .subscribe((status) => {
-              const pill = $('adminConnectionPill');
-              const text = $('adminConnectionText');
-              if (!pill || !text) return;
-              if (status === 'SUBSCRIBED') {
-                pill.className = 'sahla-conn-pill live';
-                text.textContent = 'Live';
-              } else if (status === 'TIMED_OUT' || status === 'CLOSED') {
-                pill.className = 'sahla-conn-pill reconnecting';
-                text.textContent = 'Reconnecting';
-              } else {
-                pill.className = 'sahla-conn-pill offline';
-                text.textContent = 'Offline';
-              }
-            });
-        } catch (e) {
-          console.warn('Realtime init error:', e);
-        }
       }
 
       function updateAlertsBadge(orderN, taskN) {
@@ -6600,151 +5401,6 @@
           tabBadge.textContent = '0';
           tabBadge.classList.remove('visible');
         }
-      }
-
-      function buildMobileOrderCard(o, { isStale = false, isAcked = false, alertCategory = 'general' } = {}) {
-        const card = document.createElement('div');
-        const oid = o.id;
-        const stLc = String(o.status || '').toLowerCase();
-        const rest = o.restaurant && (o.restaurant.name || o.restaurant.id);
-        const ageDisplay = o.ageMinutes != null ? o.ageMinutes : (o.created_at ? Math.max(0, Math.floor((Date.now() - new Date(o.created_at).getTime()) / 60000)) : '—');
-        const isCritical = isStale || alertCategory === 'critical' || alertCategory === 'prep_assigned' || alertCategory === 'prep_unassigned' || alertCategory === 'picked_up';
-        const noCourier = !o.delivery_person_id;
-        const canPickupAssigned = !noCourier && (stLc === 'pending' || stLc === 'confirmed' || stLc === 'preparing' || stLc === 'ready');
-
-        card.className = 'mobile-alert-card' + (isCritical ? (isAcked ? ' acknowledged' : ' critical') : '');
-
-        let ackBadge = '';
-        if (isCritical) {
-          if (isAcked) {
-            const aInfo = (latestEngineAlerts || []).find((a) => String(a.order_id) === String(oid));
-            const byName = aInfo?.acknowledged_by ? esc(aInfo.acknowledged_by) : (typeof t === 'function' ? t('hdr_admin', 'Admin') : 'Admin');
-            ackBadge = '<span class="alert-ack-pill">✓ ' + byName + '</span>';
-          } else {
-            ackBadge = '<button type="button" class="mobile-action-btn ack-btn" style="height:28px;padding:2px 8px;font-size:0.74rem;" onclick="acknowledgeAdminAlert(\'' + esc(oid) + '\', this)">✋ ' + (typeof t === 'function' ? t('btn_ack', 'Ack') : 'Ack') + '</button>';
-          }
-        }
-
-        const ageBadgeClass = isCritical ? 'warn' : 'normal';
-        const agePill = '<span class="mobile-alert-age-pill ' + ageBadgeClass + '">' + (isCritical ? '⚠️ ' : '⏱️ ') + esc(ageDisplay) + 'm</span>';
-        const stLabel = typeof orderStatusLabel === 'function' ? orderStatusLabel(stLc) : stLc.replace(/_/g, ' ');
-        const stPill = '<span class="mobile-status-pill ' + esc(stLc) + '">' + esc(stLabel) + '</span>';
-
-        const destObj = deliveryDestination(o);
-        const destLink = destObj.lookupUrl
-          ? '<a href="' + esc(destObj.lookupUrl) + '" target="_blank" rel="noopener" style="color:#0284c7;font-weight:700;">' + esc(destObj.text || 'Look up') + ' 📍</a>'
-          : esc(destObj.text || '—');
-
-        const restLabel = typeof t === 'function' ? t('th_restaurant', 'المطعم') : 'المطعم';
-        const totalLabel = typeof t === 'function' ? t('th_total', 'المجموع') : 'المجموع';
-        const courierLabel = typeof t === 'function' ? t('th_courier', 'السائق') : 'السائق';
-        const destLabel = typeof t === 'function' ? t('th_destination', 'الوجهة') : 'الوجهة';
-
-        let html =
-          '<div class="mobile-alert-top-row">' +
-            '<div class="mobile-alert-id-group">' +
-              '<button type="button" class="btn-order-eye" onclick="openOrderDetailsModal(\'' + esc(oid) + '\')" title="' + esc(typeof t === 'function' ? t('th_eye_title', 'View details') : 'View details') + '">👁️</button>' +
-              '<span class="mobile-alert-order-num" dir="ltr">#' + esc(o.order_number || oid) + '</span>' +
-              agePill +
-            '</div>' +
-            '<div style="display:flex;align-items:center;gap:6px;">' +
-              ackBadge +
-              stPill +
-            '</div>' +
-          '</div>';
-
-        if (o.order_items_summary) {
-          html += '<div class="mobile-alert-items-summary">' + renderOrderSummaryInlineHtml(o.order_items_summary) + '</div>';
-        }
-
-        html +=
-          '<div class="mobile-alert-body-list">' +
-            '<div class="mobile-alert-row">' +
-              '<span class="mobile-alert-label">🏬 ' + esc(restLabel) + '</span>' +
-              '<span class="mobile-alert-val">' + esc(rest || o.restaurant_id || '—') + '</span>' +
-            '</div>' +
-            '<div class="mobile-alert-row">' +
-              '<span class="mobile-alert-label">💰 ' + esc(totalLabel) + '</span>' +
-              '<span class="mobile-alert-val">' + (o.total_amount != null ? Number(o.total_amount).toFixed(0) + ' DA' : '—') + '</span>' +
-            '</div>' +
-            '<div class="mobile-alert-row">' +
-              '<span class="mobile-alert-label">🛵 ' + esc(courierLabel) + '</span>' +
-              '<span class="mobile-alert-val">' + esc(o.courier_display_name || '—') + '</span>' +
-            '</div>' +
-            '<div class="mobile-alert-row">' +
-              '<span class="mobile-alert-label">📍 ' + esc(destLabel) + '</span>' +
-              '<span class="mobile-alert-val">' + destLink + '</span>' +
-            '</div>' +
-          '</div>' +
-          '<div class="mobile-alert-actions" id="mob-act-' + esc(oid) + '"></div>';
-
-        card.innerHTML = html;
-
-        const actContainer = card.querySelector('#mob-act-' + CSS.escape(oid));
-        if (actContainer) {
-          if (o.courier_display_phone) {
-            const callCour = document.createElement('a');
-            callCour.href = 'tel:' + o.courier_display_phone;
-            callCour.className = 'mobile-action-btn call-btn';
-            callCour.textContent = '📞 ' + (typeof t === 'function' ? t('th_courier', 'السائق') : 'السائق');
-            actContainer.appendChild(callCour);
-          }
-          if (o.customer_display_phone) {
-            const callCust = document.createElement('a');
-            callCust.href = 'tel:' + o.customer_display_phone;
-            callCust.className = 'mobile-action-btn call-btn';
-            callCust.textContent = '📞 ' + (typeof t === 'function' ? t('th_customer', 'الزبون') : 'الزبون');
-            actContainer.appendChild(callCust);
-          }
-
-          if (stLc === 'pending') {
-            const acceptBtn = document.createElement('button');
-            acceptBtn.type = 'button';
-            acceptBtn.className = 'mobile-action-btn accept-btn';
-            acceptBtn.textContent = '✓ ' + (typeof t === 'function' ? t('btn_accept_order', 'Accept') : 'Accept');
-            acceptBtn.addEventListener('click', () => acceptOrder(oid, acceptBtn));
-            actContainer.appendChild(acceptBtn);
-
-            const rbBtn = document.createElement('button');
-            rbBtn.type = 'button';
-            rbBtn.className = 'mobile-action-btn';
-            rbBtn.textContent = '📢 ' + (typeof t === 'function' ? t('btn_rebroadcast', 'Re-broadcast') : 'Re-broadcast');
-            rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
-            actContainer.appendChild(rbBtn);
-          } else if (canPickupAssigned) {
-            const pickupBtn = document.createElement('button');
-            pickupBtn.type = 'button';
-            pickupBtn.className = 'mobile-action-btn pickup-btn';
-            pickupBtn.textContent = '📦 ' + (typeof t === 'function' ? t('btn_mark_pickup', 'Pick-up') : 'Pick-up');
-            pickupBtn.addEventListener('click', () => markPickedUp(oid, pickupBtn));
-            actContainer.appendChild(pickupBtn);
-          } else if ((stLc === 'preparing' || stLc === 'ready') && noCourier) {
-            const rbBtn = document.createElement('button');
-            rbBtn.type = 'button';
-            rbBtn.className = 'mobile-action-btn';
-            rbBtn.textContent = '📢 ' + (typeof t === 'function' ? t('btn_rebroadcast', 'Re-broadcast') : 'Re-broadcast');
-            rbBtn.addEventListener('click', () => rebroadcastOrder(oid, rbBtn));
-            actContainer.appendChild(rbBtn);
-          } else if (stLc === 'picked_up') {
-            const doneBtn = document.createElement('button');
-            doneBtn.type = 'button';
-            doneBtn.className = 'mobile-action-btn delivered-btn';
-            doneBtn.textContent = '✅ ' + (typeof t === 'function' ? t('btn_mark_delivered', 'Delivered') : 'Delivered');
-            doneBtn.addEventListener('click', () => markDelivered(oid, doneBtn));
-            actContainer.appendChild(doneBtn);
-          }
-
-          if (orderCanCancelFromDashboard(o)) {
-            const cancelBtn = document.createElement('button');
-            cancelBtn.type = 'button';
-            cancelBtn.className = 'mobile-action-btn cancel-btn';
-            cancelBtn.textContent = '✕ ' + (typeof t === 'function' ? t('btn_cancel', 'Cancel') : 'Cancel');
-            cancelBtn.addEventListener('click', () => openCancelOrderModal(oid, o.order_number || oid));
-            actContainer.appendChild(cancelBtn);
-          }
-        }
-
-        return card;
       }
 
       function renderMergedPendingAndNewOrders() {
@@ -6855,15 +5511,8 @@
                 : '');
           }
           const ageDisplay = o.ageMinutes != null ? o.ageMinutes : (o.created_at ? Math.max(0, Math.floor((Date.now() - new Date(o.created_at).getTime()) / 60000)) : '—');
-          const isAcked = latestAckedOrderIds.has(String(o.id));
-          let ackBadgeHtml = '';
-          if (isAcked) {
-            const aInfo = (latestEngineAlerts || []).find((a) => String(a.order_id) === String(o.id));
-            const byName = aInfo?.acknowledged_by ? esc(aInfo.acknowledged_by) : 'Admin';
-            ackBadgeHtml = ' <span class="alert-ack-pill" title="Acknowledged by ' + byName + '">✓ ' + byName + '</span>';
-          }
           const ageCellContent = o._isStaleAlert
-            ? '<strong>⚠️ ' + esc(ageDisplay) + '</strong>' + ackBadgeHtml
+            ? '<strong>⚠️ ' + esc(ageDisplay) + '</strong>'
             : '<span>' + esc(ageDisplay) + '</span>';
 
           tr.innerHTML =
@@ -6900,20 +5549,6 @@
           const btnRow = document.createElement('span');
           btnRow.className = 'btn-row';
           const oid = o.id;
-
-          if (o._isStaleAlert && !isAcked) {
-            const ackBtn = document.createElement('button');
-            ackBtn.type = 'button';
-            ackBtn.className = 'btn-accept-order';
-            ackBtn.style.background = '#ecfdf5';
-            ackBtn.style.color = '#065f46';
-            ackBtn.style.borderColor = '#a7f3d0';
-            ackBtn.textContent = '✋ Ack';
-            ackBtn.title = 'Acknowledge alert and silence siren';
-            ackBtn.addEventListener('click', () => acknowledgeAdminAlert(oid, ackBtn));
-            btnRow.appendChild(ackBtn);
-          }
-
           const stLc = String(o.status || '').toLowerCase();
           const noCourier = !o.delivery_person_id;
           const canPickupAssigned =
@@ -6980,21 +5615,6 @@
           tr.appendChild(tdAct);
           ob.appendChild(tr);
         });
-
-        // Mobile container rendering
-        const mobContainer = $('alertsMobileOrdersContainer');
-        if (mobContainer) {
-          mobContainer.innerHTML = '';
-          if (!list.length) {
-            mobContainer.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_pending_and_new_none', 'No pending or new orders.') : 'No pending or new orders.') + '</div>';
-          } else {
-            list.forEach((o) => {
-              const isStale = !!o._isStaleAlert;
-              const isAcked = latestAckedOrderIds.has(String(o.id));
-              mobContainer.appendChild(buildMobileOrderCard(o, { isStale, isAcked, alertCategory: isStale ? 'critical' : 'general' }));
-            });
-          }
-        }
       }
 
       async function loadAlerts() {
@@ -7043,161 +5663,33 @@
         otherActiveAlertIds = otherAlerts;
 
         latestStaleOrders = mo;
-        latestEngineAlerts = data.engineAlerts || [];
-        const localAcks = getLocalAckedOrders();
-        latestAckedOrderIds = new Set([
-          ...(data.acknowledgedAlertOrderIds || []).map(String),
-          ...Object.keys(localAcks),
-        ]);
-
-        const critIds = new Set();
-        mo.forEach((o) => {
-          if (o && o.id && !latestAckedOrderIds.has(String(o.id))) critIds.add(String(o.id));
-        });
-        mpu.forEach((o) => {
-          if (o && o.id && !latestAckedOrderIds.has(String(o.id))) critIds.add(String(o.id));
-        });
-        mpa.forEach((o) => {
-          if (o && o.id && !latestAckedOrderIds.has(String(o.id))) critIds.add(String(o.id));
-        });
-        mp.forEach((o) => {
-          if (o && o.id && !latestAckedOrderIds.has(String(o.id))) critIds.add(String(o.id));
-        });
-        _activeCriticalAlerts = critIds;
-        syncCriticalAlarmState();
-
-        // Dispatch desktop notifications and sounds for newly detected alerts
-        let hasNewCriticalAlert = false;
-        let hasNewHighAlert = false;
-
-        mo.forEach((o) => {
-          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
-          const k = `mo_${o.id}`;
-          if (!_notifiedAlertKeys.has(k)) {
-            _notifiedAlertKeys.add(k);
-            hasNewCriticalAlert = true;
-            dispatchAdminDesktopNotification({
-              title: `🚨 طلب معلق متأخر: ${o.order_number || o.id}`,
-              body: `الطلب معلق منذ ${o.ageMinutes || 5}+ دقيقة بانتظار قبول المطعم!`,
-              tag: `sahla-order-${o.id}`,
-            });
-          }
-        });
-
-        mpu.forEach((o) => {
-          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
-          const k = `mpu_${o.id}`;
-          if (!_notifiedAlertKeys.has(k)) {
-            _notifiedAlertKeys.add(k);
-            hasNewCriticalAlert = true;
-            dispatchAdminDesktopNotification({
-              title: `🚨 قيد التحضير بدون سائق: ${o.order_number || o.id}`,
-              body: `الطلب قيد التحضير منذ ${o.ageMinutes || 5}+ دقيقة بدون سائق معين!`,
-              tag: `sahla-order-${o.id}`,
-            });
-          }
-        });
-
-        mpa.forEach((o) => {
-          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
-          const k = `mpa_${o.id}`;
-          if (!_notifiedAlertKeys.has(k)) {
-            _notifiedAlertKeys.add(k);
-            hasNewCriticalAlert = true;
-            const courier = o.courier_display_name ? `السائق (${o.courier_display_name})` : 'السائق';
-            dispatchAdminDesktopNotification({
-              title: `🚨 تأخر استلام الطلب: ${o.order_number || o.id}`,
-              body: `الطلب قيد التحضير منذ ${o.ageMinutes || 20}+ دقيقة، ${courier} لم يستلم بعد!`,
-              tag: `sahla-order-${o.id}`,
-            });
-          }
-        });
-
-        mp.forEach((o) => {
-          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
-          const k = `mp_${o.id}`;
-          if (!_notifiedAlertKeys.has(k)) {
-            _notifiedAlertKeys.add(k);
-            hasNewCriticalAlert = true;
-            dispatchAdminDesktopNotification({
-              title: `🚨 تأخر التوصيل بعد الاستلام: ${o.order_number || o.id}`,
-              body: `تم استلام الطلب منذ ${o.ageMinutes || 15}+ دقيقة ولم يتم تسليمه للزبون!`,
-              tag: `sahla-order-${o.id}`,
-            });
-          }
-        });
-
-        mw.forEach((o) => {
-          if (!o || !o.id || latestAckedOrderIds.has(String(o.id))) return;
-          const k = `mw_${o.id}`;
-          if (!_notifiedAlertKeys.has(k)) {
-            _notifiedAlertKeys.add(k);
-            hasNewHighAlert = true;
-            dispatchAdminDesktopNotification({
-              title: `📦 طرد بريدي معلق: ${o.order_number || o.id}`,
-              body: `طلب الطرد معلق منذ ${o.ageMinutes || 5}+ دقيقة بحاجة لمتابعة.`,
-              tag: `sahla-order-${o.id}`,
-            });
-          }
-        });
-
-        // Prune resolved or acknowledged alerts from _notifiedAlertKeys
-        const currentAlertKeys = new Set();
-        mo.forEach((o) => o?.id && currentAlertKeys.add(`mo_${o.id}`));
-        mpu.forEach((o) => o?.id && currentAlertKeys.add(`mpu_${o.id}`));
-        mpa.forEach((o) => o?.id && currentAlertKeys.add(`mpa_${o.id}`));
-        mp.forEach((o) => o?.id && currentAlertKeys.add(`mp_${o.id}`));
-        mw.forEach((o) => o?.id && currentAlertKeys.add(`mw_${o.id}`));
-        _notifiedAlertKeys.forEach((k) => {
-          if (!currentAlertKeys.has(k)) {
-            _notifiedAlertKeys.delete(k);
-          }
-        });
-
-        if (hasNewCriticalAlert) {
-          playEmergencySirenPulse();
-        } else if (hasNewHighAlert) {
-          playAlertChime();
-        }
-
         renderMergedPendingAndNewOrders();
 
-        const isAr = (window.currentSahlaLang || 'ar') === 'ar';
-
-        const puMetaEl = $('alertsPickedUpMeta');
-        if (puMetaEl) {
-          puMetaEl.textContent = mp.length
-            ? (isAr ? `${mp.length} طلب(ات) تم استلامها ولم يتم تسليمها (تأخير ≥ ${pickupDelayMin} د).` : `${mp.length} delayed picked-up order(s).`)
-            : (isAr ? 'لا توجد تنبيهات لطلبات متأخرة بعد الاستلام.' : 'No picked-up alerts.');
-        }
-
-        const tasksMetaEl = $('alertsTasksMeta');
-        if (tasksMetaEl) {
-          tasksMetaEl.textContent = mt.length
-            ? (isAr ? `${mt.length} مهمة(مهام) تنتظر عروض أسعار.` : `${mt.length} task(s) need attention.`)
-            : (isAr ? 'لا توجد مهام تنتظر عروض أسعار.' : 'No tasks waiting for first offer.');
-        }
-
+        $('alertsPickedUpMeta').textContent = mp.length
+          ? mp.length +
+            ' delayed picked-up order(s).'
+          : 'No picked-up alerts.';
+        $('alertsTasksMeta').textContent = mt.length
+          ? mt.length + ' task(s) need attention.'
+          : 'No tasks waiting for first offer.';
         const prepAssignedMetaEl = $('alertsPreparingAssignedMeta');
         if (prepAssignedMetaEl) {
           prepAssignedMetaEl.textContent = mpa.length
-            ? (isAr ? `${mpa.length} طلب(ات) قيد التحضير، السائق معيّن ولم يستلم (≥ ${prepAssignedMin} د).` : `${mpa.length} order(s) in preparing with courier assigned not picked up (≥ ${prepAssignedMin} min).`)
-            : (isAr ? 'لا توجد تنبيهات لطلبات متأخرة قيد التحضير.' : 'No delayed preparing assigned alerts.');
+            ? mpa.length + ' order(s) in preparing with courier assigned not picked up (≥ ' + prepAssignedMin + ' min).'
+            : 'No delayed preparing assigned alerts.';
         }
-
         const prepUnassignedMetaEl = $('alertsPreparingUnassignedMeta');
         if (prepUnassignedMetaEl) {
           prepUnassignedMetaEl.textContent = mpu.length
-            ? (isAr ? `${mpu.length} طلب(ات) قيد التحضير بانتظار سائق (≥ ${prepUnassignedMin} د).` : `${mpu.length} order(s) in preparing waiting for courier (≥ ${prepUnassignedMin} min).`)
-            : (isAr ? 'لا توجد تنبيهات لطلبات بدون سائق.' : 'No preparing unassigned alerts.');
+            ? mpu.length + ' order(s) in preparing waiting for courier (≥ ' + prepUnassignedMin + ' min).'
+            : 'No preparing unassigned alerts.';
         }
-
-        const parcelMetaEl = $('alertsParcelMeta');
-        if (parcelMetaEl) {
-          parcelMetaEl.textContent = mw.length
-            ? (isAr ? `${mw.length} طرد(ات) بريدية معلقة منذ ≥ ${parcelWaitMin} د.` : `${mw.length} parcel order(s) waiting ≥ ${parcelWaitMin} min.`)
-            : (isAr ? 'لا توجد طرود بريدية معلقة.' : 'No parcel waiting alerts.');
-        }
+        updateAlertsBadge(mo.length + mp.length + mpa.length + mpu.length, mt.length);
+        parcelAlertCount = mw.length;
+        updateParcelAlertsBadge();
+        $('alertsParcelMeta').textContent = mw.length
+          ? mw.length + ' parcel order(s) waiting ≥ ' + parcelWaitMin + ' min.'
+          : 'No parcel waiting alerts.';
         if (data.pending_delivery_man_requests != null && data.pending_restaurant_requests != null) {
           updateRequestBadges(
             data.pending_delivery_man_requests,
@@ -7257,18 +5749,6 @@
           const tdAct = document.createElement('td');
           const btnRow = document.createElement('span');
           btnRow.className = 'btn-row';
-          if (!latestAckedOrderIds.has(String(o.id))) {
-            const ackBtn = document.createElement('button');
-            ackBtn.type = 'button';
-            ackBtn.className = 'btn-accept-order';
-            ackBtn.style.background = '#ecfdf5';
-            ackBtn.style.color = '#065f46';
-            ackBtn.style.borderColor = '#a7f3d0';
-            ackBtn.textContent = '✋ Ack';
-            ackBtn.title = 'Acknowledge alert and silence siren';
-            ackBtn.addEventListener('click', () => acknowledgeAdminAlert(o.id, ackBtn));
-            btnRow.appendChild(ackBtn);
-          }
           const doneBtn = document.createElement('button');
           doneBtn.type = 'button';
           doneBtn.className = 'btn-delivered-order';
@@ -7283,18 +5763,6 @@
         });
         if (!mp.length) {
           pb.innerHTML = renderEmptyRow(14, 'sec_picked_up_none');
-        }
-        const mobPickedUp = $('alertsMobilePickedUpContainer');
-        if (mobPickedUp) {
-          mobPickedUp.innerHTML = '';
-          if (!mp.length) {
-            mobPickedUp.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_picked_up_none', 'لا توجد طلبات متأخرة بعد الاستلام.') : 'لا توجد طلبات متأخرة بعد الاستلام.') + '</div>';
-          } else {
-            mp.forEach((o) => {
-              const isAcked = latestAckedOrderIds.has(String(o.id));
-              mobPickedUp.appendChild(buildMobileOrderCard(o, { alertCategory: 'picked_up', isAcked }));
-            });
-          }
         }
 
         const pab = $('alertsPreparingAssignedBody');
@@ -7368,18 +5836,6 @@
           if (!mpa.length) {
             pab.innerHTML = renderEmptyRow(14, 'sec_prep_assigned_none');
           }
-          const mobPrepAssigned = $('alertsMobilePrepAssignedContainer');
-          if (mobPrepAssigned) {
-            mobPrepAssigned.innerHTML = '';
-            if (!mpa.length) {
-              mobPrepAssigned.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_prep_assigned_none', 'لا توجد طلبات قيد التحضير متأخرة عن الاستلام.') : 'لا توجد طلبات قيد التحضير متأخرة عن الاستلام.') + '</div>';
-            } else {
-              mpa.forEach((o) => {
-                const isAcked = latestAckedOrderIds.has(String(o.id));
-                mobPrepAssigned.appendChild(buildMobileOrderCard(o, { alertCategory: 'prep_assigned', isAcked }));
-              });
-            }
-          }
         }
 
         const pub = $('alertsPreparingUnassignedBody');
@@ -7414,18 +5870,6 @@
             const tdAct = document.createElement('td');
             const btnRow = document.createElement('span');
             btnRow.className = 'btn-row';
-            if (!latestAckedOrderIds.has(String(o.id))) {
-              const ackBtn = document.createElement('button');
-              ackBtn.type = 'button';
-              ackBtn.className = 'btn-accept-order';
-              ackBtn.style.background = '#ecfdf5';
-              ackBtn.style.color = '#065f46';
-              ackBtn.style.borderColor = '#a7f3d0';
-              ackBtn.textContent = '✋ Ack';
-              ackBtn.title = 'Acknowledge alert and silence siren';
-              ackBtn.addEventListener('click', () => acknowledgeAdminAlert(o.id, ackBtn));
-              btnRow.appendChild(ackBtn);
-            }
             const rbBtn = document.createElement('button');
             rbBtn.type = 'button';
             rbBtn.className = 'btn-rebroadcast';
@@ -7450,18 +5894,6 @@
           });
           if (!mpu.length) {
             pub.innerHTML = renderEmptyRow(12, 'sec_prep_unassigned_none');
-          }
-          const mobPrepUnassigned = $('alertsMobilePrepUnassignedContainer');
-          if (mobPrepUnassigned) {
-            mobPrepUnassigned.innerHTML = '';
-            if (!mpu.length) {
-              mobPrepUnassigned.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_prep_unassigned_none', 'لا توجد طلبات قيد التحضير بانتظار سائق.') : 'لا توجد طلبات قيد التحضير بانتظار سائق.') + '</div>';
-            } else {
-              mpu.forEach((o) => {
-                const isAcked = latestAckedOrderIds.has(String(o.id));
-                mobPrepUnassigned.appendChild(buildMobileOrderCard(o, { alertCategory: 'prep_unassigned', isAcked }));
-              });
-            }
           }
         }
 
@@ -7866,23 +6298,11 @@
           const rows = data.orders || [];
           const cm = $('cancelledOrdersMeta');
           if (cm) {
-            const isAr = (window.currentSahlaLang || 'ar') === 'ar';
-            cm.textContent = isAr
-              ? `${rows.length} طلب(ات) ملغاة. "اليوم" يعتمد توقيت الجزائر (UTC+1). استخدم "الكل" لعرض جميع التواريخ.`
-              : `${rows.length} cancelled order(s). “Today” follows Africa/Algiers (UTC+1). Use “All” for all dates.`;
+            cm.textContent =
+              rows.length +
+              ' cancelled order(s). “Today” follows Africa/Algiers (UTC+1). Use “All” for all dates.';
           }
           const cb = $('cancelledOrdersBody');
-          const mobCancelled = $('cancelledOrdersMobileContainer');
-          if (mobCancelled) {
-            mobCancelled.innerHTML = '';
-            if (!rows.length) {
-              mobCancelled.innerHTML = '<div class="mobile-empty-state">✅ ' + esc(typeof t === 'function' ? t('sec_cancelled_none', 'لا توجد طلبات ملغاة.') : 'لا توجد طلبات ملغاة.') + '</div>';
-            } else {
-              rows.forEach((o) => {
-                mobCancelled.appendChild(buildMobileOrderCard(o, { alertCategory: 'cancelled' }));
-              });
-            }
-          }
           if (!cb) return;
           cb.innerHTML = '';
           if (!rows.length) {
@@ -10923,9 +9343,6 @@
       updateForcePushScheduleFields();
       updateSahlaClock();
       setInterval(updateSahlaClock, 1000);
-      updateAudioButtonUI();
-      updateSnoozeButtonUI();
-      initWebPushState().catch(() => {});
       tryBootstrap();
     </script>
   </body>
