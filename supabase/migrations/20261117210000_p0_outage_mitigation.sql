@@ -56,7 +56,7 @@ DECLARE
   v_now timestamptz := clock_timestamp();
   v_ttl_ms integer := greatest(coalesce(p_ttl_ms, 60000), 1000);
   v_expires_at timestamptz := v_now + (v_ttl_ms::text || ' milliseconds')::interval;
-  v_acquired boolean := false;
+  v_rows_affected integer := 0;
 BEGIN
   -- Serialize lock attempts on the specific key across concurrent transactions
   PERFORM pg_advisory_xact_lock(hashtext(p_key));
@@ -70,8 +70,8 @@ BEGIN
         holder_id = EXCLUDED.holder_id
     WHERE public.system_distributed_locks.expires_at <= v_now;
 
-  GET DIAGNOSTICS v_acquired = ROW_COUNT;
-  RETURN (v_acquired > 0);
+  GET DIAGNOSTICS v_rows_affected = ROW_COUNT;
+  RETURN (v_rows_affected > 0);
 END;
 $$;
 
