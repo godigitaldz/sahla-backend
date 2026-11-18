@@ -249,6 +249,53 @@ router.get('/free-delivery-zone/check', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/public/system-urls
+ * Returns official production URLs for legal policies, dashboards, and redirects.
+ */
+router.get('/system-urls', async (req, res) => {
+  try {
+    const keys = [
+      'privacy_policy_url',
+      'terms_of_service_url',
+      'user_agreement_url',
+      'delete_account_url',
+      'dashboard_url',
+      'admin_dashboard_url',
+      'web_base_url',
+    ];
+    const { data, error } = await supabaseAdmin
+      .from('system_config')
+      .select('config_key, config_value')
+      .in('config_key', keys);
+
+    if (error) {
+      console.error('[publicConfig] system-urls:', error.message);
+    }
+
+    const map = new Map((data || []).map((r) => [r.config_key, r.config_value]));
+    const defaultBase = 'https://sahla-backend.vercel.app';
+    const baseUrl = (map.get('web_base_url') || defaultBase).replace(/\/+$/, '');
+
+    const payload = {
+      success: true,
+      baseUrl,
+      privacyPolicyUrl: map.get('privacy_policy_url') || `${baseUrl}/privacy-policy`,
+      termsOfServiceUrl: map.get('terms_of_service_url') || `${baseUrl}/terms-of-service`,
+      userAgreementUrl: map.get('user_agreement_url') || `${baseUrl}/user-agreement`,
+      deleteAccountUrl: map.get('delete_account_url') || `${baseUrl}/delete-account`,
+      dashboardUrl: map.get('dashboard_url') || `${baseUrl}/performance`,
+      adminDashboardUrl: map.get('admin_dashboard_url') || `${baseUrl}/performance`,
+    };
+
+    res.set('Cache-Control', 'public, max-age=120');
+    return res.json(payload);
+  } catch (err) {
+    console.error('[publicConfig] system-urls error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 function parseMarketTabEnabledValue(value, type) {
   const t = String(type || 'boolean').toLowerCase().trim();
   if (t === 'boolean') {

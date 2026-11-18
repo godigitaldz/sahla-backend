@@ -104,6 +104,23 @@ app.get('/delete-account', (req, res) => {
   });
 });
 
+// Legal & Policy clean URLs & legacy redirects
+app.get(['/privacy', '/privacy.html', '/privacy-policy.html'], (req, res) => {
+  res.redirect(301, '/privacy-policy');
+});
+
+app.get(['/terms', '/terms.html', '/terms-of-service.html', '/terms-and-conditions'], (req, res) => {
+  res.redirect(301, '/terms-of-service');
+});
+
+app.get(['/agreement', '/agreement.html', '/user-agreement.html'], (req, res) => {
+  res.redirect(301, '/user-agreement');
+});
+
+app.get(['/delete-account.html', '/account-deletion', '/delete_account'], (req, res) => {
+  res.redirect(301, '/delete-account');
+});
+
 app.get('/performance', (req, res) => {
   res.sendFile(join(__dirname, '../public/performance.html'));
 });
@@ -114,8 +131,13 @@ app.get('/performace', (req, res) => {
   res.redirect(301, '/performance');
 });
 
-app.get(['/login', '/admin', '/app/admin'], (req, res) => {
-  res.redirect(302, '/');
+// Admin and Dashboard entry points redirect directly to performance cockpit
+app.get(['/admin', '/dashboard', '/app/admin', '/admin-dashboard', '/cockpit'], (req, res) => {
+  res.redirect(302, '/performance');
+});
+
+app.get('/login', (req, res) => {
+  res.redirect(302, '/performance');
 });
 
 app.get('/health', (req, res) => {
