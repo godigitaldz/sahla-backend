@@ -26,8 +26,8 @@
       "handle": "filesystem"
     },
     {
-      "src": "/api/public/(.*)",
-      "dest": "/api/public/$1"
+      "src": "/api/public/(orders|restaurants|table|app-offer-delivery)(.*)",
+      "dest": "/api/public/$1$2"
     },
     {
       "src": "/restaurants/(.*)",
