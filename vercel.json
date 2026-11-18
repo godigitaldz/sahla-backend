@@ -23,6 +23,10 @@
       "dest": "src/index.js"
     },
     {
+      "src": "/api/public/(system-urls|market-tab-enabled|app-version-policy|free-delivery-zone.*)",
+      "dest": "src/index.js"
+    },
+    {
       "handle": "filesystem"
     },
     {
