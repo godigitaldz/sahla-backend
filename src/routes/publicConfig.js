@@ -263,6 +263,9 @@ router.get('/system-urls', async (req, res) => {
       'dashboard_url',
       'admin_dashboard_url',
       'web_base_url',
+      'app_store_url_ios',
+      'app_update_url_ios',
+      'app_store_url_android',
     ];
     const { data, error } = await supabaseAdmin
       .from('system_config')
@@ -286,6 +289,13 @@ router.get('/system-urls', async (req, res) => {
       deleteAccountUrl: map.get('delete_account_url') || `${baseUrl}/delete-account`,
       dashboardUrl: map.get('dashboard_url') || `${baseUrl}/performance`,
       adminDashboardUrl: map.get('admin_dashboard_url') || `${baseUrl}/performance`,
+      appStoreUrlIos:
+        map.get('app_store_url_ios') ||
+        map.get('app_update_url_ios') ||
+        'https://apps.apple.com/dz/app/sahla-algerie/id6834895657',
+      appStoreUrlAndroid:
+        map.get('app_store_url_android') ||
+        'https://play.google.com/store/apps/details?id=com.godigital.sahla',
     };
 
     res.set('Cache-Control', 'public, max-age=120');

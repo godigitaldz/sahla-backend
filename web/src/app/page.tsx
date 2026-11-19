@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import './landing.css';
 
-const APP_STORE_URL = 'https://apps.apple.com/us/app/sahla-food-grocery/id6760480928';
+const APP_STORE_URL = 'https://apps.apple.com/dz/app/sahla-algerie/id6834895657';
 const GOOGLE_PLAY_URL = 'https://play.google.com/store/apps/details?id=com.godigital.sahla&pcampaignid=web_share';
 const INSTAGRAM_URL = 'https://www.instagram.com/sahla.algerie/';
 const FACEBOOK_URL = 'https://www.facebook.com/profile.php?id=61569261354562';
