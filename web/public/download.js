@@ -12,7 +12,7 @@
   'use strict';
 
   // ---------------------------------------------------------------------------
-  // 1. Localization Strings (Arabic First, English & French Fallbacks)
+  // 1. Localization Strings (Arabic First, English & French Support)
   // ---------------------------------------------------------------------------
   const STRINGS = {
     ar: {
@@ -24,6 +24,9 @@
       openingTitle: 'جاري فتح تطبيق سهلة…',
       openingDesc: 'إذا ظهرت لك نافذة تأكيد، اضغط على «سماح» (Allow) لفتح التطبيق.',
       promptTip: '💡 اضغط على «سماح» (Allow) في النافذة المنبثقة',
+      redirectingTitleIos: 'جاري تحويلك إلى App Store…',
+      redirectingTitleAndroid: 'جاري تحويلك إلى Google Play…',
+      redirectingDesc: 'التحضير لصفحة التثبيت في متجر التطبيقات…',
       openedTitle: 'تم فتح التطبيق ✓',
       openedDesc: 'استمتع بأشهى المأكولات! إذا لم يفتح معك، اضغط على الزر أدناه:',
       fallbackTitle: 'لم يفتح التطبيق تلقائياً؟',
@@ -56,6 +59,9 @@
       openingTitle: 'Opening Sahla…',
       openingDesc: 'If prompted, tap "Allow" to open the app directly on your phone.',
       promptTip: '💡 Tap "Allow" when the prompt appears',
+      redirectingTitleIos: 'Taking you to the App Store…',
+      redirectingTitleAndroid: 'Taking you to Google Play…',
+      redirectingDesc: 'Preparing the installation page…',
       openedTitle: 'Opened ✓',
       openedDesc: 'Enjoy your food! If it didn’t open, tap the button below:',
       fallbackTitle: 'Didn’t open automatically?',
@@ -88,6 +94,9 @@
       openingTitle: 'Ouverture de Sahla…',
       openingDesc: 'Si une confirmation s’affiche, appuyez sur « Ouvrir » ou « Autoriser ».',
       promptTip: '💡 Appuyez sur « Autoriser » dans la fenêtre',
+      redirectingTitleIos: 'Redirection vers l’App Store…',
+      redirectingTitleAndroid: 'Redirection vers Google Play…',
+      redirectingDesc: 'Préparation de la page de téléchargement…',
       openedTitle: 'Application ouverte ✓',
       openedDesc: 'Bon appétit ! Si elle ne s’est pas ouverte, appuyez ci-dessous :',
       fallbackTitle: 'L’application ne s’ouvre pas ?',
@@ -150,7 +159,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 3. Standalone Client-Side QR Generator
+  // 3. Standalone Client-Side QR Generator (Zero Dependencies)
   // ---------------------------------------------------------------------------
   const QRGenerator = (function () {
     const PAD0 = 0xEC;
@@ -541,20 +550,46 @@
   })();
 
   // ---------------------------------------------------------------------------
-  // 4. Platform & In-App Detection
+  // 4. Bulletproof Platform & In-App Detection
   // ---------------------------------------------------------------------------
   function detectPlatform() {
-    const ua = navigator.userAgent || navigator.vendor || window.opera || '';
-    const platform = navigator.platform || '';
+    const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+    const platform = (navigator.platform || '').toLowerCase();
 
-    const isIPadOS = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-    const isIOS = /iPad|iPhone|iPod/.test(ua) || isIPadOS;
-    if (isIOS) return 'ios';
+    // 1. Client Hints API (Modern Chrome/Edge/Opera on Android & Desktop)
+    if (navigator.userAgentData && navigator.userAgentData.platform) {
+      const uad = navigator.userAgentData.platform.toLowerCase();
+      if (/android/i.test(uad)) return 'android';
+      if (/ios|iphone|ipad|ipod/i.test(uad)) return 'ios';
+    }
 
-    if (/android/i.test(ua)) return 'android';
+    // 2. iOS Detection (iPhone, iPod, iPad, and iPadOS/iPhone desktop-mode Safari)
+    const isTouch = navigator.maxTouchPoints > 0;
+    const isApplePlatform = /iphone|ipad|ipod/i.test(ua) || /iphone|ipad|ipod/i.test(platform);
+    const isAppleDesktopMode = (/macintel|macintosh/i.test(platform) || /macintosh/i.test(ua)) && isTouch;
+    if (isApplePlatform || isAppleDesktopMode) {
+      return 'ios';
+    }
 
-    if (/Macintosh|MacIntel|Windows|Win32|Win64|Linux x86_64/i.test(platform) || /Windows NT|Macintosh|X11|Linux/i.test(ua)) {
+    // 3. Android Detection
+    if (/android/i.test(ua) || /android/i.test(platform)) {
+      return 'android';
+    }
+
+    // 4. Android Desktop Mode (Linux / X11 + touch + mobile screen width)
+    const isSmallTouchScreen = isTouch && (typeof window !== 'undefined' && window.innerWidth <= 840);
+    if ((/linux|x11/i.test(platform) || /linux|x11/i.test(ua)) && isSmallTouchScreen) {
+      return 'android';
+    }
+
+    // 5. Desktop (Windows, macOS, Linux desktop)
+    if (/macintosh|macintel|win32|win64|windows|linux x86_64/i.test(platform) || /windows nt|macintosh|x11/i.test(ua)) {
       return 'desktop';
+    }
+
+    // Fallback for touch mobile screens
+    if (isSmallTouchScreen) {
+      return 'android';
     }
 
     return 'unknown';
@@ -686,7 +721,7 @@
         ANDROID_PACKAGE: "com.godigital.sahla",
         ANDROID_URI_SCHEME: "sahla://",
         DEEP_LINK_PATH: "/open",
-        OPEN_TIMEOUT_MS: 4500,
+        OPEN_TIMEOUT_MS: 3000,
         OPTIONAL_ANDROID_FALLBACKS: {},
         BRAND: {
           primaryColor: "#FFC700",
@@ -698,6 +733,7 @@
       this.redirectTimer = null;
       this.appOpened = false;
       this.cleanedUp = false;
+      this.hasBeganFlow = false;
     }
 
     init() {
@@ -723,6 +759,27 @@
       );
     }
 
+    isBackNavigation() {
+      try {
+        const navEntries = (window.performance && window.performance.getEntriesByType)
+          ? window.performance.getEntriesByType('navigation')
+          : [];
+        if (navEntries.length > 0 && navEntries[0].type === 'back_forward') {
+          return true;
+        }
+
+        // Check if user redirected to store in the last 12 seconds
+        const lastRedirect = sessionStorage.getItem('sd_redirect_ts');
+        if (lastRedirect) {
+          const elapsed = Date.now() - Number(lastRedirect);
+          if (elapsed < 12000) {
+            return true;
+          }
+        }
+      } catch (e) {}
+      return false;
+    }
+
     render() {
       const lang = getCurrentLang();
       const t = STRINGS[lang] || STRINGS.ar;
@@ -742,7 +799,6 @@
       const section = document.getElementById('download');
       if (!section) return;
 
-      // Update root direction if needed
       document.documentElement.dir = t.dir;
       document.documentElement.lang = lang;
 
@@ -771,11 +827,11 @@
 
       // Mobile Status Card HTML
       const isMobile = platform === 'ios' || platform === 'android';
-      const attempted = sessionStorage.getItem('dl_attempted') === 'true';
+      const isBack = this.isBackNavigation();
 
       const statusCardHtml = isMobile ? `
         <div class="sd-status-card" id="sdStatusCard" aria-live="polite">
-          ${attempted ? `
+          ${isBack ? `
             <h2 class="sd-status-title" id="sdStatusTitle">${t.fallbackTitle}</h2>
             <p class="sd-status-desc" id="sdStatusDesc">${t.fallbackDesc}</p>
             <div class="sd-retry-row">
@@ -856,7 +912,7 @@
 
           <main class="sd-grid">
             <div class="sd-hero">
-              <!-- App Icon -->
+              <!-- App Icon Squircle -->
               <div class="sd-app-icon-wrap">
                 <img src="${this.config.BRAND.logoPath || 'logo.webp'}" alt="${this.config.APP_NAME}" class="sd-app-icon-img">
               </div>
@@ -967,9 +1023,10 @@
       if (retryBtn) {
         retryBtn.addEventListener('click', () => {
           sessionStorage.removeItem('dl_attempted');
+          sessionStorage.removeItem('sd_redirect_ts');
           track('manual_button_click', { button: 'retry_auto_open' });
           this.render();
-          this.startFlow();
+          this.startFlow(true);
         });
       }
 
@@ -1018,7 +1075,7 @@
       }
     }
 
-    startFlow() {
+    startFlow(force = false) {
       const platform = detectPlatform();
       const inApp = detectInAppBrowser();
       const params = getPreservedParams();
@@ -1027,8 +1084,10 @@
       const { androidUrl, iosUrl } = buildStoreUrls(this.config, params);
       const { universalLink, uriScheme, cleanPath } = buildDeepLinkUrl(this.config, params);
 
+      // Desktop & Unknown devices show QR and store buttons with zero auto-redirection
       if (platform !== 'ios' && platform !== 'android') return;
 
+      // In-app browsers block automatic intents and store redirects
       if (inApp.isInApp) {
         this.updateStatus({
           title: t.fallbackTitle,
@@ -1038,7 +1097,8 @@
         return;
       }
 
-      if (sessionStorage.getItem('dl_attempted') === 'true') {
+      // Check if user navigated back from store (prevent infinite loop)
+      if (!force && this.isBackNavigation()) {
         this.updateStatus({
           title: t.fallbackTitle,
           desc: t.fallbackDesc,
@@ -1048,15 +1108,17 @@
         return;
       }
 
-      sessionStorage.setItem('dl_attempted', 'true');
+      this.appOpened = false;
+      this.cleanedUp = false;
       track('app_open_attempt', { platform });
 
+      const storeUrl = platform === 'ios' ? iosUrl : androidUrl;
       const cleanScheme = (this.config.ANDROID_URI_SCHEME || 'sahla://').replace('://', '');
       const intentUrl = `intent://${cleanPath}#Intent;scheme=${cleanScheme};package=${this.config.ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(androidUrl)};end`;
 
-      // Timeout for graceful transition (4.5s)
-      const timeoutMs = Number(this.config.OPEN_TIMEOUT_MS) || 4500;
+      const timeoutMs = Number(this.config.OPEN_TIMEOUT_MS) || 3000;
 
+      // Lifecycle detection: app opened when page is hidden or blurred
       const onAppOpenDetected = () => {
         if (this.appOpened) return;
         this.appOpened = true;
@@ -1090,23 +1152,32 @@
         window.removeEventListener('blur', handleBlur);
       };
 
-      // Graceful timeout transition: If user remains on page after 4.5s,
-      // transition status to friendly fallback without abruptly navigating away.
+      // Auto-Detect Store Redirect Timer:
+      // If the app is not installed (or not opened within timeoutMs), redirect to store
       this.redirectTimer = setTimeout(() => {
         if (this.appOpened || document.hidden) return;
 
         this.cleanupListeners();
-        track('open_timeout_elapsed', { platform });
+        track('store_redirect', { platform, target: storeUrl });
 
+        // Record timestamp so Back button doesn't trigger loop
+        try {
+          sessionStorage.setItem('sd_redirect_ts', String(Date.now()));
+        } catch (e) {}
+
+        const redirectTitle = platform === 'ios' ? t.redirectingTitleIos : t.redirectingTitleAndroid;
         this.updateStatus({
-          title: t.fallbackTitle,
-          desc: t.fallbackDesc,
-          isOpening: false,
-          showRetry: true
+          title: redirectTitle,
+          desc: t.redirectingDesc,
+          isOpening: true
         });
+
+        setTimeout(() => {
+          window.location.replace(storeUrl);
+        }, 200);
       }, timeoutMs);
 
-      // Trigger native handshake
+      // Trigger native mobile handshake
       if (platform === 'ios') {
         window.location.href = uriScheme;
       } else if (platform === 'android') {
@@ -1136,9 +1207,9 @@
         const btn = document.getElementById('sdRetryBtn');
         if (btn) {
           btn.addEventListener('click', () => {
-            sessionStorage.removeItem('dl_attempted');
+            sessionStorage.removeItem('sd_redirect_ts');
             this.render();
-            this.startFlow();
+            this.startFlow(true);
           });
         }
       }
@@ -1155,6 +1226,13 @@
   }
 
   window.addEventListener('hashchange', onRouteChanged);
+
+  // Re-check when restored from bfcache
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) {
+      app.render();
+    }
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', onRouteChanged);
