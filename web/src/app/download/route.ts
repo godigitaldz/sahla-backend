@@ -1,0 +1,7 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function GET(request: NextRequest) {
+  const host = request.headers.get('host') || 'sahla-backend.vercel.app';
+  const query = request.nextUrl.searchParams.toString();
+  return NextResponse.redirect(new URL(`/#download${query ? '?' + query : ''}`, `https://${host}`), 302);
+}

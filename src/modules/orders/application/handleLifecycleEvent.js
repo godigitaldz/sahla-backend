@@ -159,12 +159,20 @@ async function sendDedupePush({
     orderId,
     cohort,
     status: 'skipped',
-    providerResponse: { reserved: true },
+    providerResponse: { reserved: true, reserved_at: new Date().toISOString() },
   });
   if (!inserted) {
     const existing = await orderLifecycleRepository.getDispatchByKey(dispatchKey);
     if (existing?.status === 'sent' && dispatchLogDelivered(existing.provider_response)) {
       return { success: true, skipped: true, reason: 'deduped_dispatch_sent' };
+    }
+    const reservedAt = Date.parse(
+      existing?.provider_response?.reserved_at || existing?.updated_at || '',
+    );
+    const isReserved =
+      existing?.status === 'skipped' && existing?.provider_response?.reserved === true;
+    if (isReserved && Number.isFinite(reservedAt) && Date.now() - reservedAt < 60_000) {
+      return { success: true, skipped: true, reason: 'dispatch_in_flight' };
     }
   }
   const sent = await supabasePushGateway.sendPush({ userIds: ids, title, body, data });

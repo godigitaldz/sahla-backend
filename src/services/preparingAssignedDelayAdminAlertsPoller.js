@@ -112,9 +112,11 @@ export async function runPreparingAssignedDelayAdminAlertsOnce({ logger = consol
 
       // 1. Admin Alert
       if (adminIds.length > 0) {
-        const adminDispatchKey = `order:${orderId}:preparing_assigned:20m:admin`;
+        const canonicalDispatchKey = `order:${orderId}:preparing:assigned:20m:admin`;
+        const legacyDispatchKey = `order:${orderId}:preparing_assigned:20m:admin`;
+        
         const adminSent = await sendPushWithDispatch({
-          dispatchKey: adminDispatchKey,
+          dispatchKey: canonicalDispatchKey,
           orderId,
           cohort: 'admin',
           userIds: adminIds,
@@ -128,9 +130,10 @@ export async function runPreparingAssignedDelayAdminAlertsOnce({ logger = consol
             order_number: orderNumber,
             assigned_age_minutes: String(ageMinutes),
           },
+          logger,
         });
 
-        if (pushSendSucceeded(adminSent)) {
+        if (pushSendSucceeded(adminSent) && !adminSent.skipped) {
           stats.sent_admin_alerts += 1;
         }
       } else {

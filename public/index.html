@@ -9,7 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <meta name="apple-itunes-app" content="app-id=6834895657, app-argument=sahla://open">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="download.css">
+    <script src="config.js"></script>
     <script src="translations.js"></script>
 </head>
 <body>
@@ -45,6 +48,11 @@
             </div>
         </div>
     </nav>
+
+    <!-- Smart App Download Section (Activates on location.hash === "#download") -->
+    <section id="download" class="smart-download-section" aria-live="polite">
+        <!-- Rendered dynamically by download.js when visitor lands on #download -->
+    </section>
 
     <!-- Hero Section -->
     <section class="hero" id="home">
@@ -164,5 +172,6 @@
     <script src="localization.js"></script>
     <script src="script.js"></script>
     <script src="cookie-consent.js"></script>
+    <script src="download.js"></script>
 </body>
 </html>

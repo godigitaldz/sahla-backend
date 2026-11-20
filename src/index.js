@@ -2,6 +2,7 @@ import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import { existsSync, readFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/app.js';
@@ -50,7 +51,77 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use('/api', limiter);
 
-app.use(express.static(join(__dirname, '../public')));
+// Apple App Site Association (AASA) for iOS Universal Links
+app.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (req, res) => {
+  const filePath = resolve(__dirname, '../public/.well-known/apple-app-site-association');
+  if (existsSync(filePath)) {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.status(200).send(readFileSync(filePath, 'utf8'));
+  }
+  return res.status(404).json({ error: 'AASA not found' });
+});
+
+// Digital Asset Links for Android App Links
+app.get(['/.well-known/assetlinks.json', '/assetlinks.json'], (req, res) => {
+  const filePath = resolve(__dirname, '../public/.well-known/assetlinks.json');
+  if (existsSync(filePath)) {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.status(200).send(readFileSync(filePath, 'utf8'));
+  }
+  return res.status(404).json({ error: 'Assetlinks not found' });
+});
+
+app.use(express.static(join(__dirname, '../public'), { dotfiles: 'allow' }));
+
+// Universal Link Fallback Page: /open & /open/*
+app.get(['/open', '/open/*'], (req, res) => {
+  const filePath = resolve(__dirname, '../public/open.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving /open fallback page:', err);
+      if (!res.headersSent) res.status(500).json({ error: 'Failed to serve open page' });
+    }
+  });
+});
+
+// Dedicated /download route
+app.get('/download', (req, res) => {
+  const filePath = resolve(__dirname, '../public/download.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving download page:', err);
+      if (!res.headersSent) res.status(500).json({ error: 'Failed to serve download page' });
+    }
+  });
+});
+
+// Send-Link to Phone/Email Stub Endpoint
+app.post('/api/send-link', (req, res) => {
+  const { recipient, to, target, phone, email, url } = req.body || {};
+  const rawRecipient = recipient || to || target || phone || email;
+  if (!rawRecipient || typeof rawRecipient !== 'string') {
+    return res.status(400).json({ success: false, error: 'Recipient phone or email is required.' });
+  }
+
+  const cleanRecipient = rawRecipient.trim();
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanRecipient);
+  const isPhone = /^\+?[0-9\s\-()]{7,20}$/.test(cleanRecipient);
+
+  if (!isEmail && !isPhone) {
+    return res.status(400).json({ success: false, error: 'Please enter a valid phone number or email address.' });
+  }
+
+  console.log(`[Send-Link API Stub] Dispatching download link to ${isEmail ? 'email' : 'phone'}: ${cleanRecipient} (URL: ${url || 'default'})`);
+
+  return res.status(200).json({
+    success: true,
+    message: isEmail ? 'Download link sent to your email!' : 'Download link sent to your phone via SMS!',
+    type: isEmail ? 'email' : 'sms',
+    recipient: cleanRecipient
+  });
+});
 
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, '../public/index.html'));

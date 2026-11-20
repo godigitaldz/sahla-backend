@@ -2,10 +2,6 @@ import crypto from 'node:crypto';
 import { Router } from 'express';
 
 import { supabaseAdmin } from '../config/supabase.js';
-import { runPendingOrdersPollOnce } from '../services/pendingOrdersPoller.js';
-import { runPickupDelayAdminAlertsOnce } from '../services/pickupDelayAdminAlertsPoller.js';
-import { runPreparingUnassignedRebroadcastOnce } from '../services/preparingUnassignedRebroadcastPoller.js';
-import { runPreparingAssignedDelayAdminAlertsOnce } from '../services/preparingAssignedDelayAdminAlertsPoller.js';
 import { supabasePushGateway } from '../modules/notifications/supabasePushGateway.js';
 import {
   getRestaurantOpsUserIds,
@@ -25,9 +21,6 @@ import {
 } from '../services/deliveryWorkingHoursService.js';
 
 const router = Router();
-
-/** Throttle for optional background poll tied to dashboard traffic (see PERFORMANCE_OPEN_DASHBOARD_POLL_MS). */
-let _lastDashboardEscalationPollMs = 0;
 
 const COOKIE_NAME = 'perf_auth';
 
@@ -3290,30 +3283,6 @@ async function fetchFreshAlerts() {
     ...enrichOrderCourier(o),
     ageMinutes: ageMinutes(o.courier_unassigned_episode_at || o.updated_at || o.created_at),
   })).filter((o) => o.ageMinutes != null && o.ageMinutes >= preparingUnassignedDelayMin);
-
-  const dashboardPollMs = Number(process.env.PERFORMANCE_OPEN_DASHBOARD_POLL_MS || 0);
-  if (Number.isFinite(dashboardPollMs) && dashboardPollMs >= 30_000) {
-    const now = Date.now();
-    if (now - _lastDashboardEscalationPollMs >= dashboardPollMs) {
-      _lastDashboardEscalationPollMs = now;
-      setImmediate(async () => {
-        try {
-          const pending = await runPendingOrdersPollOnce({ logger: console });
-          const pickup = await runPickupDelayAdminAlertsOnce({ logger: console });
-          const preparingRebroadcast = await runPreparingUnassignedRebroadcastOnce({ logger: console }).catch(() => {});
-          const preparingAssignedAlerts = await runPreparingAssignedDelayAdminAlertsOnce({ logger: console }).catch(() => {});
-          console.info?.('[performance/alerts] background escalation poll', {
-            pending,
-            pickup,
-            preparingRebroadcast,
-            preparingAssignedAlerts,
-          });
-        } catch (err) {
-          console.error('[performance/alerts] background escalation poll failed', err);
-        }
-      });
-    }
-  }
 
   const [
     stalePendingOrdersWithItems,

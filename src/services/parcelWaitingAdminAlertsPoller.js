@@ -1,5 +1,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { getActiveAdminUserIds } from './adminRecipients.js';
+import { sendPushWithDispatch } from './notificationDispatchService.js';
+import { pushSendSucceeded } from '../modules/notifications/pushSendResult.js';
 
 const PARCEL_WAITING_THRESHOLD_MS = 15 * 60_000;
 const PARCEL_WAITING_ALERT_TYPE = 'admin_parcel_waiting_15m';
@@ -57,44 +59,58 @@ export async function runParcelWaitingAdminAlertsOnce({ logger = console } = {})
     if (adminIds.length === 0) return stats;
 
     const dedupeSinceIso = safeIsoDate(24 * 3600_000);
-    const { data: sentLogs } = await supabaseAdmin
-      .from('push_notifications_log')
-      .select('data')
-      .eq('status', 'sent')
-      .gte('created_at', dedupeSinceIso)
-      .in('data->>order_id', candidateIds);
+    const [logsRes, dispatchesRes] = await Promise.all([
+      supabaseAdmin
+        .from('push_notifications_log')
+        .select('data')
+        .eq('status', 'sent')
+        .gte('created_at', dedupeSinceIso)
+        .in('data->>order_id', candidateIds),
+      supabaseAdmin
+        .from('notification_dispatch_log')
+        .select('dispatch_key, order_id, status')
+        .eq('status', 'sent')
+        .in('order_id', candidateIds),
+    ]);
 
     const alreadyAlertedIds = new Set(
-      (sentLogs ?? [])
+      (logsRes.data ?? [])
         .filter((l) => l?.data?.flow === PARCEL_WAITING_ALERT_TYPE)
         .map((l) => l?.data?.order_id)
         .filter(Boolean),
     );
 
+    const sentDispatchKeys = new Set(
+      (dispatchesRes.data ?? []).map((r) => r.dispatch_key).filter(Boolean),
+    );
+
     for (const order of waitingParcels) {
       const orderId = String(order.id);
-      if (alreadyAlertedIds.has(orderId)) continue;
+      const dispatchKey = `order:${orderId}:parcel_waiting:15m:admin`;
+      if (alreadyAlertedIds.has(orderId) || sentDispatchKeys.has(dispatchKey)) continue;
 
       const orderNumber = String(order.order_number ?? orderId);
-      const res = await supabaseAdmin.functions.invoke('send-push-notification', {
-        body: {
-          user_ids: adminIds,
-          title: 'طلب طرد بانتظار مندوب',
-          body: `طلب الطرد #${orderNumber} قيد الانتظار منذ أكثر من 15 دقيقة دون تعيين مندوب.`,
-          data: {
-            type: 'admin_order_alert',
-            flow: PARCEL_WAITING_ALERT_TYPE,
-            order_id: orderId,
-            order_number: orderNumber,
-            source: 'backend_parcel_waiting_alerts',
-          },
-          force_activate_inactive_tokens: true,
+      const res = await sendPushWithDispatch({
+        dispatchKey,
+        orderId,
+        cohort: 'admin',
+        userIds: adminIds,
+        title: 'طلب طرد بانتظار مندوب',
+        body: `طلب الطرد #${orderNumber} قيد الانتظار منذ أكثر من 15 دقيقة دون تعيين مندوب.`,
+        data: {
+          type: 'admin_order_alert',
+          flow: PARCEL_WAITING_ALERT_TYPE,
+          order_id: orderId,
+          order_number: orderNumber,
+          source: 'backend_parcel_waiting_alerts',
         },
+        logger,
       });
 
-      if (!res.error && res.data?.success === true) {
+      if (pushSendSucceeded(res) && !res.skipped) {
         stats.sent_alerts += 1;
         alreadyAlertedIds.add(orderId);
+        sentDispatchKeys.add(dispatchKey);
       }
     }
 

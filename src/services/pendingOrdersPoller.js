@@ -3,6 +3,8 @@ import { getActiveAdminUserIds } from './adminRecipients.js';
 import { getRestaurantOpsUserIds } from '../modules/notifications/orderRebroadcastRecipients.js';
 import { runPickupDelayAdminAlertsOnce } from './pickupDelayAdminAlertsPoller.js';
 import { runPreparingUnassignedRebroadcastOnce } from './preparingUnassignedRebroadcastPoller.js';
+import { sendPushWithDispatch } from './notificationDispatchService.js';
+import { pushSendSucceeded } from '../modules/notifications/pushSendResult.js';
 
 const DEFAULT_INTERVAL_MS = 60_000;
 const FIRST_ADMIN_THRESHOLD_MS = 2 * 60_000;
@@ -89,15 +91,13 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
 
     stats.delivery_due = (dueDeliveryOrders ?? []).length;
 
-    if (
-      stats.pending_due === 0 &&
-      stats.delivery_due === 0
-    ) {
+    if (stats.pending_due === 0 && stats.delivery_due === 0) {
       return stats;
     }
 
     const adminIds = await getActiveAdminUserIds(logger);
     stats.admins = adminIds.length;
+
     if (adminIds.length === 0) {
       logger.warn?.('[pending-orders-poller] no admin users found; skipping admin alerts');
     }
@@ -109,58 +109,99 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
     ].filter(Boolean);
 
     let sentLogs = [];
+    let sentDispatches = [];
     if (candidateOrderIds.length > 0) {
-      const { data: logs, error: logsError } = await supabaseAdmin
-        .from('push_notifications_log')
-        .select('data')
-        .eq('status', 'sent')
-        .gte('created_at', sinceIso)
-        .in('data->>order_id', candidateOrderIds);
+      const [logsRes, dispatchesRes] = await Promise.all([
+        supabaseAdmin
+          .from('push_notifications_log')
+          .select('data')
+          .eq('status', 'sent')
+          .gte('created_at', sinceIso)
+          .in('data->>order_id', candidateOrderIds),
+        supabaseAdmin
+          .from('notification_dispatch_log')
+          .select('dispatch_key, order_id, status')
+          .eq('status', 'sent')
+          .in('order_id', candidateOrderIds),
+      ]);
 
-      if (logsError) {
+      if (logsRes.error) {
         logger.error?.(
           '[pending-orders-poller] log dedupe query failed:',
-          logsError.message,
+          logsRes.error.message,
         );
-        stats.error = logsError.message;
-        return stats;
       }
-      sentLogs = logs ?? [];
+      if (dispatchesRes.error) {
+        logger.warn?.(
+          '[pending-orders-poller] dispatch dedupe query failed:',
+          dispatchesRes.error.message,
+        );
+      }
+      sentLogs = logsRes.data ?? [];
+      sentDispatches = dispatchesRes.data ?? [];
     }
 
-    const sentFirstStageOrderIds = new Set(
-      (sentLogs ?? [])
+    const sentDispatchesKeys = new Set(
+      sentDispatches.map((r) => r.dispatch_key).filter(Boolean),
+    );
+
+    const sentFirstStageOrderIds = new Set([
+      ...(sentLogs ?? [])
         .filter((row) => String(row?.data?.flow ?? '') === ADMIN_FIRST_ALERT_TYPE)
         .map((row) => row?.data?.order_id)
         .filter((value) => typeof value === 'string'),
-    );
-    const sentSecondStageOrderIds = new Set(
-      (sentLogs ?? [])
+      ...(dueOrders ?? [])
+        .map((o) => String(o?.id ?? ''))
+        .filter((id) => sentDispatchesKeys.has(`order:${id}:pending:2m:admin`)),
+    ]);
+
+    const sentSecondStageOrderIds = new Set([
+      ...(sentLogs ?? [])
         .filter((row) => String(row?.data?.flow ?? '') === ADMIN_SECOND_ALERT_TYPE)
         .map((row) => row?.data?.order_id)
         .filter((value) => typeof value === 'string'),
-    );
-    const sentCustomerStageOrderIds = new Set(
-      (sentLogs ?? [])
+      ...(dueOrders ?? [])
+        .map((o) => String(o?.id ?? ''))
+        .filter((id) => sentDispatchesKeys.has(`order:${id}:pending:5m:admin`)),
+    ]);
+
+    const sentCustomerStageOrderIds = new Set([
+      ...(sentLogs ?? [])
         .filter((row) => String(row?.data?.type ?? '') === CUSTOMER_ESCALATION_ALERT_TYPE)
         .map((row) => row?.data?.order_id)
         .filter((value) => typeof value === 'string'),
-    );
-    const sentAutoCancelOrderIds = new Set(
-      (sentLogs ?? [])
+      ...(dueOrders ?? [])
+        .map((o) => String(o?.id ?? ''))
+        .filter((id) => sentDispatchesKeys.has(`order:${id}:pending:5m:user`)),
+    ]);
+
+    const sentAutoCancelOrderIds = new Set([
+      ...(sentLogs ?? [])
         .filter((row) => {
           const type = String(row?.data?.type ?? '');
           return type === CUSTOMER_AUTO_CANCEL_ALERT_TYPE || type === 'order_auto_cancelled_10m';
         })
         .map((row) => row?.data?.order_id)
         .filter((value) => typeof value === 'string'),
-    );
-    const sentDeliveryAlertOrderIds = new Set(
-      (sentLogs ?? [])
+      ...(dueOrders ?? [])
+        .map((o) => String(o?.id ?? ''))
+        .filter(
+          (id) =>
+            sentDispatchesKeys.has(`order:${id}:pending:15m:user_cancel`) ||
+            sentDispatchesKeys.has(`order:${id}:pending:10m:user_cancel`),
+        ),
+    ]);
+
+    const sentDeliveryAlertOrderIds = new Set([
+      ...(sentLogs ?? [])
         .filter((row) => String(row?.data?.flow ?? '') === ADMIN_DELIVERY_ALERT_TYPE)
         .map((row) => row?.data?.order_id)
         .filter((value) => typeof value === 'string'),
-    );
+      ...(dueDeliveryOrders ?? [])
+        .map((o) => String(o?.id ?? ''))
+        .filter((id) => sentDispatchesKeys.has(`order:${id}:delivery_delay:15m:admin`)),
+    ]);
+
     const sentRestaurant2mOrderIds = new Set(
       (sentLogs ?? [])
         .filter((row) => {
@@ -205,7 +246,7 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
     let autoCancelledCount = 0;
     let sentDeliveryDelayedCount = 0;
 
-    for (const order of (dueOrders ?? [])) {
+    for (const order of dueOrders ?? []) {
       const customerId = String(order.customer_id ?? '');
       const restaurantId = String(order.restaurant_id ?? '').trim();
       const orderId = String(order.id ?? '');
@@ -226,23 +267,24 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
         try {
           const restOps = await getRestaurantOpsUserIds(restaurantId, logger);
           if (restOps.length === 0) return;
-          const rbInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
-            body: {
-              user_ids: restOps,
-              title: 'طلب جديد',
-              body: `الطلب #${orderNumber} لا يزال معلقاً.`,
-              data: {
-                type: 'new_order',
-                flow: `pending_restaurant_rebroadcast_${stage}`,
-                order_id: orderId,
-                order_number: orderNumber,
-                restaurant_id: restaurantId,
-                source: 'backend_pending_orders_poller',
-              },
-              force_activate_inactive_tokens: true,
+          const rbInvoke = await sendPushWithDispatch({
+            dispatchKey: `order:${orderId}:restaurant_rebroadcast:${stage}`,
+            orderId,
+            cohort: 'admin',
+            userIds: restOps,
+            title: 'طلب جديد',
+            body: `الطلب #${orderNumber} لا يزال معلقاً.`,
+            data: {
+              type: 'new_order',
+              flow: `pending_restaurant_rebroadcast_${stage}`,
+              order_id: orderId,
+              order_number: orderNumber,
+              restaurant_id: restaurantId,
+              source: 'backend_pending_orders_poller',
             },
+            logger,
           });
-          if (!rbInvoke.error && rbInvoke.data?.success === true) {
+          if (pushSendSucceeded(rbInvoke) && !rbInvoke.skipped) {
             sentRestaurantRebroadcastCount += 1;
             dedupeSet.add(orderId);
           }
@@ -264,102 +306,100 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
         await sendRestaurantRebroadcast('12m', sentRestaurant12mOrderIds);
       }
 
+      // First-stage admin alert (2m)
       if (isFirstStageDue && !sentFirstStageOrderIds.has(orderId) && adminIds.length > 0) {
-        const adminFirstInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
-          body: {
-            user_ids: adminIds,
-            title: 'New Order Pending',
-            body: `Order #${orderNumber} has been pending for more than 2 minutes.`,
-            data: {
-              type: 'admin_order_alert',
-              stage: 'first',
-              flow: ADMIN_FIRST_ALERT_TYPE,
-              order_id: orderId,
-              order_number: orderNumber,
-              source: 'backend_pending_orders_poller',
-            },
-            force_activate_inactive_tokens: true,
+        const adminFirstInvoke = await sendPushWithDispatch({
+          dispatchKey: `order:${orderId}:pending:2m:admin`,
+          orderId,
+          cohort: 'admin',
+          userIds: adminIds,
+          title: 'New Order Pending',
+          body: `Order #${orderNumber} has been pending for more than 2 minutes.`,
+          data: {
+            type: 'admin_order_alert',
+            stage: 'first',
+            flow: ADMIN_FIRST_ALERT_TYPE,
+            order_id: orderId,
+            order_number: orderNumber,
+            source: 'backend_pending_orders_poller',
           },
+          logger,
         });
 
-        if (!adminFirstInvoke.error && adminFirstInvoke.data?.success === true) {
-          if (Number(adminFirstInvoke.data?.summary?.total_sent ?? 0) > 0) {
-            sentFirstStageCount += 1;
-            sentFirstStageOrderIds.add(orderId);
-          }
-        } else {
+        if (pushSendSucceeded(adminFirstInvoke) && !adminFirstInvoke.skipped) {
+          sentFirstStageCount += 1;
+          sentFirstStageOrderIds.add(orderId);
+        } else if (!adminFirstInvoke?.skipped) {
           logger.error?.(
-            `[pending-orders-poller] first-stage admin push failed order=${orderId}: ${adminFirstInvoke.error?.message ?? 'unknown_error'
-            }`,
+            `[pending-orders-poller] first-stage admin push failed order=${orderId}: ${adminFirstInvoke?.error ?? 'unknown_error'}`,
           );
         }
       }
 
+      // Second-stage admin alert (5m)
       if (isSecondStageDue && !sentSecondStageOrderIds.has(orderId) && adminIds.length > 0) {
-        const adminSecondInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
-          body: {
-            user_ids: adminIds,
-            title: 'Order Still Pending',
-            body: `Order #${orderNumber} is still pending after 5 minutes.`,
-            data: {
-              type: 'admin_order_alert',
-              stage: 'second',
-              flow: ADMIN_SECOND_ALERT_TYPE,
-              order_id: orderId,
-              order_number: orderNumber,
-              source: 'backend_pending_orders_poller',
-            },
-            force_activate_inactive_tokens: true,
+        const adminSecondInvoke = await sendPushWithDispatch({
+          dispatchKey: `order:${orderId}:pending:5m:admin`,
+          orderId,
+          cohort: 'admin',
+          userIds: adminIds,
+          title: 'Order Still Pending',
+          body: `Order #${orderNumber} is still pending after 5 minutes.`,
+          data: {
+            type: 'admin_order_alert',
+            stage: 'second',
+            flow: ADMIN_SECOND_ALERT_TYPE,
+            order_id: orderId,
+            order_number: orderNumber,
+            source: 'backend_pending_orders_poller',
           },
+          logger,
         });
 
-        if (!adminSecondInvoke.error && adminSecondInvoke.data?.success === true) {
-          if (Number(adminSecondInvoke.data?.summary?.total_sent ?? 0) > 0) {
-            sentSecondStageCount += 1;
-            sentSecondStageOrderIds.add(orderId);
-          }
-        } else {
+        if (pushSendSucceeded(adminSecondInvoke) && !adminSecondInvoke.skipped) {
+          sentSecondStageCount += 1;
+          sentSecondStageOrderIds.add(orderId);
+        } else if (!adminSecondInvoke?.skipped) {
           logger.error?.(
-            `[pending-orders-poller] second-stage admin push failed order=${orderId}: ${adminSecondInvoke.error?.message ?? 'unknown_error'
-            }`,
+            `[pending-orders-poller] second-stage admin push failed order=${orderId}: ${adminSecondInvoke?.error ?? 'unknown_error'}`,
           );
         }
       }
 
+      // Customer escalation notification (5m)
       if (
         isSecondStageDue &&
         !sentCustomerStageOrderIds.has(orderId) &&
         customerId &&
         sentSecondStageOrderIds.has(orderId)
       ) {
-        const customerInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
-          body: {
-            user_ids: [customerId],
-            title: 'Order Update',
-            body: `Your order #${orderNumber} is still pending. Our team is actively following it.`,
-            data: {
-              type: CUSTOMER_ESCALATION_ALERT_TYPE,
-              order_id: orderId,
-              order_number: orderNumber,
-              source: 'backend_pending_orders_poller',
-            },
-            force_activate_inactive_tokens: true,
+        const customerInvoke = await sendPushWithDispatch({
+          dispatchKey: `order:${orderId}:pending:5m:user`,
+          orderId,
+          cohort: 'user',
+          userIds: [customerId],
+          title: 'Order Update',
+          body: `Your order #${orderNumber} is still pending. Our team is actively following it.`,
+          data: {
+            type: CUSTOMER_ESCALATION_ALERT_TYPE,
+            order_id: orderId,
+            order_number: orderNumber,
+            source: 'backend_pending_orders_poller',
           },
+          logger,
         });
 
-        if (!customerInvoke.error && customerInvoke.data?.success === true) {
-          if (Number(customerInvoke.data?.summary?.total_sent ?? 0) > 0) {
-            sentCustomerStageCount += 1;
-            sentCustomerStageOrderIds.add(orderId);
-          }
-        } else {
+        if (pushSendSucceeded(customerInvoke) && !customerInvoke.skipped) {
+          sentCustomerStageCount += 1;
+          sentCustomerStageOrderIds.add(orderId);
+        } else if (!customerInvoke?.skipped) {
           logger.error?.(
-            `[pending-orders-poller] customer escalation push failed order=${orderId}: ${customerInvoke.error?.message ?? 'unknown_error'
-            }`,
+            `[pending-orders-poller] customer escalation push failed order=${orderId}: ${customerInvoke?.error ?? 'unknown_error'}`,
           );
         }
       }
 
+      // Auto-cancel (15m)
       if (isAutoCancelDue && customerId && !sentAutoCancelOrderIds.has(orderId)) {
         const nowIso = new Date().toISOString();
         const { data: cancelledRows, error: cancelError } = await supabaseAdmin
@@ -386,38 +426,38 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
           continue;
         }
 
-        const autoCancelInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
-          body: {
-            user_ids: [customerId],
-            title: 'طلبك تم إلغاؤه.',
-            body: 'تم إلغاء طلبكم نتيجة لنفاذ الكمية، نرجو منكم التفهم.',
-            data: {
-              type: CUSTOMER_AUTO_CANCEL_ALERT_TYPE,
-              order_id: orderId,
-              order_number: orderNumber,
-              source: 'backend_pending_orders_poller',
-              force_arabic_template: true,
-            },
-            force_activate_inactive_tokens: true,
+        const autoCancelInvoke = await sendPushWithDispatch({
+          dispatchKey: `order:${orderId}:pending:15m:user_cancel`,
+          orderId,
+          cohort: 'user',
+          userIds: [customerId],
+          title: 'طلبك تم إلغاؤه.',
+          body: 'تم إلغاء طلبكم نتيجة لنفاذ الكمية، نرجو منكم التفهم.',
+          data: {
+            type: CUSTOMER_AUTO_CANCEL_ALERT_TYPE,
+            order_id: orderId,
+            order_number: orderNumber,
+            source: 'backend_pending_orders_poller',
+            force_arabic_template: true,
           },
+          logger,
         });
 
-        if (!autoCancelInvoke.error && autoCancelInvoke.data?.success === true) {
-          if (Number(autoCancelInvoke.data?.summary?.total_sent ?? 0) > 0) {
-            autoCancelledCount += 1;
-            sentAutoCancelOrderIds.add(orderId);
-          }
-        } else {
+        if (pushSendSucceeded(autoCancelInvoke) && !autoCancelInvoke.skipped) {
+          autoCancelledCount += 1;
+          sentAutoCancelOrderIds.add(orderId);
+        } else if (!autoCancelInvoke?.skipped) {
           logger.error?.(
             `[pending-orders-poller] auto-cancel notification failed order=${orderId}: ${
-              autoCancelInvoke.error?.message ?? 'unknown_error'
+              autoCancelInvoke?.error ?? 'unknown_error'
             }`,
           );
         }
       }
     }
 
-    for (const order of (dueDeliveryOrders ?? [])) {
+    // Picked-up delivery delayed alert (15m)
+    for (const order of dueDeliveryOrders ?? []) {
       const orderId = String(order.id ?? '');
       const orderNumber = String(order.order_number ?? '');
       if (!orderId || !orderNumber || sentDeliveryAlertOrderIds.has(orderId)) {
@@ -425,32 +465,31 @@ export async function runPendingOrdersPollOnce({ logger = console } = {}) {
       }
       if (adminIds.length === 0) continue;
 
-      const deliveryInvoke = await supabaseAdmin.functions.invoke('send-push-notification', {
-        body: {
-          user_ids: adminIds,
-          title: 'Delivery Delayed',
-          body: `Order #${orderNumber} has been picked up for more than 15 minutes and is not delivered yet.`,
-          data: {
-            type: 'admin_order_alert',
-            stage: 'delivery_delayed',
-            flow: ADMIN_DELIVERY_ALERT_TYPE,
-            order_id: orderId,
-            order_number: orderNumber,
-            source: 'backend_pending_orders_poller',
-          },
-          force_activate_inactive_tokens: true,
+      const deliveryInvoke = await sendPushWithDispatch({
+        dispatchKey: `order:${orderId}:delivery_delay:15m:admin`,
+        orderId,
+        cohort: 'admin',
+        userIds: adminIds,
+        title: 'Delivery Delayed',
+        body: `Order #${orderNumber} has been picked up for more than 15 minutes and is not delivered yet.`,
+        data: {
+          type: 'admin_order_alert',
+          stage: 'delivery_delayed',
+          flow: ADMIN_DELIVERY_ALERT_TYPE,
+          order_id: orderId,
+          order_number: orderNumber,
+          source: 'backend_pending_orders_poller',
         },
+        logger,
       });
 
-      if (!deliveryInvoke.error && deliveryInvoke.data?.success === true) {
-        if (Number(deliveryInvoke.data?.summary?.total_sent ?? 0) > 0) {
-          sentDeliveryDelayedCount += 1;
-          sentDeliveryAlertOrderIds.add(orderId);
-        }
-      } else {
+      if (pushSendSucceeded(deliveryInvoke) && !deliveryInvoke.skipped) {
+        sentDeliveryDelayedCount += 1;
+        sentDeliveryAlertOrderIds.add(orderId);
+      } else if (!deliveryInvoke?.skipped) {
         logger.error?.(
           `[pending-orders-poller] delivery-delayed admin push failed order=${orderId}: ${
-            deliveryInvoke.error?.message ?? 'unknown_error'
+            deliveryInvoke?.error ?? 'unknown_error'
           }`,
         );
       }
@@ -484,7 +523,7 @@ export function startPendingOrdersPoller({ logger = console } = {}) {
 
   if (process.env.VERCEL === '1') {
     logger.info?.(
-      '[pending-orders-poller] VERCEL=1: in-process interval disabled; schedule GET /api/internal/pending-orders-poll (GitHub Actions, Vercel Cron, or external) with CRON_SECRET',
+      '[pending-orders-poller] VERCEL=1: in-process interval disabled; scheduled external runner required (QStash Schedule, Supabase pg_cron, or external webhook)',
     );
     return { stop: () => { } };
   }

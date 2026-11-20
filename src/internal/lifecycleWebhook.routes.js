@@ -16,8 +16,11 @@ import { runPreparingUnassignedRebroadcastOnce } from '../services/preparingUnas
 import { runPreparingAssignedDelayAdminAlertsOnce } from '../services/preparingAssignedDelayAdminAlertsPoller.js';
 import { acquireWindowLock } from '../services/distributedLockService.js';
 import { syncWorkingHours } from '../services/deliveryWorkingHoursService.js';
+import { qstashPublisher } from '../modules/orders/infrastructure/qstashPublisher.js';
 
 const router = express.Router();
+
+let _lastQstashScheduleCheckMs = 0;
 
 function fullRequestUrl(req) {
   const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
@@ -385,6 +388,16 @@ async function runCronTick(req, res) {
     }
   }
 
+  // Stage: Ensure QStash recurring schedule is armed (checked at most once every 24h, or on force)
+  if (remainingMs() > 2_000 && (force || Date.now() - _lastQstashScheduleCheckMs > 86_400_000)) {
+    try {
+      _lastQstashScheduleCheckMs = Date.now();
+      result.recurring_schedule = await qstashPublisher.ensureRecurringCronSchedule({ logger: log });
+    } catch (e) {
+      log.warn('qstash recurring schedule check failed', { error: e?.message });
+    }
+  }
+
   result.elapsed_ms = Date.now() - tickStartedAt;
   return res.json({ success: true, ...result });
 }
@@ -417,5 +430,48 @@ router.post('/pending-orders-poll', runCronTick);
 
 router.get('/delivery-personnel/sync-working-hours', handleSyncWorkingHours);
 router.post('/delivery-personnel/sync-working-hours', handleSyncWorkingHours);
+
+router.post('/cron/ensure-schedule', express.json(), async (req, res) => {
+  const bearer = String(req.headers.authorization || '')
+    .replace(/^Bearer\s+/i, '')
+    .trim();
+  const secret = String(process.env.CRON_SECRET || '').trim();
+  if (!secret || bearer !== secret) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+
+  const traceId = createTraceId(req.headers['x-trace-id']);
+  const log = traceLogger(console, traceId);
+
+  try {
+    const cron = req.body?.cron || '* * * * *';
+    const destination = req.body?.destination || null;
+    const scheduleRes = await qstashPublisher.ensureRecurringCronSchedule({
+      cron,
+      destination,
+      logger: log,
+    });
+    return res.json({ success: true, trace_id: traceId, ...scheduleRes });
+  } catch (e) {
+    log.error('ensure schedule endpoint failed', { error: e?.message });
+    return res.status(500).json({ success: false, error: e?.message || 'ensure_schedule_failed' });
+  }
+});
+
+router.get('/cron/schedules', async (req, res) => {
+  const bearer = String(req.headers.authorization || '')
+    .replace(/^Bearer\s+/i, '')
+    .trim();
+  const secret = String(process.env.CRON_SECRET || '').trim();
+  if (!secret || bearer !== secret) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+  try {
+    const schedules = await qstashPublisher.listSchedules();
+    return res.json({ success: true, schedules });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e?.message || 'list_schedules_failed' });
+  }
+});
 
 export default router;

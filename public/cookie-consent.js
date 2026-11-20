@@ -237,7 +237,7 @@ if (document.readyState === 'loading') {
 
 // Listen for language changes
 document.addEventListener('languageChanged', () => {
-    if (window.cookieConsent) {
+    if (window.cookieConsent && typeof window.cookieConsent.updateTexts === 'function') {
         window.cookieConsent.updateTexts();
     }
 });

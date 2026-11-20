@@ -1,0 +1,47 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "9P628XCQ94.com.sahla.sahlaalgerie",
+          "9P628XCQ94.com.godigital.sahla",
+          "T8CTMB48BY.com.sahla.sahlaalgerie",
+          "T8CTMB48BY.com.godigital.sahla"
+        ],
+        "components": [
+          {
+            "/": "/open",
+            "comment": "Matches /open path exactly"
+          },
+          {
+            "/": "/open/*",
+            "comment": "Matches all subpaths under /open"
+          },
+          {
+            "/": "/download",
+            "comment": "Matches /download"
+          },
+          {
+            "/": "/download/*",
+            "comment": "Matches all subpaths under /download"
+          }
+        ],
+        "paths": [
+          "/open",
+          "/open/*",
+          "/download",
+          "/download/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "9P628XCQ94.com.sahla.sahlaalgerie",
+      "9P628XCQ94.com.godigital.sahla",
+      "T8CTMB48BY.com.sahla.sahlaalgerie",
+      "T8CTMB48BY.com.godigital.sahla"
+    ]
+  }
+}

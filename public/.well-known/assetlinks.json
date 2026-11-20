@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.godigital.sahla",
+      "sha256_cert_fingerprints": [
+        "35:5A:0E:B6:87:F5:F1:98:3C:59:0D:0A:86:52:83:5B:02:CD:AC:9C:22:A7:6D:5C:9C:BC:E4:51:DA:96:93:F4",
+        "83:F0:97:BF:F1:C0:B6:48:C2:0E:7F:08:C0:BB:1C:E7:6D:25:F8:45:2B:71:73:DA:E3:69:6D:8D:A6:89:11:7B"
+      ]
+    }
+  }
+]

@@ -1,5 +1,21 @@
 {
   "version": 2,
+  "headers": [
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    },
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    }
+  ],
   "builds": [
     {
       "src": "web/package.json",
@@ -24,6 +40,18 @@
     },
     {
       "src": "/api/public/(system-urls|market-tab-enabled|app-version-policy|free-delivery-zone.*)",
+      "dest": "src/index.js"
+    },
+    {
+      "src": "/.well-known/(.*)",
+      "dest": "src/index.js"
+    },
+    {
+      "src": "/open(.*)",
+      "dest": "src/index.js"
+    },
+    {
+      "src": "/download(.*)",
       "dest": "src/index.js"
     },
     {

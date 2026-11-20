@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   title: 'ساهلة — خليك في بلاصتك.. حنا نجيو لعندك!',
   description: 'ساهلة — تطبيق توصيل الطعام الجزائري الأول. خليك في بلاصتك.. حنا نجيو لعندك!',
   manifest: '/manifest.webmanifest',
+  itunes: {
+    appId: '6834895657',
+    appArgument: 'sahla://open',
+  },
   openGraph: {
     title: 'ساهلة — خليك في بلاصتك.. حنا نجيو لعندك!',
     description: 'ساهلة — تطبيق توصيل الطعام الجزائري الأول. خليك في بلاصتك.. حنا نجيو لعندك!',

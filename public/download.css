@@ -1,0 +1,728 @@
+/* ==========================================================================
+   Smart Download Page Styles
+   Mobile-first, responsive, accessible, supports dark mode & reduced motion.
+   ========================================================================== */
+
+:root {
+  --sd-primary: #FEB405;
+  --sd-primary-dark: #E09E00;
+  --sd-primary-contrast: #111827;
+  --sd-bg: #F9FAFB;
+  --sd-surface: #FFFFFF;
+  --sd-surface-border: #E5E7EB;
+  --sd-text: #1F2937;
+  --sd-text-muted: #6B7280;
+  --sd-badge-bg: #000000;
+  --sd-badge-text: #FFFFFF;
+  --sd-badge-border: #1F2937;
+  --sd-badge-hover: #1F2937;
+  --sd-radius-sm: 8px;
+  --sd-radius-md: 14px;
+  --sd-radius-lg: 20px;
+  --sd-radius-full: 9999px;
+  --sd-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --sd-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --sd-shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.12);
+  --sd-focus-ring: 0 0 0 3px rgba(254, 180, 5, 0.5);
+  --sd-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sd-bg: #0F172A;
+    --sd-surface: #1E293B;
+    --sd-surface-border: #334155;
+    --sd-text: #F8FAFC;
+    --sd-text-muted: #94A3B8;
+    --sd-badge-bg: #0B0F19;
+    --sd-badge-text: #FFFFFF;
+    --sd-badge-border: #475569;
+    --sd-badge-hover: #1E293B;
+    --sd-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --sd-shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Section visibility control for #download hash route */
+.smart-download-section {
+  display: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  background-color: var(--sd-bg);
+  color: var(--sd-text);
+  font-family: 'Cairo', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+  padding: 24px 16px 48px;
+}
+
+body.route-download {
+  overflow-x: hidden;
+  background-color: var(--sd-bg);
+}
+
+body.route-download .smart-download-section {
+  display: block;
+}
+
+/* Hide standard landing sections when in download mode */
+body.route-download #home,
+body.route-download .hero,
+body.route-download .navbar,
+body.route-download .footer,
+body.route-download .cookie-consent {
+  display: none !important;
+}
+
+/* Container */
+.sd-container {
+  max-width: 1140px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Top Navigation / Back Bar */
+.sd-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 24px;
+}
+
+.sd-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--sd-text);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.sd-logo-img {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--sd-radius-md);
+  object-fit: cover;
+  box-shadow: var(--sd-shadow-sm);
+}
+
+.sd-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--sd-text-muted);
+  border: 1px solid var(--sd-surface-border);
+  padding: 8px 14px;
+  border-radius: var(--sd-radius-full);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--sd-transition);
+}
+
+.sd-back-btn:hover {
+  color: var(--sd-text);
+  border-color: var(--sd-text-muted);
+}
+
+.sd-back-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--sd-focus-ring);
+}
+
+/* In-App Browser Alert Banner */
+.sd-inapp-banner {
+  display: none;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  border-radius: var(--sd-radius-md);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--sd-shadow-sm);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sd-inapp-banner {
+    background: #451A03;
+    border-color: #78350F;
+    color: #FEF3C7;
+  }
+}
+
+.sd-inapp-banner.is-visible {
+  display: block;
+}
+
+.sd-inapp-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.sd-inapp-desc {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.sd-inapp-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sd-inapp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #92400E;
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 14px;
+  border-radius: var(--sd-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--sd-transition);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sd-inapp-btn {
+    background: #F59E0B;
+    color: #111827;
+  }
+}
+
+.sd-inapp-btn:hover {
+  opacity: 0.9;
+}
+
+.sd-inapp-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--sd-focus-ring);
+}
+
+/* Layout Grid */
+.sd-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .sd-grid {
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 48px;
+    padding-top: 16px;
+  }
+}
+
+/* Left Column: Hero & Mobile Actions */
+.sd-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .sd-hero {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  [dir="rtl"] .sd-hero {
+    text-align: right;
+  }
+}
+
+.sd-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(254, 180, 5, 0.15);
+  color: var(--sd-primary-dark);
+  padding: 6px 14px;
+  border-radius: var(--sd-radius-full);
+  font-size: 0.825rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+}
+
+.sd-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 14px;
+  color: var(--sd-text);
+}
+
+@media (min-width: 768px) {
+  .sd-title {
+    font-size: 3rem;
+  }
+}
+
+.sd-tagline {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--sd-text-muted);
+  margin: 0 0 28px;
+  max-width: 540px;
+}
+
+/* Live Status Box (Aria Live for Mobile Handshake) */
+.sd-status-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-surface-border);
+  border-radius: var(--sd-radius-lg);
+  padding: 24px;
+  box-shadow: var(--sd-shadow-md);
+  margin-bottom: 28px;
+  text-align: center;
+  box-sizing: border-box;
+  transition: all var(--sd-transition);
+}
+
+.sd-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3.5px solid rgba(254, 180, 5, 0.25);
+  border-top-color: var(--sd-primary);
+  border-radius: 50%;
+  animation: sd-spin 0.85s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes sd-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sd-status-icon {
+  font-size: 36px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.sd-status-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--sd-text);
+}
+
+.sd-status-desc {
+  font-size: 0.925rem;
+  color: var(--sd-text-muted);
+  margin: 0;
+}
+
+.sd-retry-row {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.sd-btn-retry {
+  background: transparent;
+  color: var(--sd-text);
+  border: 1px solid var(--sd-surface-border);
+  padding: 8px 16px;
+  border-radius: var(--sd-radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--sd-transition);
+}
+
+.sd-btn-retry:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Primary Action Buttons (Store Badges) */
+.sd-badges-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 480px) {
+  .sd-badges-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.sd-store-badge {
+  flex: 1;
+  min-width: 200px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--sd-badge-bg);
+  color: var(--sd-badge-text);
+  border: 1px solid var(--sd-badge-border);
+  border-radius: var(--sd-radius-md);
+  padding: 12px 18px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--sd-transition), background-color var(--sd-transition), box-shadow var(--sd-transition);
+  box-shadow: var(--sd-shadow-sm);
+  box-sizing: border-box;
+}
+
+.sd-store-badge:hover {
+  background-color: var(--sd-badge-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--sd-shadow-md);
+  color: #FFFFFF;
+}
+
+.sd-store-badge:focus-visible {
+  outline: none;
+  box-shadow: var(--sd-focus-ring);
+}
+
+.sd-badge-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+.sd-badge-text-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+[dir="rtl"] .sd-badge-text-wrap {
+  align-items: flex-start;
+  text-align: right;
+}
+
+.sd-badge-sub {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  line-height: 1.1;
+}
+
+.sd-badge-main {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+/* Secondary Open App Button */
+.sd-btn-open-app {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+  background: var(--sd-primary);
+  color: var(--sd-primary-contrast);
+  border: none;
+  border-radius: var(--sd-radius-md);
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform var(--sd-transition), background var(--sd-transition);
+  margin-bottom: 24px;
+  box-shadow: 0 4px 14px rgba(254, 180, 5, 0.4);
+}
+
+.sd-btn-open-app:hover {
+  background: var(--sd-primary-dark);
+  transform: translateY(-2px);
+}
+
+.sd-btn-open-app:focus-visible {
+  outline: none;
+  box-shadow: var(--sd-focus-ring);
+}
+
+/* Optional Android Fallbacks (AppGallery, Direct APK) */
+.sd-fallbacks-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+
+.sd-btn-fallback {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-surface-border);
+  color: var(--sd-text);
+  padding: 8px 14px;
+  border-radius: var(--sd-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--sd-transition);
+}
+
+.sd-btn-fallback:hover {
+  border-color: var(--sd-text-muted);
+}
+
+.sd-btn-fallback:focus-visible {
+  outline: none;
+  box-shadow: var(--sd-focus-ring);
+}
+
+/* Desktop QR Code & Send-Link Card */
+.sd-desktop-card {
+  display: none;
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-surface-border);
+  border-radius: var(--sd-radius-lg);
+  padding: 32px;
+  box-shadow: var(--sd-shadow-lg);
+  box-sizing: border-box;
+}
+
+@media (min-width: 900px) {
+  .sd-desktop-card {
+    display: block;
+  }
+}
+
+.sd-qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--sd-surface-border);
+}
+
+.sd-qr-box {
+  background: #FFFFFF;
+  padding: 14px;
+  border-radius: var(--sd-radius-md);
+  border: 1px solid var(--sd-surface-border);
+  box-shadow: var(--sd-shadow-sm);
+  margin-bottom: 14px;
+  line-height: 0;
+}
+
+.sd-qr-box svg {
+  display: block;
+  width: 180px;
+  height: 180px;
+}
+
+.sd-qr-label {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--sd-text);
+}
+
+.sd-qr-sub {
+  font-size: 0.85rem;
+  color: var(--sd-text-muted);
+  margin: 0;
+}
+
+/* Send Link Form (Phone/Email) */
+.sd-send-section {
+  padding-top: 24px;
+}
+
+.sd-send-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--sd-text);
+}
+
+.sd-send-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sd-input {
+  flex: 1;
+  background: var(--sd-bg);
+  border: 1px solid var(--sd-surface-border);
+  border-radius: var(--sd-radius-sm);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: var(--sd-text);
+  font-family: inherit;
+  transition: border-color var(--sd-transition);
+}
+
+.sd-input:focus {
+  outline: none;
+  border-color: var(--sd-primary);
+  box-shadow: var(--sd-focus-ring);
+}
+
+.sd-btn-send {
+  background: var(--sd-primary);
+  color: var(--sd-primary-contrast);
+  border: none;
+  border-radius: var(--sd-radius-sm);
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--sd-transition);
+}
+
+.sd-btn-send:hover {
+  background: var(--sd-primary-dark);
+}
+
+.sd-btn-send:focus-visible {
+  outline: none;
+  box-shadow: var(--sd-focus-ring);
+}
+
+.sd-send-feedback {
+  font-size: 0.825rem;
+  min-height: 18px;
+  margin-bottom: 12px;
+}
+
+.sd-send-feedback.is-success {
+  color: #10B981;
+  font-weight: 600;
+}
+
+.sd-send-feedback.is-error {
+  color: #EF4444;
+  font-weight: 600;
+}
+
+/* Copy Link Tool */
+.sd-copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--sd-bg);
+  border: 1px dashed var(--sd-surface-border);
+  padding: 8px 12px;
+  border-radius: var(--sd-radius-sm);
+}
+
+.sd-copy-url {
+  font-size: 0.8rem;
+  color: var(--sd-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.sd-btn-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-surface-border);
+  color: var(--sd-text);
+  border-radius: var(--sd-radius-sm);
+  padding: 6px 12px;
+  font-size: 0.775rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--sd-transition);
+}
+
+.sd-btn-copy:hover {
+  border-color: var(--sd-primary);
+}
+
+.sd-btn-copy:focus-visible {
+  outline: none;
+  box-shadow: var(--sd-focus-ring);
+}
+
+/* Screenshots Preview */
+.sd-screenshots-preview {
+  display: none;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+@media (min-width: 768px) {
+  .sd-screenshots-preview {
+    display: flex;
+  }
+}
+
+.sd-screenshot-item {
+  width: 140px;
+  height: 280px;
+  border-radius: var(--sd-radius-md);
+  object-fit: cover;
+  box-shadow: var(--sd-shadow-md);
+  border: 3px solid var(--sd-surface);
+}
+
+/* Toast Notification for Clipboard Copy */
+.sd-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #111827;
+  color: #FFFFFF;
+  padding: 10px 20px;
+  border-radius: var(--sd-radius-full);
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--sd-shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 9999;
+}
+
+.sd-toast.is-active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

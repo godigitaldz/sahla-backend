@@ -6,7 +6,10 @@ import {
 } from '../modules/notifications/orderRebroadcastRecipients.js';
 import {
   PREPARING_UNASSIGNED_EPISODE_MAX_SECONDS,
+  episodeDispatchKey,
 } from '../modules/orders/domain/preparingUnassignedEpisode.js';
+import { sendPushWithDispatch } from './notificationDispatchService.js';
+import { pushSendSucceeded } from '../modules/notifications/pushSendResult.js';
 
 const COURIER_REBROADCAST_INTERVAL_MS = 3 * 60_000;
 const ADMIN_UNASSIGNED_THRESHOLD_MS = 5 * 60_000;
@@ -72,18 +75,29 @@ export async function runPreparingUnassignedRebroadcastOnce({ logger = console }
 
     // Fetch dedupe logs from last 30 minutes for candidate orders only
     const dedupeSinceIso = safeIsoDate(30 * 60_000);
-    const { data: recentLogs, error: logError } = await supabaseAdmin
-      .from('push_notifications_log')
-      .select('data, created_at')
-      .eq('status', 'sent')
-      .gte('created_at', dedupeSinceIso)
-      .in('data->>order_id', candidateIds);
+    const [logsRes, dispatchesRes] = await Promise.all([
+      supabaseAdmin
+        .from('push_notifications_log')
+        .select('data, created_at')
+        .eq('status', 'sent')
+        .gte('created_at', dedupeSinceIso)
+        .in('data->>order_id', candidateIds),
+      supabaseAdmin
+        .from('notification_dispatch_log')
+        .select('dispatch_key, order_id, status')
+        .eq('status', 'sent')
+        .in('order_id', candidateIds),
+    ]);
 
-    if (logError) {
-      logger.warn?.('[preparing-unassigned-rebroadcast] log query failed, continuing:', logError.message);
+    if (logsRes.error) {
+      logger.warn?.('[preparing-unassigned-rebroadcast] log query failed, continuing:', logsRes.error.message);
+    }
+    if (dispatchesRes.error) {
+      logger.warn?.('[preparing-unassigned-rebroadcast] dispatch query failed, continuing:', dispatchesRes.error.message);
     }
 
-    const logs = recentLogs ?? [];
+    const logs = logsRes.data ?? [];
+    const sentDispatchKeys = new Set((dispatchesRes.data ?? []).map((r) => r.dispatch_key).filter(Boolean));
     const now = Date.now();
 
     for (const order of eligibleOrders) {
@@ -113,62 +127,70 @@ export async function runPreparingUnassignedRebroadcastOnce({ logger = console }
       const lastPushAgeMs = lastCourierPush ? now - Date.parse(lastCourierPush.created_at) : Number.POSITIVE_INFINITY;
 
       if (lastPushAgeMs >= COURIER_REBROADCAST_INTERVAL_MS && courierIds.length > 0) {
-        const invokeRes = await supabaseAdmin.functions.invoke('send-push-notification', {
-          body: {
-            user_ids: courierIds,
-            title: 'طلب متاح',
-            body: `الطلب #${orderNumber} جاهز لتعيين سائق.`,
-            data: {
-              type: 'order_available',
-              stage: 'preparing_unassigned',
-              flow: COURIER_UNASSIGNED_FLOW,
-              order_id: orderId,
-              order_number: orderNumber,
-              restaurant_id: String(order.restaurant_id || ''),
-              source: 'backend_preparing_unassigned_rebroadcast',
-            },
-            force_activate_inactive_tokens: true,
+        const bucket = Math.floor(now / COURIER_REBROADCAST_INTERVAL_MS);
+        const courierDispatchKey = `order:${orderId}:preparing_unassigned:courier:${bucket}`;
+
+        const invokeRes = await sendPushWithDispatch({
+          dispatchKey: courierDispatchKey,
+          orderId,
+          cohort: 'admin',
+          userIds: courierIds,
+          title: 'طلب متاح',
+          body: `الطلب #${orderNumber} جاهز لتعيين سائق.`,
+          data: {
+            type: 'order_available',
+            stage: 'preparing_unassigned',
+            flow: COURIER_UNASSIGNED_FLOW,
+            order_id: orderId,
+            order_number: orderNumber,
+            restaurant_id: String(order.restaurant_id || ''),
+            source: 'backend_preparing_unassigned_rebroadcast',
           },
+          logger,
         });
 
-        if (!invokeRes.error && invokeRes.data?.success === true) {
+        if (pushSendSucceeded(invokeRes) && !invokeRes.skipped) {
           stats.sent_courier_rebroadcasts += 1;
-        } else {
+        } else if (!invokeRes?.skipped) {
           logger.error?.(
-            `[preparing-unassigned-rebroadcast] courier push failed order=${orderId}: ${invokeRes.error?.message ?? 'unknown'}`,
+            `[preparing-unassigned-rebroadcast] courier push failed order=${orderId}: ${invokeRes?.error ?? 'unknown'}`,
           );
         }
       }
 
       // Admin escalation alert at 5 minutes
       if (ageMs >= ADMIN_UNASSIGNED_THRESHOLD_MS && adminIds.length > 0) {
-        const alreadyAlerted = logs.some(
+        const adminKey = episodeDispatchKey(orderId, '5m:admin', order.courier_unassigned_episode_at);
+        const alreadyAlertedInLogs = logs.some(
           (l) => l?.data?.order_id === orderId && l?.data?.flow === ADMIN_UNASSIGNED_ALERT_TYPE,
         );
+        const alreadyAlertedInDispatch = sentDispatchKeys.has(adminKey);
 
-        if (!alreadyAlerted) {
-          const adminRes = await supabaseAdmin.functions.invoke('send-push-notification', {
-            body: {
-              user_ids: adminIds,
-              title: 'تحضير بدون سائق',
-              body: `الطلب #${orderNumber} قيد التحضير/الجاهزية ولم يُعيَّن أي عامل توصيل — منذ 5 دقائق.`,
-              data: {
-                type: 'admin_order_alert',
-                stage: 'preparing_unassigned_5m',
-                flow: ADMIN_UNASSIGNED_ALERT_TYPE,
-                order_id: orderId,
-                order_number: orderNumber,
-                source: 'backend_preparing_unassigned_rebroadcast',
-              },
-              force_activate_inactive_tokens: true,
+        if (!alreadyAlertedInLogs && !alreadyAlertedInDispatch) {
+          const adminRes = await sendPushWithDispatch({
+            dispatchKey: adminKey,
+            orderId,
+            cohort: 'admin',
+            userIds: adminIds,
+            title: 'تحضير بدون سائق',
+            body: `الطلب #${orderNumber} قيد التحضير/الجاهزية ولم يُعيَّن أي عامل توصيل — منذ 5 دقائق.`,
+            data: {
+              type: 'admin_order_alert',
+              stage: 'preparing_unassigned_5m',
+              flow: ADMIN_UNASSIGNED_ALERT_TYPE,
+              order_id: orderId,
+              order_number: orderNumber,
+              source: 'backend_preparing_unassigned_rebroadcast',
             },
+            logger,
           });
 
-          if (!adminRes.error && adminRes.data?.success === true) {
+          if (pushSendSucceeded(adminRes) && !adminRes.skipped) {
             stats.sent_admin_alerts += 1;
-          } else {
+            sentDispatchKeys.add(adminKey);
+          } else if (!adminRes?.skipped) {
             logger.error?.(
-              `[preparing-unassigned-rebroadcast] admin alert push failed order=${orderId}: ${adminRes.error?.message ?? 'unknown'}`,
+              `[preparing-unassigned-rebroadcast] admin alert push failed order=${orderId}: ${adminRes?.error ?? 'unknown'}`,
             );
           }
         }

@@ -42,6 +42,10 @@ export class QstashPublisher {
     return `${this.baseWebhookUrl}/api/internal/events/order-lifecycle`;
   }
 
+  pendingOrdersPollUrl() {
+    return `${this.baseWebhookUrl}/api/internal/pending-orders-poll`;
+  }
+
   async scheduleLifecycleMessage({
     eventId,
     eventType,
@@ -85,6 +89,96 @@ export class QstashPublisher {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  async listSchedules() {
+    this.assertEnabled();
+    return this.client.schedules.list();
+  }
+
+  async deleteSchedule(scheduleId) {
+    this.assertEnabled();
+    if (!scheduleId) return false;
+    await this.client.schedules.delete(scheduleId);
+    return true;
+  }
+
+  /**
+   * Ensures an always-on recurring QStash schedule exists to trigger
+   * `/api/internal/pending-orders-poll` every minute, independent of browser/dashboard activity.
+   */
+  async ensureRecurringCronSchedule({
+    cron = '* * * * *',
+    destination = null,
+    cronSecret = null,
+    logger = console,
+  } = {}) {
+    if (!this.enabled || !this.client) {
+      return { skipped: true, reason: 'qstash_not_configured' };
+    }
+
+    const secret =
+      cronSecret ||
+      process.env.CRON_SECRET ||
+      process.env.SAHLA_CRON_SECRET ||
+      '';
+    if (!secret) {
+      return { skipped: true, reason: 'missing_cron_secret' };
+    }
+
+    const targetUrl = destination || this.pendingOrdersPollUrl();
+
+    try {
+      const existingSchedules = await this.client.schedules.list().catch((err) => {
+        logger.warn?.('[qstash] schedules.list error:', err?.message);
+        return [];
+      });
+
+      const match = (existingSchedules || []).find(
+        (s) => s?.destination === targetUrl,
+      );
+
+      if (match) {
+        logger.info?.(`[qstash] active recurring schedule found: id=${match.scheduleId} cron="${match.cron}"`);
+        return {
+          created: false,
+          already_exists: true,
+          scheduleId: match.scheduleId,
+          cron: match.cron,
+          destination: targetUrl,
+        };
+      }
+
+      const forwardHeaders = qstashForwardHeaders();
+      const headers = {
+        Authorization: `Bearer ${secret}`,
+        'Content-Type': 'application/json',
+        ...forwardHeaders,
+      };
+
+      const res = await this.client.schedules.create({
+        destination: targetUrl,
+        cron,
+        method: 'POST',
+        headers,
+        retries: 2,
+      });
+
+      logger.info?.(`[qstash] created recurring schedule: id=${res?.scheduleId} cron="${cron}" -> ${targetUrl}`);
+      return {
+        created: true,
+        already_exists: false,
+        scheduleId: res?.scheduleId,
+        cron,
+        destination: targetUrl,
+      };
+    } catch (err) {
+      logger.error?.('[qstash] ensureRecurringCronSchedule failed:', err?.message);
+      return {
+        created: false,
+        error: err?.message || String(err),
+      };
     }
   }
 }
