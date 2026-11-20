@@ -32,7 +32,7 @@ const CONFIG = {
 
   // Deep Link Route inside the App & Timeout Duration
   DEEP_LINK_PATH: "/open",
-  OPEN_TIMEOUT_MS: 2200,
+  OPEN_TIMEOUT_MS: 4500,
 
   // Branding & Assets
   BRAND: {
