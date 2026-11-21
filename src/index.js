@@ -83,6 +83,12 @@ app.use(express.static(join(__dirname, '../public'), {
   }
 }));
 
+// Redirect static asset requests erroneously nested under /open or /download to root
+app.get(['/open/:file(*\\.(?:js|css|webp|png|ico|json|svg))', '/download/:file(*\\.(?:js|css|webp|png|ico|json|svg))'], (req, res) => {
+  const file = req.params.file;
+  return res.redirect(301, `/${file}`);
+});
+
 // Universal Link Fallback Page: /open & /open/*
 app.get(['/open', '/open/', '/open/*', '/open.html'], (req, res) => {
   const filePath = resolve(__dirname, '../public/open.html');

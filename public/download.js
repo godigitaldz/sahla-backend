@@ -1189,7 +1189,7 @@ if (typeof window !== "undefined") {
         <div class="sd-container">
           <header class="sd-topbar">
             <a href="#home" class="sd-logo-link" id="sdHomeLink" aria-label="${this.config.APP_NAME}">
-              <img src="${this.config.BRAND.logoPath || 'logo.webp'}" alt="${this.config.APP_NAME}" class="sd-logo-img">
+              <img src="${this.config.BRAND.logoPath || '/logo.webp'}" alt="${this.config.APP_NAME}" class="sd-logo-img">
             </a>
             <a href="#home" class="sd-back-btn" id="sdBackBtn">
               <span>${t.backToWeb}</span>
@@ -1204,7 +1204,7 @@ if (typeof window !== "undefined") {
           <main class="sd-grid">
             <div class="sd-hero">
               <div class="sd-app-icon-wrap">
-                <img src="${this.config.BRAND.logoPath || 'logo.webp'}" alt="${this.config.APP_NAME}" class="sd-app-icon-img">
+                <img src="${this.config.BRAND.logoPath || '/logo.webp'}" alt="${this.config.APP_NAME}" class="sd-app-icon-img">
               </div>
 
               <div class="sd-badge-tag">

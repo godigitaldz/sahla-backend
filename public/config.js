@@ -44,7 +44,7 @@ var CONFIG = {
     primaryDarkColor: "#064E3B",
     backgroundColor: "#FFFFFF",
     textColor: "#1F2937",
-    logoPath: "logo.webp",
+    logoPath: "/logo.webp",
     appName: "Sahla",
     tagline: "أفضل مأكولات ومطاعم بسكرة بين يديك مع توصيل فوري حتى باب منزلك.",
     screenshots: [
