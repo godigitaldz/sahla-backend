@@ -73,7 +73,15 @@ app.get(['/.well-known/assetlinks.json', '/assetlinks.json'], (req, res) => {
   return res.status(404).json({ error: 'Assetlinks not found' });
 });
 
-app.use(express.static(join(__dirname, '../public'), { dotfiles: 'allow' }));
+app.use(express.static(join(__dirname, '../public'), {
+  dotfiles: 'allow',
+  maxAge: '5m',
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+  }
+}));
 
 // Universal Link Fallback Page: /open & /open/*
 app.get(['/open', '/open/', '/open/*', '/open.html'], (req, res) => {

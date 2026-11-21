@@ -825,13 +825,8 @@ if (typeof window !== "undefined") {
   function buildChromeIntent(href) {
     const u = new URL(href);
     const fallback = encodeURIComponent(u.href);
-    let pathAndQuery = `${u.host}${u.pathname}${u.search}`;
-    if (u.hash && u.hash !== '#' && u.hash !== '#download') {
-      pathAndQuery += encodeURIComponent(u.hash);
-    } else if (u.hash === '#download') {
-      pathAndQuery += '%23download';
-    }
-    return `intent://${pathAndQuery}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
+    const dataPath = `${u.host}${u.pathname}${u.search}`;
+    return `intent://${dataPath}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
   }
 
   function showToast(message) {
@@ -1018,22 +1013,31 @@ if (typeof window !== "undefined") {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
               <span>${t.openInChromeBtn}</span>
             </a>
-            <button class="sd-inapp-btn" id="sdInAppCopyBtn" type="button">
+            <button class="sd-inapp-btn sd-btn-copy" id="sdInAppCopyBtn" type="button">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               <span>${t.copyDownloadLink}</span>
             </button>
           `;
         } else {
-          const safariProtocolUrl = `x-safari-https://${host}${window.location.pathname}${window.location.search}`;
-          inAppActionsHtml = `
+          // iOS in-app mode:
+          // x-safari-https:// is blocked/unhandled by modern Instagram and Snapchat WebViews.
+          // The reliable, high-contrast action is copying the link with instant toast feedback.
+          // If ?debug=1 is enabled, render the experimental Safari anchor for testing purposes.
+          const isDebug = window.location.search.includes('debug=1');
+          const safariProtocolUrl = `x-safari-https://${host}${window.location.pathname}${window.location.search}${window.location.hash}`;
+          const experimentalSafariHtml = isDebug ? `
             <a href="${safariProtocolUrl}" class="sd-inapp-btn sd-btn-safari" id="sdEscapeBtn" rel="noopener">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-              <span>${t.openInSafariBtn}</span>
+              <span>${t.openInSafariBtn} (تجريبي)</span>
             </a>
-            <button class="sd-inapp-btn" id="sdInAppCopyBtn" type="button">
+          ` : '';
+
+          inAppActionsHtml = `
+            <button class="sd-inapp-btn sd-btn-copy" id="sdInAppCopyBtn" type="button">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               <span>${t.copyDownloadLink}</span>
             </button>
+            ${experimentalSafariHtml}
           `;
         }
 
@@ -1495,9 +1499,24 @@ if (typeof window !== "undefined") {
 
       // -----------------------------------------------------------------------
       // RULE A: IN-APP BROWSER MODE
-      // ZERO AUTO-NAVIGATION ON LOAD. NO TIMERS, NO SCHEME CALLS.
+      // ZERO AUTO-NAVIGATION ON LOAD BY DEFAULT. NO TIMERS, NO SCHEME CALLS.
+      // OPTIONAL ISOLATED EXPERIMENT: ONLY IF CONFIG.AUTO_OPEN_IN_APP === true OR ?auto=1
       // -----------------------------------------------------------------------
       if (inApp.isInApp) {
+        track('inapp_browser_detected', { app: inApp.app, platform });
+        const autoParam = new URLSearchParams(window.location.search).get('auto');
+        const isAutoExperiment = (this.config.AUTO_OPEN_IN_APP === true || autoParam === '1') && autoParam !== '0';
+        if (isAutoExperiment) {
+          track('inapp_auto_experiment_attempt', { platform, app: inApp.app });
+          const queryString = params.toString();
+          if (platform === 'ios') {
+            safeNavigate(`${this.config.IOS_URI_SCHEME}open${queryString ? '?' + queryString : ''}`);
+          } else if (platform === 'android') {
+            const cleanScheme = (this.config.ANDROID_URI_SCHEME || 'sahla://').replace('://', '');
+            const intentUrl = `intent://${cleanPath}${queryString ? '?' + queryString : ''}#Intent;scheme=${cleanScheme};package=${this.config.ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(androidUrl)};end`;
+            safeNavigate(intentUrl);
+          }
+        }
         return; // HALT IMMEDIATELY. User controls are rendered for tap interaction.
       }
 

@@ -23,13 +23,8 @@ console.log('🧪 [SIMULATED] Running Unit Tests...');
 function buildChromeIntent(href) {
   const u = new URL(href);
   const fallback = encodeURIComponent(u.href);
-  let pathAndQuery = `${u.host}${u.pathname}${u.search}`;
-  if (u.hash && u.hash !== '#' && u.hash !== '#download') {
-    pathAndQuery += encodeURIComponent(u.hash);
-  } else if (u.hash === '#download') {
-    pathAndQuery += '%23download';
-  }
-  return `intent://${pathAndQuery}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
+  const dataPath = `${u.host}${u.pathname}${u.search}`;
+  return `intent://${dataPath}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
 }
 
 const unitCases = [
@@ -55,14 +50,16 @@ const unitCases = [
     desc: 'with #download hash route',
     assert(res) {
       if (res.includes('##') || res.indexOf('#') !== res.indexOf('#Intent')) throw new Error('Unencoded raw hash in intent: ' + res);
-      if (!res.includes('%23download#Intent;')) throw new Error('Hash not encoded before #Intent: ' + res);
+      if (res.includes('/%23download#Intent;')) throw new Error('Fragment turned into path segment: ' + res);
+      if (!res.includes('S.browser_fallback_url=' + encodeURIComponent('https://sahla-backend.vercel.app/#download'))) throw new Error('Full hash fallback not preserved: ' + res);
     }
   },
   {
     href: 'https://sahla-backend.vercel.app/open?ref=123#invite',
     desc: 'with query and custom hash',
     assert(res) {
-      if (!res.includes('%23invite#Intent;')) throw new Error('Custom hash not encoded: ' + res);
+      if (res.includes('/%23invite#Intent;')) throw new Error('Fragment turned into path segment: ' + res);
+      if (!res.includes('S.browser_fallback_url=' + encodeURIComponent('https://sahla-backend.vercel.app/open?ref=123#invite'))) throw new Error('Full hash fallback not preserved: ' + res);
     }
   }
 ];
