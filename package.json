@@ -8,6 +8,9 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "build": "echo 'No build step required'",
+    "sync:public": "node scripts/sync-public.js",
+    "stamp:version": "node scripts/stamp-version.js",
+    "test:download": "node scripts/test-download-page.js",
     "test": "node --env-file-if-exists=.env.production.local --test $(find src -name \"*.test.js\")"
   },
   "keywords": ["food", "delivery", "api", "supabase"],

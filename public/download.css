@@ -850,3 +850,142 @@ body.route-download .cookie-consent {
   visibility: visible;
   transform: translateX(-50%) translateY(0);
 }
+
+/* In-App Tap-Initiated Primary Button */
+.sd-btn-inapp-primary {
+  display: flex !important;
+  width: 100%;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  border: none;
+}
+
+.sd-inapp-store-highlight {
+  background: #FEF3C7;
+  border: 1px solid #F59E0B;
+  color: #92400E;
+  padding: 10px 14px;
+  border-radius: var(--sd-radius-btn);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 10px 0 14px;
+  animation: sdPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes sdPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.sd-badges-group.is-highlighted {
+  outline: 3px solid #F59E0B;
+  outline-offset: 4px;
+  border-radius: var(--sd-radius-btn);
+}
+
+/* Manual Copy Input Fallback */
+.sd-manual-copy-box {
+  margin-top: 12px;
+  text-align: right;
+}
+
+.sd-manual-copy-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #78350F;
+}
+
+.sd-manual-copy-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #D97706;
+  font-size: 0.82rem;
+  font-family: monospace;
+  direction: ltr;
+  background: #FFF;
+  color: #111;
+}
+
+/* Android Market URI Link */
+.sd-market-row {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.sd-btn-market {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: #2563EB;
+  text-decoration: underline;
+  padding: 6px 10px;
+}
+
+/* Diagnostics Panel (?debug=1) */
+.sd-debug-panel {
+  margin-top: 40px;
+  padding: 16px;
+  background: #111827;
+  color: #10B981;
+  border-radius: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  border: 1px solid #374151;
+  direction: ltr;
+  text-align: left;
+}
+
+.sd-debug-panel summary {
+  cursor: pointer;
+  color: #FBBF24;
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.sd-debug-pre {
+  background: #030712;
+  color: #E5E7EB;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 380px;
+  overflow-y: auto;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.sd-debug-actions {
+  margin-top: 10px;
+}
+
+.sd-debug-btn {
+  background: #2563EB;
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Footer Version Tag */
+.sd-footer {
+  margin-top: 36px;
+  text-align: center;
+}
+
+.sd-build-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: var(--sd-text-light);
+  letter-spacing: 0.5px;
+  font-family: monospace;
+}

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sahla Admin</title>
+    <style>
+      body { font-family: Inter, Arial, sans-serif; margin: 0; background: #f7f7f7; color: #111; }
+      .wrap { max-width: 560px; margin: 72px auto; background: #fff; border-radius: 14px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+      h1 { margin: 0 0 8px; font-size: 24px; }
+      p { margin: 0 0 16px; color: #555; }
+      .row { margin: 8px 0; }
+      .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #fb8c00; color: #fff; font-size: 12px; }
+      button { margin-top: 12px; padding: 10px 14px; border: none; border-radius: 10px; background: #111; color: #fff; cursor: pointer; }
+      .err { color: #b00020; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Admin Area</h1>
+      <p id="status">Checking session...</p>
+      <div class="row">User: <span id="uid">-</span></div>
+      <div class="row">Role: <span id="role" class="badge">-</span></div>
+      <button id="logoutBtn">Sign out</button>
+      <p class="err" id="err"></p>
+    </div>
+
+    <script type="module">
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+      const SUPABASE_URL = "https://wtowqpejzxlsmgywkjvn.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0b3dxcGVqenhsc21neXdranZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3NzUzNzIsImV4cCI6MjA3MjM1MTM3Mn0.2hDTLo1QVJ82DlceZgvndItMvUz5-q3xqoiX0zOtOG0";
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const statusEl = document.getElementById("status");
+      const uidEl = document.getElementById("uid");
+      const roleEl = document.getElementById("role");
+      const errEl = document.getElementById("err");
+
+      const { data: authData } = await supabase.auth.getSession();
+      const session = authData?.session || null;
+
+      if (!session?.user?.id) {
+        window.location.href = "/login";
+      } else {
+        const userId = session.user.id;
+        uidEl.textContent = userId;
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle();
+        const role = (profile?.role || "").toLowerCase();
+        roleEl.textContent = role || "none";
+        if (role !== "admin" && role !== "super_admin") {
+          errEl.textContent = "Access denied: admin role required.";
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 1200);
+        } else {
+          statusEl.textContent = "Authenticated admin session.";
+        }
+      }
+
+      document.getElementById("logoutBtn").onclick = async () => {
+        await supabase.auth.signOut();
+        window.location.href = "/login";
+      };
+    </script>
+  </body>
+</html>

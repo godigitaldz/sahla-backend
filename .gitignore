@@ -11,3 +11,4 @@ coverage/
 .vercel
 .env*.local
 supabase/.temp/
+test-artifacts/

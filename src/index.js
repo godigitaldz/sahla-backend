@@ -78,6 +78,7 @@ app.use(express.static(join(__dirname, '../public'), { dotfiles: 'allow' }));
 // Universal Link Fallback Page: /open & /open/*
 app.get(['/open', '/open/*'], (req, res) => {
   const filePath = resolve(__dirname, '../public/open.html');
+  res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   res.sendFile(filePath, (err) => {
     if (err) {
       console.error('Error serving /open fallback page:', err);
@@ -89,6 +90,7 @@ app.get(['/open', '/open/*'], (req, res) => {
 // Dedicated /download route
 app.get('/download', (req, res) => {
   const filePath = resolve(__dirname, '../public/download.html');
+  res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   res.sendFile(filePath, (err) => {
     if (err) {
       console.error('Error serving download page:', err);
