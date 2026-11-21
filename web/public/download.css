@@ -989,3 +989,155 @@ body.route-download .cookie-consent {
   letter-spacing: 0.5px;
   font-family: monospace;
 }
+
+/* Mobile Optimization: Compact vertical rhythm & above-the-fold CTA */
+@media (max-width: 640px) {
+  .smart-download-section {
+    padding: 12px 14px 28px;
+  }
+
+  .sd-topbar {
+    padding: 2px 0 10px;
+  }
+
+  .sd-logo-img {
+    height: 36px;
+  }
+
+  .sd-back-btn {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+  }
+
+  /* Compact in-app banner */
+  .sd-inapp-banner {
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+  }
+
+  .sd-inapp-header {
+    font-size: 0.9rem;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .sd-inapp-desc {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin: 0 0 10px;
+  }
+
+  .sd-inapp-actions {
+    gap: 8px;
+  }
+
+  .sd-inapp-btn {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    border-radius: 10px;
+  }
+
+  /* Compact Brand Hero */
+  .sd-app-icon-wrap {
+    width: 64px;
+    height: 64px;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 18px;
+  }
+
+  .sd-badge-tag {
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    margin-bottom: 8px;
+  }
+
+  .sd-title {
+    font-size: 1.45rem;
+    line-height: 1.25;
+    margin: 0 0 4px;
+  }
+
+  .sd-tagline {
+    font-size: 0.84rem;
+    line-height: 1.4;
+    margin: 0 0 12px;
+    max-width: 320px;
+  }
+
+  /* Compact Status Card */
+  .sd-status-card {
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border-radius: 16px;
+  }
+
+  .sd-status-title {
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+  }
+
+  .sd-status-desc {
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+  }
+
+  .sd-spinner {
+    width: 34px;
+    height: 34px;
+  }
+
+  .sd-spinner-wrap {
+    margin-bottom: 8px;
+  }
+
+  .sd-prompt-tip {
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    margin-top: 6px;
+  }
+
+  /* Tap Action Buttons */
+  .sd-btn-open-app {
+    padding: 13px 20px;
+    font-size: 1.02rem;
+    margin-bottom: 10px;
+    width: 100%;
+    max-width: 330px;
+    box-sizing: border-box;
+  }
+
+  .sd-store-prompt {
+    font-size: 0.85rem;
+    margin: 8px 0 8px;
+  }
+
+  .sd-badges-group {
+    gap: 8px;
+    margin-bottom: 12px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sd-store-badge {
+    padding: 8px 14px;
+    min-width: 138px;
+    flex: 1 1 138px;
+    max-width: 165px;
+  }
+
+  .sd-badge-main {
+    font-size: 0.92rem;
+  }
+
+  .sd-badge-sub {
+    font-size: 0.65rem;
+  }
+
+  .sd-inapp-store-highlight {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+  }
+}

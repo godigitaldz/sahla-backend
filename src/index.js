@@ -76,25 +76,27 @@ app.get(['/.well-known/assetlinks.json', '/assetlinks.json'], (req, res) => {
 app.use(express.static(join(__dirname, '../public'), { dotfiles: 'allow' }));
 
 // Universal Link Fallback Page: /open & /open/*
-app.get(['/open', '/open/*'], (req, res) => {
+app.get(['/open', '/open/', '/open/*', '/open.html'], (req, res) => {
   const filePath = resolve(__dirname, '../public/open.html');
+  res.setHeader('Content-Type', 'text/html; charset=UTF-8');
   res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   res.sendFile(filePath, (err) => {
     if (err) {
       console.error('Error serving /open fallback page:', err);
-      if (!res.headersSent) res.status(500).json({ error: 'Failed to serve open page' });
+      if (!res.headersSent) res.status(500).send('<!DOCTYPE html><html><body>Failed to serve open page</body></html>');
     }
   });
 });
 
 // Dedicated /download route
-app.get('/download', (req, res) => {
+app.get(['/download', '/download/', '/download/*', '/download.html'], (req, res) => {
   const filePath = resolve(__dirname, '../public/download.html');
+  res.setHeader('Content-Type', 'text/html; charset=UTF-8');
   res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   res.sendFile(filePath, (err) => {
     if (err) {
       console.error('Error serving download page:', err);
-      if (!res.headersSent) res.status(500).json({ error: 'Failed to serve download page' });
+      if (!res.headersSent) res.status(500).send('<!DOCTYPE html><html><body>Failed to serve download page</body></html>');
     }
   });
 });
@@ -241,6 +243,12 @@ app.use('/api/images', imagesRouter);
 app.use('/api/internal', lifecycleWebhookRoutes);
 
 app.use((req, res) => {
+  if (req.method === 'GET' && (req.path.startsWith('/open') || req.path === '/open')) {
+    return res.sendFile(resolve(__dirname, '../public/open.html'));
+  }
+  if (req.method === 'GET' && (req.path.startsWith('/download') || req.path === '/download')) {
+    return res.sendFile(resolve(__dirname, '../public/download.html'));
+  }
   res.status(404).json({
     success: false,
     error: 'Route not found',

@@ -160,8 +160,8 @@ if (typeof window !== "undefined") {
       copyBtn: 'نسخ الرابط',
       copiedToast: 'تم نسخ الرابط بنجاح! ✓',
       // In-App Browser Strings
-      inAppNoticeInstagram: 'المتصفح الداخلي يحجب فتح وتثبيت التطبيقات. اضغط على ⋯ في أعلى الشاشة، ثم اختر «فتح في Safari» (Open in Safari).',
-      inAppNoticeSnapchat: 'المتصفح الداخلي يحجب فتح وتثبيت التطبيقات. اضغط على أيقونة فتح في المتصفح ⎋ في الشريط السفلي للشاشة لفتح الرابط في Safari.',
+      inAppNoticeInstagram: 'المتصفح الداخلي يحجب فتح وتثبيت التطبيقات. اضغط على ⋯ في أعلى الشاشة، ثم اختر «فتح في Safari».',
+      inAppNoticeSnapchat: 'المتصفح الداخلي يحجب فتح وتثبيت التطبيقات. اضغط على أيقونة فتح في Safari 🧭 في الشريط السفلي للشاشة.',
       inAppNoticeIosGeneric: (b) => `المتصفح الداخلي لتطبيق ${b} يحجب فتح وتثبيت التطبيقات. اضغط على ⋯ أو أيقونة المشاركة، ثم اختر «فتح في Safari».`,
       inAppNoticeAndroid: (b) => `المتصفح الداخلي لتطبيق ${b} يحجب تثبيت التطبيقات. اضغط على الزر أدناه أو قائمة ⋮ لفتح الرابط في متصفح Chrome.`,
       openInChromeBtn: 'افتح في Chrome',
@@ -1339,7 +1339,7 @@ if (typeof window !== "undefined") {
             window.removeEventListener('blur', onBlur);
           };
 
-          // 3. Timeout check: if still visible after timeoutMs, DO NOT redirect automatically!
+          // 3. Timeout check: if still visible after tap, show store hint (DO NOT redirect automatically!)
           timeoutId = setTimeout(() => {
             cleanup();
             isTapping = false;
@@ -1350,7 +1350,7 @@ if (typeof window !== "undefined") {
               const badgesWrap = document.querySelector('.sd-badges-group');
               if (badgesWrap) badgesWrap.classList.add('is-highlighted');
             }
-          }, Number(this.config.OPEN_TIMEOUT_MS) || 2200);
+          }, 1800);
 
           window.addEventListener('pageshow', () => {
             isTapping = false;
@@ -1517,6 +1517,7 @@ if (typeof window !== "undefined") {
           title: t.fallbackTitle,
           desc: t.fallbackDesc,
           isOpening: false,
+          showTip: false,
           showRetry: true
         });
         return;
@@ -1526,11 +1527,20 @@ if (typeof window !== "undefined") {
       this.cleanedUp = false;
       track('app_open_tap', { platform, type: 'auto_normal' });
 
+      // Show opening status with prompt tip on initial normal mobile load
+      this.updateStatus({
+        title: t.openingTitle,
+        desc: t.openingDesc,
+        isOpening: true,
+        showTip: true,
+        showRetry: false
+      });
+
       const storeUrl = platform === 'ios' ? iosUrl : androidUrl;
       const cleanScheme = (this.config.ANDROID_URI_SCHEME || 'sahla://').replace('://', '');
       const intentUrl = `intent://${cleanPath}#Intent;scheme=${cleanScheme};package=${this.config.ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(androidUrl)};end`;
 
-      const timeoutMs = Number(this.config.OPEN_TIMEOUT_MS) || 2200;
+      const timeoutMs = Number(this.config.OPEN_TIMEOUT_MS) || 3000;
 
       const onAppOpenDetected = () => {
         if (this.appOpened) return;
@@ -1542,6 +1552,7 @@ if (typeof window !== "undefined") {
           title: t.openedTitle,
           desc: t.openedDesc,
           isOpening: false,
+          showTip: false,
           showRetry: true
         });
       };
@@ -1577,7 +1588,8 @@ if (typeof window !== "undefined") {
         this.updateStatus({
           title: redirectTitle,
           desc: t.redirectingDesc,
-          isOpening: true
+          isOpening: true,
+          showTip: false
         });
 
         setTimeout(() => {
@@ -1593,7 +1605,7 @@ if (typeof window !== "undefined") {
       }
     }
 
-    updateStatus({ title, desc, isOpening = false, showRetry = false }) {
+    updateStatus({ title, desc, isOpening = false, showTip = false, showRetry = false }) {
       const titleEl = document.getElementById('sdStatusTitle');
       const descEl = document.getElementById('sdStatusDesc');
       const spinnerEl = document.getElementById('sdSpinnerWrap');
@@ -1603,7 +1615,7 @@ if (typeof window !== "undefined") {
       if (titleEl) titleEl.textContent = title;
       if (descEl) descEl.textContent = desc;
       if (spinnerEl) spinnerEl.style.display = isOpening ? 'block' : 'none';
-      if (tipEl) tipEl.style.display = isOpening ? 'inline-flex' : 'none';
+      if (tipEl) tipEl.style.display = showTip ? 'inline-flex' : 'none';
 
       if (showRetry && cardEl && !document.getElementById('sdRetryBtn')) {
         const lang = getCurrentLang();
