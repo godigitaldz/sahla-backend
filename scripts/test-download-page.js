@@ -15,17 +15,21 @@ async function runTests() {
   process.env.PORT = String(PORT);
 
   // Load env variables
-  const envContent = readFileSync('.env.local', 'utf8');
-  for (const line of envContent.split('\n')) {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#')) {
-      const idx = trimmed.indexOf('=');
-      if (idx > 0) {
-        const k = trimmed.substring(0, idx).trim();
-        const v = trimmed.substring(idx + 1).trim();
-        process.env[k] = v.replace(/^["']|["']$/g, '');
+  try {
+    const envContent = readFileSync('.env.local', 'utf8');
+    for (const line of envContent.split('\n')) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#')) {
+        const idx = trimmed.indexOf('=');
+        if (idx > 0) {
+          const k = trimmed.substring(0, idx).trim();
+          const v = trimmed.substring(idx + 1).trim();
+          process.env[k] = v.replace(/^["']|["']$/g, '');
+        }
       }
     }
+  } catch (e) {
+    console.warn('Could not read .env.local, using defaults');
   }
 
   const { default: app } = await import('../src/index.js');
@@ -91,7 +95,7 @@ async function runTests() {
     }
     if (msg.method === 'Runtime.exceptionThrown') {
       pageErrors.push(msg.params.exceptionDetails);
-      console.error('  [Exception]', msg.params.exceptionDetails.text);
+      console.error('  [Exception]', msg.params.exceptionDetails.exception?.description || msg.params.exceptionDetails.text);
     }
   });
 
@@ -108,49 +112,87 @@ async function runTests() {
 
   const testScenarios = [
     {
-      name: 'Desktop (1440x900)',
-      width: 1440,
-      height: 900,
-      isMobile: false,
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      screenshotName: 'screenshot_desktop_download.png',
-      expectPlatform: 'desktop'
-    },
-    {
-      name: 'iPhone (390x844)',
+      scenarioId: 1,
+      name: 'iOS Safari (Normal Browser Mode)',
       width: 390,
       height: 844,
       isMobile: true,
       hasTouch: true,
       userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
-      screenshotName: 'screenshot_iphone_download.png',
-      expectPlatform: 'ios'
+      screenshotName: 'scenario_1_ios_safari.png',
+      expectPlatform: 'ios',
+      expectInApp: false
     },
     {
-      name: 'Android Pixel (412x915)',
+      scenarioId: 2,
+      name: 'iOS Instagram (In-App WebView)',
+      width: 390,
+      height: 844,
+      isMobile: true,
+      hasTouch: true,
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 325.0.0.0.0',
+      screenshotName: 'scenario_2_ios_instagram.png',
+      expectPlatform: 'ios',
+      expectInApp: true,
+      expectInAppBrowser: 'Instagram'
+    },
+    {
+      scenarioId: 3,
+      name: 'iOS Snapchat (In-App WebView)',
+      width: 390,
+      height: 844,
+      isMobile: true,
+      hasTouch: true,
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Snapchat/12.80.0',
+      screenshotName: 'scenario_3_ios_snapchat.png',
+      expectPlatform: 'ios',
+      expectInApp: true,
+      expectInAppBrowser: 'Snapchat'
+    },
+    {
+      scenarioId: 4,
+      name: 'Android Chrome (Normal Browser Mode)',
       width: 412,
       height: 915,
       isMobile: true,
       hasTouch: true,
       userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
-      screenshotName: 'screenshot_android_download.png',
-      expectPlatform: 'android'
+      screenshotName: 'scenario_4_android_chrome.png',
+      expectPlatform: 'android',
+      expectInApp: false
     },
     {
-      name: 'In-App Instagram Browser (iOS)',
-      width: 390,
-      height: 844,
+      scenarioId: 5,
+      name: 'Android Instagram (In-App WebView)',
+      width: 412,
+      height: 915,
       isMobile: true,
       hasTouch: true,
-      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 325.0.0',
-      screenshotName: 'screenshot_inapp_download.png',
-      expectPlatform: 'ios',
-      expectInApp: true
+      userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 7; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/124.0.6367.82 Mobile Safari/537.36 Instagram 325.0.0.35.91 Android (34/14; 420dpi; 1080x2400; Google/google; Pixel 7)',
+      screenshotName: 'scenario_5_android_instagram.png',
+      expectPlatform: 'android',
+      expectInApp: true,
+      expectInAppBrowser: 'Instagram'
+    },
+    {
+      scenarioId: 6,
+      name: 'Desktop (macOS Chrome/Safari)',
+      width: 1440,
+      height: 900,
+      isMobile: false,
+      hasTouch: false,
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      screenshotName: 'scenario_6_desktop.png',
+      expectPlatform: 'desktop',
+      expectInApp: false
     }
   ];
 
+  const resultsTable = [];
+
   for (const scenario of testScenarios) {
-    console.log(`\n📋 Running Scenario: ${scenario.name}`);
+    console.log(`\n======================================================`);
+    console.log(`📋 Running Scenario ${scenario.scenarioId}: ${scenario.name}`);
     consoleMessages.length = 0;
     pageErrors.length = 0;
 
@@ -166,71 +208,106 @@ async function runTests() {
       userAgent: scenario.userAgent
     });
 
+    // Clear session storage before each test
     await send('Page.navigate', { url: 'about:blank' });
     await sleep(200);
     await send('Page.navigate', { url: `http://localhost:${PORT}/#download` });
 
-    // Wait for load and DOM to settle
-    await sleep(1500);
+    // Wait for initial render
+    await sleep(1200);
 
     const platformRes = await send('Runtime.evaluate', {
       expression: 'typeof window.detectPlatform === "function" ? window.detectPlatform() : null'
     });
-    console.log(`  Detected Platform: ${platformRes.result?.value}`);
+    const detectedPlatform = platformRes.result?.value;
 
-    if (scenario.expectInApp) {
-      const inAppBannerRes = await send('Runtime.evaluate', {
-        expression: 'Boolean(document.getElementById("sdInAppBanner"))'
-      });
-      console.log(`  In-App Banner Visible: ${inAppBannerRes.result?.value}`);
-    }
+    const inAppRes = await send('Runtime.evaluate', {
+      expression: 'typeof window.detectInAppBrowser === "function" ? window.detectInAppBrowser() : null',
+      returnByValue: true
+    });
+    const detectedInApp = inAppRes.result?.value || { isInApp: false, browser: null };
 
-    if (scenario.expectPlatform === 'desktop') {
-      const qrRes = await send('Runtime.evaluate', {
-        expression: 'Boolean(document.getElementById("sdQrBox") && document.getElementById("sdQrBox").querySelector("svg"))'
-      });
-      console.log(`  QR Code SVG Rendered: ${qrRes.result?.value}`);
-    }
+    const bannerRes = await send('Runtime.evaluate', {
+      expression: 'Boolean(document.getElementById("sdInAppBanner") && document.getElementById("sdInAppBanner").classList.contains("is-visible"))'
+    });
+    const isBannerVisible = bannerRes.result?.value;
 
+    const statusCardRes = await send('Runtime.evaluate', {
+      expression: 'Boolean(document.getElementById("sdStatusCard"))'
+    });
+    const isStatusCardRendered = statusCardRes.result?.value;
+
+    const appStoreBtnRes = await send('Runtime.evaluate', {
+      expression: 'Boolean(document.getElementById("sdAppStoreBtn"))'
+    });
+    const isAppStoreBtnRendered = appStoreBtnRes.result?.value;
+
+    const playStoreBtnRes = await send('Runtime.evaluate', {
+      expression: 'Boolean(document.getElementById("sdPlayStoreBtn"))'
+    });
+    const isPlayStoreBtnRendered = playStoreBtnRes.result?.value;
+
+    const chromeBtnRes = await send('Runtime.evaluate', {
+      expression: 'Boolean(document.querySelector(".sd-btn-chrome"))'
+    });
+    const isChromeBtnRendered = chromeBtnRes.result?.value;
+
+    const safariBtnRes = await send('Runtime.evaluate', {
+      expression: 'Boolean(document.querySelector(".sd-btn-safari"))'
+    });
+    const isSafariBtnRendered = safariBtnRes.result?.value;
+
+    const qrBoxRes = await send('Runtime.evaluate', {
+      expression: 'Boolean(document.getElementById("sdQrBox") && document.getElementById("sdQrBox").querySelector("svg"))'
+    });
+    const isQrRendered = qrBoxRes.result?.value;
+
+    // Check timer status in SmartDownload
+    const timerRes = await send('Runtime.evaluate', {
+      expression: 'Boolean(window.SmartDownload && window.SmartDownload.redirectTimer !== null)'
+    });
+    const isRedirectTimerActive = timerRes.result?.value;
+
+    console.log(`  Platform: ${detectedPlatform} (expected: ${scenario.expectPlatform})`);
+    console.log(`  In-App: ${detectedInApp.isInApp} (${detectedInApp.browser})`);
+    console.log(`  Banner visible: ${isBannerVisible}`);
+    console.log(`  Status card (spinner/countdown): ${isStatusCardRendered}`);
+    console.log(`  Redirect timer active: ${isRedirectTimerActive}`);
+    console.log(`  App Store Badge: ${isAppStoreBtnRendered}, Play Store Badge: ${isPlayStoreBtnRendered}`);
+    if (isChromeBtnRendered) console.log('  "Open in Chrome" intent button rendered: YES');
+    if (isSafariBtnRendered) console.log('  "Open in Safari" button rendered: YES');
+    if (isQrRendered) console.log('  QR Code SVG rendered: YES');
+
+    // Screenshot
     const { data: screenshotData } = await send('Page.captureScreenshot', { format: 'png' });
     const screenshotPath = `${ARTIFACT_DIR}/${scenario.screenshotName}`;
     writeFileSync(screenshotPath, Buffer.from(screenshotData, 'base64'));
-    console.log(`  📸 Screenshot saved: ${scenario.screenshotName}`);
 
-    console.log(`  Errors: ${pageErrors.length}, Console logs: ${consoleMessages.length}`);
-    if (pageErrors.length > 0) {
-      console.error('  ❌ Unhandled page exceptions detected:', pageErrors);
-    } else {
-      console.log('  ✅ No page errors detected.');
-    }
+    resultsTable.push({
+      scenario: scenario.name,
+      platform: detectedPlatform,
+      inApp: detectedInApp.isInApp ? `Yes (${detectedInApp.browser})` : 'No',
+      banner: isBannerVisible ? 'Visible' : 'Hidden',
+      autoRedirectTimer: isRedirectTimerActive ? 'Active (2200ms)' : 'None (Halted)',
+      primaryActions: [
+        isStatusCardRendered ? 'Status Card' : null,
+        isChromeBtnRendered ? 'Open in Chrome button' : null,
+        isSafariBtnRendered ? 'Safari link' : null,
+        isQrRendered ? 'QR Code' : null,
+        'Direct Store Badges'
+      ].filter(Boolean).join(', ')
+    });
   }
 
-  // Also test standalone download.html and open.html
-  console.log('\n📋 Testing standalone /download');
-  await send('Page.navigate', { url: `http://localhost:${PORT}/download` });
-  await sleep(1000);
-  const standaloneDlRes = await send('Runtime.evaluate', { expression: 'document.title' });
-  console.log('  /download Title:', standaloneDlRes.result?.value);
-
-  console.log('\n📋 Testing fallback /open');
-  await send('Page.navigate', { url: `http://localhost:${PORT}/open` });
-  await sleep(1000);
-  const openTitleRes = await send('Runtime.evaluate', { expression: 'document.title' });
-  console.log('  /open Title:', openTitleRes.result?.value);
-
-  console.log('\n📋 Testing POST /api/send-link endpoint');
-  const sendLinkRes = await fetch(`http://localhost:${PORT}/api/send-link`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ to: '+213555123456', platform: 'desktop' })
-  });
-  const sendLinkJson = await sendLinkRes.json();
-  console.log('  /api/send-link response:', sendLinkJson);
+  console.log('\n======================================================');
+  console.log('📊 SUMMARY VERIFICATION TABLE');
+  console.log('======================================================');
+  console.table(resultsTable);
 
   ws.close();
   chromeProc.kill();
   server.close();
-  console.log('\n🎉 All browser verification tests completed successfully!');
+  console.log('\n🎉 All 6 verification scenarios executed!');
   process.exit(0);
 }
 

@@ -7,7 +7,7 @@
  * =============================================================================
  */
 
-const CONFIG = {
+var CONFIG = {
   // App Identifiers & Web Domain
   APP_NAME: "Sahla",
   DOMAIN: "sahla-backend.vercel.app",
@@ -32,7 +32,9 @@ const CONFIG = {
 
   // Deep Link Route inside the App & Timeout Duration
   DEEP_LINK_PATH: "/open",
-  OPEN_TIMEOUT_MS: 3000,
+  OPEN_TIMEOUT_MS: 2200,
+  HOST: "sahla-backend.vercel.app", // TODO: Replace with custom production domain (e.g., get.sahla.dz or sahla-app.com)
+  ANDROID_SHA256: "35:5A:0E:B6:87:F5:F1:98:3C:59:0D:0A:86:52:83:5B:02:CD:AC:9C:22:A7:6D:5C:9C:BC:E4:51:DA:96:93:F4",
 
   // Branding & Assets
   BRAND: {

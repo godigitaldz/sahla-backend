@@ -1,18 +1,51 @@
 /**
  * =============================================================================
- * Smart Download Controller (Polished & Production-Ready)
+ * Smart Download Configuration & Controller
  * =============================================================================
+ * Single Source of Truth for App Identifiers, Deep Links, Fallbacks & Branding.
  * Handles device detection, deep link handshakes, in-app browser warnings,
  * client-side QR generation, store redirection, localization, and analytics.
  * Zero external dependencies.
  * =============================================================================
  */
 
+var CONFIG = Object.assign({
+  APP_NAME: "Sahla",
+  // HOST: Universal Links and App Links require a custom domain you control (e.g., get.sahla.dz or sahla-app.com).
+  // *.vercel.app is a shared platform host and cannot host Apple App Site Association without custom domain routing.
+  HOST: "sahla-backend.vercel.app", // TODO: Replace with custom production domain (e.g., get.sahla.dz or sahla-app.com)
+  IOS_APP_STORE_URL: "https://apps.apple.com/dz/app/sahla-algerie/id6834895657",
+  IOS_BUNDLE_ID: "com.sahla.sahlaalgerie",
+  IOS_TEAM_ID: "9P628XCQ94",
+  IOS_URI_SCHEME: "sahla://",
+  ANDROID_PLAY_STORE_URL: "https://play.google.com/store/apps/details?id=com.godigital.sahla",
+  ANDROID_PACKAGE: "com.godigital.sahla",
+  ANDROID_SHA256: "35:5A:0E:B6:87:F5:F1:98:3C:59:0D:0A:86:52:83:5B:02:CD:AC:9C:22:A7:6D:5C:9C:BC:E4:51:DA:96:93:F4",
+  OPEN_TIMEOUT_MS: 2200,
+  OPTIONAL_ANDROID_FALLBACKS: {
+    appGallery: "", // TODO: Add Huawei AppGallery URL if available
+    directApk: ""   // TODO: Add direct APK download URL if available
+  },
+  BRAND: {
+    primaryColor: "#FFC700",
+    primaryDarkColor: "#064E3B",
+    logoPath: "logo.webp",
+    appName: "Sahla",
+    tagline: "أفضل مأكولات ومطاعم بسكرة بين يديك مع توصيل فوري حتى باب منزلك."
+  }
+}, (typeof window !== "undefined" && window.CONFIG) || {});
+
+if (typeof window !== "undefined") {
+  window.CONFIG = CONFIG;
+}
+
+var ACTIVE_CONFIG = CONFIG;
+
 (function () {
   'use strict';
 
   // ---------------------------------------------------------------------------
-  // 1. Localization Strings (Arabic First, English & French Support)
+  // 1. Localization Strings (Arabic First, English & French Fallbacks)
   // ---------------------------------------------------------------------------
   const STRINGS = {
     ar: {
@@ -32,7 +65,7 @@
       fallbackTitle: 'لم يفتح التطبيق تلقائياً؟',
       fallbackDesc: 'اضغط «فتح تطبيق سهلة» إذا كان مثبتاً على هاتفك، أو حمّله مجاناً الآن:',
       openAppBtn: 'فتح تطبيق سهلة',
-      tryAgain: '↻ إعادة المحاولة',
+      tryAgain: '↻ حاول مرة أخرى',
       downloadOnAppStoreSub: 'تحميل من',
       appStore: 'App Store',
       getItOnPlayStoreSub: 'احصل عليه من',
@@ -44,11 +77,15 @@
       sendBtn: 'إرسال',
       copyBtn: 'نسخ الرابط',
       copiedToast: 'تم نسخ الرابط بنجاح! ✓',
-      inAppNotice: 'هل تتصفح من داخل تطبيق تواصل؟',
-      inAppNoticeDesc: 'المتصفح الداخلي يحجب فتح التطبيقات وتنزيلها. يُرجى فتح الرابط في متصفح جهازك:',
-      inAppStepIos: 'اضغط على ⋯ أو أيقونة المشاركة، ثم اختر "فتح في Safari"',
-      inAppStepAndroid: 'اضغط على ⋮ ثم اختر "فتح في Chrome / المتصفح"',
-      inAppCopyLink: 'نسخ رابط التحميل'
+      // In-App Browser Copy
+      inAppNoticeInstagram: 'المتصفح الداخلي يحجب فتح وتثبيت التطبيقات. اضغط على ⋯ في أعلى الشاشة، ثم اختر «فتح في Safari» (Open in Safari).',
+      inAppNoticeSnapchat: 'المتصفح الداخلي يحجب فتح وتثبيت التطبيقات. اضغط على أيقونة المشاركة/المتصفح ⎋ في الشريط السفلي للشاشة لفتح الرابط في Safari.',
+      inAppNoticeIosGeneric: (b) => `المتصفح الداخلي لتطبيق ${b} يحجب فتح وتثبيت التطبيقات. اضغط على ⋯ أو أيقونة المشاركة، ثم اختر «فتح في Safari».`,
+      inAppNoticeAndroid: (b) => `المتصفح الداخلي لتطبيق ${b} يحجب تثبيت التطبيقات. اضغط على الزر أدناه أو قائمة ⋮ لفتح الرابط في متصفح Chrome.`,
+      openInChromeBtn: 'افتح في Chrome',
+      openInSafariBtn: 'فتح في Safari (اختياري)',
+      copyDownloadLink: 'نسخ رابط التحميل',
+      storePromptInApp: 'أو حمّل التطبيق مباشرة من المتجر:'
     },
     en: {
       dir: 'ltr',
@@ -79,11 +116,15 @@
       sendBtn: 'Send',
       copyBtn: 'Copy Link',
       copiedToast: 'Link copied to clipboard! ✓',
-      inAppNotice: 'Browsing inside a social media app?',
-      inAppNoticeDesc: 'In-app browsers block app store redirects. Please open in your browser:',
-      inAppStepIos: 'Tap ⋯ or Share, then select "Open in Safari"',
-      inAppStepAndroid: 'Tap ⋮ then select "Open in Chrome / Browser"',
-      inAppCopyLink: 'Copy Download Link'
+      // In-App Browser Copy
+      inAppNoticeInstagram: 'In-app browsers block app store redirects. Tap ⋯ at the top, then select "Open in Safari".',
+      inAppNoticeSnapchat: 'In-app browsers block app store redirects. Tap the share/browser icon ⎋ in the bottom toolbar to open in Safari.',
+      inAppNoticeIosGeneric: (b) => `The in-app browser for ${b} blocks store redirects. Tap ⋯ or Share, then select "Open in Safari".`,
+      inAppNoticeAndroid: (b) => `The in-app browser blocks app installation. Tap the button below or ⋮ menu to open in Chrome.`,
+      openInChromeBtn: 'Open in Chrome',
+      openInSafariBtn: 'Open in Safari (optional)',
+      copyDownloadLink: 'Copy Download Link',
+      storePromptInApp: 'Or download directly from the store:'
     },
     fr: {
       dir: 'ltr',
@@ -114,11 +155,15 @@
       sendBtn: 'Envoyer',
       copyBtn: 'Copier le lien',
       copiedToast: 'Lien copié dans le presse-papiers ! ✓',
-      inAppNotice: 'Navigation depuis un réseau social ?',
-      inAppNoticeDesc: 'Les navigateurs intégrés bloquent les redirections. Ouvrez dans votre navigateur :',
-      inAppStepIos: 'Appuyez sur ⋯ ou Partager, puis sélectionnez « Ouvrir dans Safari »',
-      inAppStepAndroid: 'Appuyez sur ⋮ puis sélectionnez « Ouvrir dans Chrome »',
-      inAppCopyLink: 'Copier le lien'
+      // In-App Browser Copy
+      inAppNoticeInstagram: 'Le navigateur intégré bloque les redirections. Appuyez sur ⋯ en haut, puis sélectionnez « Ouvrir dans Safari ».',
+      inAppNoticeSnapchat: 'Le navigateur intégré bloque les redirections. Appuyez sur l’icône ⎋ dans la barre inférieure pour ouvrir dans Safari.',
+      inAppNoticeIosGeneric: (b) => `Le navigateur intégré de ${b} bloque les redirections. Appuyez sur ⋯ ou Partager, puis « Ouvrir dans Safari ».`,
+      inAppNoticeAndroid: (b) => `Le navigateur intégré bloque l’installation. Appuyez ci-dessous ou sur ⋮ pour ouvrir dans Chrome.`,
+      openInChromeBtn: 'Ouvrir dans Chrome',
+      openInSafariBtn: 'Ouvrir dans Safari (optionnel)',
+      copyDownloadLink: 'Copier le lien',
+      storePromptInApp: 'Ou téléchargez directement depuis le store :'
     }
   };
 
@@ -550,13 +595,47 @@
   })();
 
   // ---------------------------------------------------------------------------
-  // 4. Bulletproof Platform & In-App Detection
+  // 4. Bulletproof In-App Browser & Platform Detection
   // ---------------------------------------------------------------------------
+  function detectInAppBrowser() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+
+    // Standard UA indicators across social networks
+    const isInstagram = /Instagram/i.test(ua);
+    const isSnapchat = /Snapchat/i.test(ua);
+    const isTikTok = /TikTok|musical_ly|Bytedance/i.test(ua);
+    const isFacebook = /FBAN|FBAV|FB_IAB/i.test(ua);
+    const isTwitter = /Twitter/i.test(ua);
+    const isThreads = /Barcelona/i.test(ua);
+    const isPinterest = /Pinterest/i.test(ua);
+    const isLinkedIn = /LinkedInApp/i.test(ua);
+    const isLine = /Line\//i.test(ua);
+    const isWeChat = /MicroMessenger/i.test(ua);
+    const isGeneric = /(iphone|ipod|ipad).*applewebkit(?!.*safari)/i.test(ua) || /; wv\)/i.test(ua);
+
+    const isInApp = isInstagram || isSnapchat || isTikTok || isFacebook || isTwitter || isThreads || isPinterest || isLinkedIn || isLine || isWeChat || isGeneric;
+
+    let name = null;
+    if (isInstagram) name = 'Instagram';
+    else if (isSnapchat) name = 'Snapchat';
+    else if (isTikTok) name = 'TikTok';
+    else if (isFacebook) name = 'Facebook';
+    else if (isTwitter) name = 'Twitter';
+    else if (isThreads) name = 'Threads';
+    else if (isPinterest) name = 'Pinterest';
+    else if (isLinkedIn) name = 'LinkedIn';
+    else if (isLine) name = 'Line';
+    else if (isWeChat) name = 'WeChat';
+    else if (isGeneric) name = 'InAppBrowser';
+
+    return { isInApp, browser: name };
+  }
+
   function detectPlatform() {
     const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
     const platform = (navigator.platform || '').toLowerCase();
 
-    // 1. Client Hints API (Modern Chrome/Edge/Opera on Android & Desktop)
+    // 1. Client Hints API (Modern Chrome/Edge on Android & Desktop)
     if (navigator.userAgentData && navigator.userAgentData.platform) {
       const uad = navigator.userAgentData.platform.toLowerCase();
       if (/android/i.test(uad)) return 'android';
@@ -595,30 +674,6 @@
     return 'unknown';
   }
 
-  function detectInAppBrowser() {
-    const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
-
-    const inAppRules = [
-      { name: 'Instagram', regex: /instagram/i },
-      { name: 'Facebook', regex: /fban|fbav|fb_iab/i },
-      { name: 'TikTok', regex: /musical_ly|bytedance|tiktok/i },
-      { name: 'Snapchat', regex: /snapchat/i },
-      { name: 'LinkedIn', regex: /linkedinapp/i },
-      { name: 'WhatsApp', regex: /whatsapp/i },
-      { name: 'Line', regex: /line\//i },
-      { name: 'WeChat', regex: /micromessenger/i },
-      { name: 'GenericWebView', regex: /(iphone|ipod|ipad).*applewebkit(?!.*safari)/i }
-    ];
-
-    for (const rule of inAppRules) {
-      if (rule.regex.test(ua)) {
-        return { isInApp: true, browser: rule.name };
-      }
-    }
-
-    return { isInApp: false, browser: null };
-  }
-
   // ---------------------------------------------------------------------------
   // 5. Query Parameter & Deep Link Builders
   // ---------------------------------------------------------------------------
@@ -638,22 +693,25 @@
   function buildDeepLinkUrl(config, params) {
     const queryString = params.toString();
     const cleanPath = (config.DEEP_LINK_PATH || '/open').replace(/^\//, '');
+    const host = config.HOST || config.DOMAIN || window.location.hostname || "sahla-backend.vercel.app";
 
-    const universalLink = `https://${config.DOMAIN}/${cleanPath}${queryString ? '?' + queryString : ''}`;
+    const universalLink = `https://${host}/${cleanPath}${queryString ? '?' + queryString : ''}`;
     const uriScheme = `${config.IOS_URI_SCHEME}${cleanPath}${queryString ? '?' + queryString : ''}`;
 
-    return { universalLink, uriScheme, cleanPath, queryString };
+    return { universalLink, uriScheme, cleanPath, queryString, host };
   }
 
   function buildStoreUrls(config, params) {
     const queryString = params.toString();
 
+    // Android Google Play Store URL with referrer parameter
     let androidUrl = config.ANDROID_PLAY_STORE_URL;
     if (queryString) {
       const separator = androidUrl.includes('?') ? '&' : '?';
       androidUrl += `${separator}referrer=${encodeURIComponent(queryString)}`;
     }
 
+    // iOS Apple App Store URL with campaign & provider tokens
     let iosUrl = config.IOS_APP_STORE_URL;
     if (queryString) {
       const separator = iosUrl.includes('?') ? '&' : '?';
@@ -687,6 +745,7 @@
   }
 
   async function copyToClipboard(text, successMsg) {
+    track('copy_link_click', { url: text });
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text);
@@ -712,28 +771,10 @@
   // ---------------------------------------------------------------------------
   class SmartDownloadApp {
     constructor() {
-      this.config = window.CONFIG || {
-        APP_NAME: "Sahla",
-        DOMAIN: window.location.hostname || "sahla-backend.vercel.app",
-        IOS_APP_STORE_URL: "https://apps.apple.com/dz/app/sahla-algerie/id6834895657",
-        IOS_URI_SCHEME: "sahla://",
-        ANDROID_PLAY_STORE_URL: "https://play.google.com/store/apps/details?id=com.godigital.sahla",
-        ANDROID_PACKAGE: "com.godigital.sahla",
-        ANDROID_URI_SCHEME: "sahla://",
-        DEEP_LINK_PATH: "/open",
-        OPEN_TIMEOUT_MS: 3000,
-        OPTIONAL_ANDROID_FALLBACKS: {},
-        BRAND: {
-          primaryColor: "#FFC700",
-          logoPath: "logo.webp",
-          appName: "Sahla"
-        }
-      };
-
+      this.config = ACTIVE_CONFIG;
       this.redirectTimer = null;
       this.appOpened = false;
       this.cleanedUp = false;
-      this.hasBeganFlow = false;
     }
 
     init() {
@@ -768,11 +809,11 @@
           return true;
         }
 
-        // Check if user redirected to store in the last 12 seconds
+        // Check if user returned via Back button within 15 seconds
         const lastRedirect = sessionStorage.getItem('sd_redirect_ts');
         if (lastRedirect) {
           const elapsed = Date.now() - Number(lastRedirect);
-          if (elapsed < 12000) {
+          if (elapsed < 15000) {
             return true;
           }
         }
@@ -787,14 +828,13 @@
       const inApp = detectInAppBrowser();
       const params = getPreservedParams();
       const { androidUrl, iosUrl } = buildStoreUrls(this.config, params);
-      const { universalLink, uriScheme, cleanPath } = buildDeepLinkUrl(this.config, params);
-
-      // Clean scheme intent for Android
-      const cleanScheme = (this.config.ANDROID_URI_SCHEME || 'sahla://').replace('://', '');
-      const intentUrl = `intent://${cleanPath}#Intent;scheme=${cleanScheme};package=${this.config.ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(androidUrl)};end`;
+      const { universalLink, uriScheme, cleanPath, host } = buildDeepLinkUrl(this.config, params);
 
       track('download_page_view', { platform, isInApp: inApp.isInApp, browser: inApp.browser });
       track('platform_detected', { platform });
+      if (inApp.isInApp) {
+        track('inapp_browser_detected', { browser: inApp.browser, platform });
+      }
 
       const section = document.getElementById('download');
       if (!section) return;
@@ -802,75 +842,126 @@
       document.documentElement.dir = t.dir;
       document.documentElement.lang = lang;
 
-      const fullDownloadUrl = `https://${this.config.DOMAIN}/#download${params.toString() ? '?' + params.toString() : ''}`;
+      const queryString = params.toString() ? '?' + params.toString() : '';
+      const fullDownloadUrl = `https://${host}/#download${queryString}`;
+      const currentUrl = window.location.href;
 
-      // In-app social browser alert HTML
+      // -----------------------------------------------------------------------
+      // MODE A: IN-APP BROWSER (Instagram, Snapchat, TikTok, Facebook, etc.)
+      // -----------------------------------------------------------------------
       let inAppBannerHtml = '';
+      let statusCardHtml = '';
+      let manualOpenBtnHtml = '';
+
       if (inApp.isInApp) {
-        const stepInstruction = platform === 'ios' ? t.inAppStepIos : t.inAppStepAndroid;
+        // Platform-specific instructions for in-app browsers
+        let instructions = '';
+        if (platform === 'ios') {
+          if (inApp.browser === 'Instagram') {
+            instructions = t.inAppNoticeInstagram;
+          } else if (inApp.browser === 'Snapchat') {
+            instructions = t.inAppNoticeSnapchat;
+          } else {
+            instructions = t.inAppNoticeIosGeneric(inApp.browser || 'التطبيق');
+          }
+        } else {
+          instructions = t.inAppNoticeAndroid(inApp.browser || 'التطبيق');
+        }
+
+        // Action buttons inside in-app banner
+        let inAppActionsHtml = '';
+        if (platform === 'android') {
+          // Android Chrome intent to break out of in-app WebView
+          const chromeIntentUrl = `intent://${host}/#download${queryString}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(currentUrl)};end`;
+          inAppActionsHtml = `
+            <a href="${chromeIntentUrl}" class="sd-inapp-btn sd-btn-chrome" target="_blank" rel="noopener">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+              <span>${t.openInChromeBtn}</span>
+            </a>
+            <button class="sd-inapp-btn" id="sdInAppCopyBtn" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>${t.copyDownloadLink}</span>
+            </button>
+          `;
+        } else {
+          // iOS Safari secondary protocol attempt (tap only) + copy button
+          const safariProtocolUrl = `x-safari-https://${host}/#download${queryString}`;
+          inAppActionsHtml = `
+            <a href="${safariProtocolUrl}" class="sd-inapp-btn sd-btn-safari" target="_blank" rel="noopener">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+              <span>${t.openInSafariBtn}</span>
+            </a>
+            <button class="sd-inapp-btn" id="sdInAppCopyBtn" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>${t.copyDownloadLink}</span>
+            </button>
+          `;
+        }
+
         inAppBannerHtml = `
           <div class="sd-inapp-banner is-visible" id="sdInAppBanner" role="alert">
             <div class="sd-inapp-header">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span>${t.inAppNotice} (${inApp.browser})</span>
+              <span>هل تتصفح من داخل تطبيق ${inApp.browser || ''}؟</span>
             </div>
-            <p class="sd-inapp-desc">${t.inAppNoticeDesc} <strong>${stepInstruction}</strong></p>
+            <p class="sd-inapp-desc">${instructions}</p>
             <div class="sd-inapp-actions">
-              <button class="sd-inapp-btn" id="sdInAppCopyBtn" type="button">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                ${t.inAppCopyLink}
-              </button>
+              ${inAppActionsHtml}
             </div>
           </div>
         `;
-      }
 
-      // Mobile Status Card HTML
-      const isMobile = platform === 'ios' || platform === 'android';
-      const isBack = this.isBackNavigation();
+        // In in-app mode, no status card and no sahla:// scheme button
+        statusCardHtml = '';
+        manualOpenBtnHtml = '';
+      } else {
+        // ---------------------------------------------------------------------
+        // MODE B: NORMAL MOBILE BROWSERS (Safari, Chrome, etc.)
+        // ---------------------------------------------------------------------
+        const isMobile = platform === 'ios' || platform === 'android';
+        const isAttempted = sessionStorage.getItem('dl_attempted') === 'true' || this.isBackNavigation();
 
-      const statusCardHtml = isMobile ? `
-        <div class="sd-status-card" id="sdStatusCard" aria-live="polite">
-          ${isBack ? `
-            <h2 class="sd-status-title" id="sdStatusTitle">${t.fallbackTitle}</h2>
-            <p class="sd-status-desc" id="sdStatusDesc">${t.fallbackDesc}</p>
-            <div class="sd-retry-row">
-              <button class="sd-btn-retry" id="sdRetryBtn" type="button">${t.tryAgain}</button>
+        if (isMobile) {
+          statusCardHtml = `
+            <div class="sd-status-card" id="sdStatusCard" aria-live="polite">
+              ${isAttempted ? `
+                <h2 class="sd-status-title" id="sdStatusTitle">${t.fallbackTitle}</h2>
+                <p class="sd-status-desc" id="sdStatusDesc">${t.fallbackDesc}</p>
+                <div class="sd-retry-row">
+                  <button class="sd-btn-retry" id="sdRetryBtn" type="button">${t.tryAgain}</button>
+                </div>
+              ` : `
+                <div class="sd-spinner-wrap" id="sdSpinnerWrap">
+                  <div class="sd-spinner"></div>
+                  <div class="sd-spinner-inner"></div>
+                </div>
+                <h2 class="sd-status-title" id="sdStatusTitle">${t.openingTitle}</h2>
+                <p class="sd-status-desc" id="sdStatusDesc">${t.openingDesc}</p>
+                <div class="sd-prompt-tip" id="sdPromptTip">
+                  <span>${t.promptTip}</span>
+                </div>
+              `}
             </div>
-          ` : `
-            <div class="sd-spinner-wrap" id="sdSpinnerWrap">
-              <div class="sd-spinner"></div>
-              <div class="sd-spinner-inner"></div>
-            </div>
-            <h2 class="sd-status-title" id="sdStatusTitle">${t.openingTitle}</h2>
-            <p class="sd-status-desc" id="sdStatusDesc">${t.openingDesc}</p>
-            <div class="sd-prompt-tip" id="sdPromptTip">
-              <span>${t.promptTip}</span>
-            </div>
-          `}
-        </div>
-      ` : '';
+          `;
 
-      // Optional Android Fallbacks HTML
-      let fallbacksHtml = '';
-      if (platform === 'android' && this.config.OPTIONAL_ANDROID_FALLBACKS) {
-        const { appGallery, directApk } = this.config.OPTIONAL_ANDROID_FALLBACKS;
-        if (appGallery || directApk) {
-          fallbacksHtml = `
-            <div class="sd-fallbacks-row">
-              ${appGallery ? `<a href="${appGallery}" class="sd-btn-fallback" target="_blank" rel="noopener noreferrer">Huawei AppGallery</a>` : ''}
-              ${directApk ? `<a href="${directApk}" class="sd-btn-fallback" download>Download APK</a>` : ''}
-            </div>
+          // Manual Open App Button
+          const cleanScheme = (this.config.ANDROID_URI_SCHEME || 'sahla://').replace('://', '');
+          const intentUrl = `intent://${cleanPath}#Intent;scheme=${cleanScheme};package=${this.config.ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(androidUrl)};end`;
+          manualOpenBtnHtml = `
+            <a href="${platform === 'ios' ? uriScheme : intentUrl}" class="sd-btn-open-app" id="sdManualOpenBtn" style="display:flex;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              <span>${t.openAppBtn}</span>
+            </a>
           `;
         }
       }
 
-      // Generate client-side QR SVG
-      const qrSvg = QRGenerator.generateSVG(fullDownloadUrl, 5, 2);
-
-      // Order of Store Badges (Mobile platform priority)
+      // Real Store Badges (Direct <a href> buttons honoring target="_blank" rel="noopener")
       const appStoreBadgeHtml = `
-        <a href="${iosUrl}" class="sd-store-badge" id="sdAppStoreBtn" target="_blank" rel="noopener noreferrer" aria-label="Download on Apple App Store">
+        <a href="${iosUrl}" class="sd-store-badge" id="sdAppStoreBtn" target="_blank" rel="noopener" aria-label="Download on Apple App Store">
           <svg class="sd-badge-icon" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.61 1.34-.55.63-1.03 1.68-.9 2.7.99.08 2.02-.44 2.59-1.19z"/></svg>
           <div class="sd-badge-text-wrap">
             <span class="sd-badge-sub">${t.downloadOnAppStoreSub}</span>
@@ -880,7 +971,7 @@
       `;
 
       const playStoreBadgeHtml = `
-        <a href="${androidUrl}" class="sd-store-badge" id="sdPlayStoreBtn" target="_blank" rel="noopener noreferrer" aria-label="Get it on Google Play">
+        <a href="${androidUrl}" class="sd-store-badge" id="sdPlayStoreBtn" target="_blank" rel="noopener" aria-label="Get it on Google Play">
           <svg class="sd-badge-icon" viewBox="0 0 24 24"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/></svg>
           <div class="sd-badge-text-wrap">
             <span class="sd-badge-sub">${t.getItOnPlayStoreSub}</span>
@@ -889,11 +980,29 @@
         </a>
       `;
 
-      const badgesGroupHtml = platform === 'ios'
-        ? `${appStoreBadgeHtml}${playStoreBadgeHtml}`
-        : `${playStoreBadgeHtml}${appStoreBadgeHtml}`;
+      // Match platform priority: iOS users see App Store first, Android users see Google Play first
+      const badgesGroupHtml = (platform === 'android')
+        ? `${playStoreBadgeHtml}${appStoreBadgeHtml}`
+        : `${appStoreBadgeHtml}${playStoreBadgeHtml}`;
 
-      // Assemble full modern DOM
+      // Optional Android Fallbacks
+      let fallbacksHtml = '';
+      if (platform === 'android' && this.config.OPTIONAL_ANDROID_FALLBACKS) {
+        const { appGallery, directApk } = this.config.OPTIONAL_ANDROID_FALLBACKS;
+        if (appGallery || directApk) {
+          fallbacksHtml = `
+            <div class="sd-fallbacks-row">
+              ${appGallery ? `<a href="${appGallery}" class="sd-btn-fallback" target="_blank" rel="noopener">Huawei AppGallery</a>` : ''}
+              ${directApk ? `<a href="${directApk}" class="sd-btn-fallback" download>Download APK</a>` : ''}
+            </div>
+          `;
+        }
+      }
+
+      // Generate client-side QR SVG
+      const qrSvg = QRGenerator.generateSVG(fullDownloadUrl, 5, 2);
+
+      // Assemble full DOM
       section.innerHTML = `
         <div class="sd-container">
           <header class="sd-topbar">
@@ -927,19 +1036,16 @@
               <h1 class="sd-title">${t.title}</h1>
               <p class="sd-tagline">${t.tagline}</p>
 
-              <!-- Live Mobile Status Card -->
+              <!-- Live Mobile Status Card (Normal Browser Only) -->
               ${statusCardHtml}
 
-              <!-- Primary "Open App" Button -->
-              <a href="${platform === 'ios' ? uriScheme : (platform === 'android' ? intentUrl : uriScheme)}" class="sd-btn-open-app" id="sdManualOpenBtn" style="${isMobile ? 'display:flex;' : 'display:none;'}">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
-                  <line x1="12" y1="18" x2="12.01" y2="18"/>
-                </svg>
-                <span>${t.openAppBtn}</span>
-              </a>
+              <!-- Primary "Open App" Button (Normal Browser Only) -->
+              ${manualOpenBtnHtml}
 
-              <!-- App Store & Google Play Badges -->
+              <!-- In-App Store Prompt if applicable -->
+              ${inApp.isInApp ? `<p class="sd-store-prompt">${t.storePromptInApp}</p>` : ''}
+
+              <!-- Direct Store Badges Group -->
               <div class="sd-badges-group">
                 ${badgesGroupHtml}
               </div>
@@ -982,6 +1088,7 @@
     }
 
     bindEvents(fullDownloadUrl, t) {
+      // In-app copy button
       const inAppCopyBtn = document.getElementById('sdInAppCopyBtn');
       if (inAppCopyBtn) {
         inAppCopyBtn.addEventListener('click', () => {
@@ -990,6 +1097,7 @@
         });
       }
 
+      // Desktop copy button
       const copyBtn = document.getElementById('sdCopyBtn');
       if (copyBtn) {
         copyBtn.addEventListener('click', () => {
@@ -998,6 +1106,7 @@
         });
       }
 
+      // Store buttons tracking
       const appStoreBtn = document.getElementById('sdAppStoreBtn');
       if (appStoreBtn) {
         appStoreBtn.addEventListener('click', () => {
@@ -1012,6 +1121,7 @@
         });
       }
 
+      // Manual open app button tracking
       const manualOpenBtn = document.getElementById('sdManualOpenBtn');
       if (manualOpenBtn) {
         manualOpenBtn.addEventListener('click', () => {
@@ -1019,6 +1129,7 @@
         });
       }
 
+      // Retry auto-open button
       const retryBtn = document.getElementById('sdRetryBtn');
       if (retryBtn) {
         retryBtn.addEventListener('click', () => {
@@ -1030,6 +1141,7 @@
         });
       }
 
+      // Desktop Send Link to phone form
       const sendForm = document.getElementById('sdSendForm');
       if (sendForm) {
         sendForm.addEventListener('submit', async (e) => {
@@ -1084,21 +1196,28 @@
       const { androidUrl, iosUrl } = buildStoreUrls(this.config, params);
       const { universalLink, uriScheme, cleanPath } = buildDeepLinkUrl(this.config, params);
 
-      // Desktop & Unknown devices show QR and store buttons with zero auto-redirection
-      if (platform !== 'ios' && platform !== 'android') return;
-
-      // In-app browsers block automatic intents and store redirects
+      // -----------------------------------------------------------------------
+      // RULE A: IN-APP BROWSER MODE
+      // ABSOLUTELY NO AUTO-REDIRECT, NO SCHEME ATTEMPTS, NO TIMEOUTS.
+      // -----------------------------------------------------------------------
       if (inApp.isInApp) {
-        this.updateStatus({
-          title: t.fallbackTitle,
-          desc: t.inAppNoticeDesc,
-          isOpening: false
-        });
+        track('inapp_browser_detected', { browser: inApp.browser, platform });
+        return; // HALT IMMEDIATELY. Real tap buttons are already rendered.
+      }
+
+      // -----------------------------------------------------------------------
+      // RULE C: DESKTOP / UNKNOWN
+      // ABSOLUTELY NO AUTO-REDIRECT.
+      // -----------------------------------------------------------------------
+      if (platform !== 'ios' && platform !== 'android') {
         return;
       }
 
-      // Check if user navigated back from store (prevent infinite loop)
-      if (!force && this.isBackNavigation()) {
+      // -----------------------------------------------------------------------
+      // RULE B: NORMAL MOBILE BROWSERS (Safari, Chrome, etc.)
+      // -----------------------------------------------------------------------
+      // Loop Guard: if already attempted in this session or user hit Back from store
+      if (!force && (sessionStorage.getItem('dl_attempted') === 'true' || this.isBackNavigation())) {
         this.updateStatus({
           title: t.fallbackTitle,
           desc: t.fallbackDesc,
@@ -1116,7 +1235,7 @@
       const cleanScheme = (this.config.ANDROID_URI_SCHEME || 'sahla://').replace('://', '');
       const intentUrl = `intent://${cleanPath}#Intent;scheme=${cleanScheme};package=${this.config.ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(androidUrl)};end`;
 
-      const timeoutMs = Number(this.config.OPEN_TIMEOUT_MS) || 3000;
+      const timeoutMs = Number(this.config.OPEN_TIMEOUT_MS) || 2200;
 
       // Lifecycle detection: app opened when page is hidden or blurred
       const onAppOpenDetected = () => {
@@ -1153,15 +1272,15 @@
       };
 
       // Auto-Detect Store Redirect Timer:
-      // If the app is not installed (or not opened within timeoutMs), redirect to store
+      // If the app is not installed (page stays visible after timeoutMs), redirect to store
       this.redirectTimer = setTimeout(() => {
         if (this.appOpened || document.hidden) return;
 
         this.cleanupListeners();
         track('store_redirect', { platform, target: storeUrl });
 
-        // Record timestamp so Back button doesn't trigger loop
         try {
+          sessionStorage.setItem('dl_attempted', 'true');
           sessionStorage.setItem('sd_redirect_ts', String(Date.now()));
         } catch (e) {}
 
@@ -1174,10 +1293,10 @@
 
         setTimeout(() => {
           window.location.replace(storeUrl);
-        }, 200);
+        }, 150);
       }, timeoutMs);
 
-      // Trigger native mobile handshake
+      // Trigger native handshake
       if (platform === 'ios') {
         window.location.href = uriScheme;
       } else if (platform === 'android') {
@@ -1207,6 +1326,7 @@
         const btn = document.getElementById('sdRetryBtn');
         if (btn) {
           btn.addEventListener('click', () => {
+            sessionStorage.removeItem('dl_attempted');
             sessionStorage.removeItem('sd_redirect_ts');
             this.render();
             this.startFlow(true);
@@ -1227,7 +1347,6 @@
 
   window.addEventListener('hashchange', onRouteChanged);
 
-  // Re-check when restored from bfcache
   window.addEventListener('pageshow', (e) => {
     if (e.persisted) {
       app.render();
