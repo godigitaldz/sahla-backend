@@ -260,3 +260,27 @@ Use this checklist to test the smart download flow on physical hardware:
 - [ ] **Verify:** QR code is clearly rendered in the sidebar.
 - [ ] Scan QR code with phone camera &rarr; opens mobile download flow with preserved parameters.
 - [ ] Fill in phone/email and submit &rarr; confirms sending link.
+
+## Download gateway funnel tracking
+
+The `/open`, `/download`, and `/#download` pages emit passive events to `POST /api/track/download`. The client assigns a random tab session ID in `sessionStorage` (with in-memory fallback), sends with `sendBeacon` or non-blocking `fetch(..., { keepalive: true })`, and never sends a name, phone, email, raw IP, or raw user-agent. The server uses the request IP only transiently for its 120-events/minute in-memory rate limit and reads the user-agent only to flag bots; it stores neither value. No cookie, fingerprint, or DNT exception is used; this project did not previously honor Do Not Track for this gateway.
+
+Events are `page_view`, `platform_detected`, `inapp_detected`, `app_open_attempt`, `app_opened_likely`, `store_redirect`, `store_tap`, `escape_tap`, `copy_link`, and `retry_tap`. Event props are allowlisted. Bot events are marked and excluded from stats by default. Page views are unique per session ID.
+
+Funnel definitions used by the dashboard:
+
+- **Entered:** unique sessions with `page_view`.
+- **Reached store:** unique sessions with `store_redirect` or `store_tap`. This means the gateway redirected to a store or a store link was tapped; it does **not** mean the app was installed.
+- **App open attempt / likely opened:** unique sessions with `app_open_attempt` / `app_opened_likely`. The latter is a visibility/page-hide heuristic, not confirmation from the app.
+- **Conversion:** reached store ÷ entered. The dashboard also shows likely-opened ÷ entered.
+
+Web pages cannot measure installs or confirm a real app launch. **TODO_STORE_CAMPAIGN_ATTRIBUTION:** later connect App Store campaign `ct=` and Google Play `referrer=` reporting to estimate store outcomes. The current `TRACK_ENDPOINT` is configured in `public/config.js` and defaults to `/api/track/download`. Server DB access uses existing `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; no new secret or `TRACK_SALT` is required because user-agent hashes are not collected (`ua_hash` remains null).
+
+Apply `supabase/migrations/20261122120000_download_funnel_tracking.sql` in the Supabase SQL editor or through the project’s migration workflow before enabling production collection. The table has RLS enabled with no public policies; only server-side `service_role` access is granted. Suggested retention is 180 days; run this periodically if that policy is appropriate:
+
+```sql
+DELETE FROM public.download_events
+WHERE created_at < now() - interval '180 days';
+```
+
+Run the headless funnel and redirect-isolation checks with `npm run test:download-tracking`; backend route checks are in `npm run test:tracking-api`. After applying the migration, the seeded SQL aggregate check is `scripts/test-download-tracking-stats.sql` (run it in the Supabase SQL editor; it rolls back its fixtures). Generate a seeded dashboard screenshot with `npm run screenshot:download-funnel`. Headless browser results are simulated and do not replace physical-device testing.

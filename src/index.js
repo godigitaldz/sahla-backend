@@ -16,6 +16,7 @@ import ordersRouter from './routes/orders.js';
 import promoCodesRouter from './routes/promoCodes.js';
 import restaurantsRouter from './routes/restaurants.js';
 import performanceDashboardRouter from './routes/performanceDashboard.js';
+import downloadTrackingRouter from './routes/downloadTracking.js';
 import publicConfigRouter from './routes/publicConfig.js';
 import lifecycleWebhookRoutes from './internal/lifecycleWebhook.routes.js';
 import {
@@ -40,6 +41,10 @@ app.use(cors({
   origin: config.cors.allowedOrigins,
   credentials: true,
 }));
+
+// Keep the public beacon endpoint ahead of the shared parser and API limiter so
+// its payload can be capped at 4 KB and invalid events can always end quietly.
+app.use('/api/track', downloadTrackingRouter);
 
 app.use(express.json({
   limit: '10mb',

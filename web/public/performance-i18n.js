@@ -38,6 +38,8 @@ const SAHLA_PERF_I18N = {
     tab_partner_requests: 'طلبات الانضمام',
     tab_restaurant_tables: 'طاولات المطاعم',
     tab_tasks: 'المهام (إفريلي)',
+    df_tab: 'قمع التحميل', df_range: 'الفترة', df_today: 'اليوم', df_7d: 'آخر 7 أيام', df_30d: 'آخر 30 يوماً', df_custom: 'مخصص', df_from: 'من', df_to: 'إلى',
+    df_entered: 'دخلوا الصفحة', df_store: 'تم تحويلهم للمتجر', df_attempts: 'محاولات فتح التطبيق', df_conversion: 'نسبة التحويل', df_steps: 'مسار التحويل', df_likely: 'فتح التطبيق على الأرجح', df_device: 'حسب الجهاز', df_inapp: 'حسب المتصفح الداخلي', df_source: 'حسب المصدر والحملة', df_daily: 'الاتجاه اليومي', df_route: 'حسب المسار', df_category: 'الفئة', df_sessions: 'الجلسات', df_loading: 'جارٍ تحميل الإحصاءات…', df_empty: 'لا توجد بيانات لهذه الفترة.', df_error: 'تعذر تحميل إحصاءات التحميل. تحقق من الاتصال وحاول مجدداً.', df_note: 'التحويل للمتجر لا يعني التثبيت. لا يمكن قياس التثبيت أو فتح التطبيق الفعلي من صفحة الويب وحدها.', df_entered_step: 'دخلوا الصفحة', df_reached_step: 'وصلوا إلى المتجر', df_attempt_step: 'حاولوا فتح التطبيق',
 
     // Orders + Alerts Sections
     sec_pending_and_new: 'الطلبات المعلقة والجديدة (مع تنبيهات المهلة)',
@@ -444,6 +446,8 @@ const SAHLA_PERF_I18N = {
     tab_partner_requests: 'Demandes partenaires',
     tab_restaurant_tables: 'Tables restaurant',
     tab_tasks: 'Tâches (Ifrili)',
+    df_tab: 'Entonnoir de téléchargement', df_range: 'Période', df_today: "Aujourd’hui", df_7d: '7 derniers jours', df_30d: '30 derniers jours', df_custom: 'Personnalisée', df_from: 'Du', df_to: 'Au',
+    df_entered: 'Visites de la page', df_store: 'Redirigés vers le store', df_attempts: "Tentatives d’ouverture de l’application", df_conversion: 'Taux de conversion', df_steps: 'Parcours de conversion', df_likely: 'Ouverture probable de l’application', df_device: 'Par appareil', df_inapp: 'Par navigateur intégré', df_source: 'Par source et campagne', df_daily: 'Tendance quotidienne', df_route: 'Par parcours', df_category: 'Catégorie', df_sessions: 'Sessions', df_loading: 'Chargement des statistiques…', df_empty: 'Aucune donnée pour cette période.', df_error: 'Impossible de charger les statistiques. Vérifiez la connexion puis réessayez.', df_note: "Une redirection vers le store ne signifie pas une installation. Le site seul ne permet pas de mesurer les installations ni les ouvertures réelles de l’application.", df_entered_step: 'Visites', df_reached_step: 'Arrivées au store', df_attempt_step: "Tentatives d’ouverture",
 
     // Orders + Alerts Sections
     sec_pending_and_new: 'Commandes en attente et nouvelles (alertes de délai)',
@@ -850,6 +854,8 @@ const SAHLA_PERF_I18N = {
     tab_partner_requests: 'Sahla Partner Requests',
     tab_restaurant_tables: 'Restaurant tables',
     tab_tasks: 'Tasks',
+    df_tab: 'Download funnel', df_range: 'Date range', df_today: 'Today', df_7d: 'Last 7 days', df_30d: 'Last 30 days', df_custom: 'Custom', df_from: 'From', df_to: 'To',
+    df_entered: 'Entered page', df_store: 'Reached store', df_attempts: 'App open attempts', df_conversion: 'Conversion rate', df_steps: 'Funnel', df_likely: 'Likely app opened', df_device: 'By device', df_inapp: 'By in-app browser', df_source: 'By source and campaign', df_daily: 'Daily trend', df_route: 'By route', df_category: 'Category', df_sessions: 'Sessions', df_loading: 'Loading statistics…', df_empty: 'No data for this period.', df_error: 'Could not load download statistics. Check your connection and try again.', df_note: 'Reaching the store does not mean an install. Installs and actual app opens cannot be measured from the web page alone.', df_entered_step: 'Entered', df_reached_step: 'Reached store', df_attempt_step: 'App open attempts',
 
     // Orders + Alerts Sections
     sec_pending_and_new: 'Pending & new orders (with threshold alerts)',

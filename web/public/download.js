@@ -105,6 +105,94 @@ if (typeof window !== "undefined") {
     }
   };
 
+  let fallbackTrackingSessionId = '';
+  const trackingOnceInMemory = new Set();
+
+  function getTrackingSessionId() {
+    try {
+      const existing = safeSession.get('sd_download_tracking_session');
+      if (existing) return existing;
+    } catch (_) {}
+    if (fallbackTrackingSessionId) return fallbackTrackingSessionId;
+    try {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        fallbackTrackingSessionId = window.crypto.randomUUID();
+      }
+    } catch (_) {}
+    if (!fallbackTrackingSessionId) {
+      fallbackTrackingSessionId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+    }
+    try { safeSession.set('sd_download_tracking_session', fallbackTrackingSessionId); } catch (_) {}
+    return fallbackTrackingSessionId;
+  }
+
+  function capTrackingValue(value, max = 120) {
+    return typeof value === 'string' ? value.trim().slice(0, max) : '';
+  }
+
+  function sendDownloadTracking(event, props = {}) {
+    try {
+      if (document.visibilityState === 'prerender') return;
+      const sessionId = getTrackingSessionId();
+      if (['page_view', 'platform_detected', 'inapp_detected'].includes(event)) {
+        const marker = `sd_download_${event}_sent`;
+        try {
+          if (safeSession.get(marker) === sessionId) return;
+          safeSession.set(marker, sessionId);
+          if (safeSession.get(marker) !== sessionId) {
+            if (trackingOnceInMemory.has(event)) return;
+            trackingOnceInMemory.add(event);
+          }
+        } catch (_) {
+          if (trackingOnceInMemory.has(event)) return;
+          trackingOnceInMemory.add(event);
+        }
+      }
+      const query = new URLSearchParams(window.location.search || '');
+      const allowedProps = {};
+      if (props.trigger === 'auto' || props.trigger === 'tap') allowedProps.trigger = props.trigger;
+      if (props.store === 'appstore' || props.store === 'playstore') allowedProps.store = props.store;
+      if (props.target === 'Safari' || props.target === 'Chrome') allowedProps.target = props.target;
+      const buildVersion = document.querySelector('meta[name="build"]')?.getAttribute('content') || '';
+      const payload = {
+        event,
+        sessionId: capTrackingValue(sessionId, 80),
+        platform: ['ios', 'android', 'desktop', 'unknown'].includes(props.platform) ? props.platform : 'unknown',
+        inApp: ['Instagram', 'Snapchat', 'TikTok', 'Facebook', 'Messenger', 'Other'].includes(props.inApp)
+          ? props.inApp : 'none',
+        route: capTrackingValue(`${window.location.pathname || '/'}${window.location.hash === '#download' ? '#download' : ''}`, 160) || '/',
+        source: {
+          utm_source: capTrackingValue(query.get('utm_source') || ''),
+          utm_medium: capTrackingValue(query.get('utm_medium') || ''),
+          utm_campaign: capTrackingValue(query.get('utm_campaign') || ''),
+          ref: capTrackingValue(query.get('ref') || ''),
+          campaign: capTrackingValue(query.get('campaign') || ''),
+        },
+        props: allowedProps,
+        ts: new Date().toISOString(),
+        buildVersion: capTrackingValue(buildVersion, 40),
+        lang: capTrackingValue(document.documentElement.lang || 'ar', 12),
+      };
+      const endpoint = (window.CONFIG && window.CONFIG.TRACK_ENDPOINT) || '/api/track/download';
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      if (navigator.sendBeacon) {
+        try {
+          if (navigator.sendBeacon(endpoint, blob)) return;
+        } catch (_) {}
+      }
+      if (typeof fetch === 'function') {
+        try {
+          const pending = fetch(endpoint, {
+            method: 'POST', body: blob, keepalive: true, credentials: 'same-origin',
+          });
+          if (pending && typeof pending.catch === 'function') pending.catch(() => {});
+        } catch (_) {}
+      }
+    } catch (_) {
+      // Analytics is best-effort only and must never interrupt download navigation.
+    }
+  }
+
   async function copyText(text) {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -291,6 +379,35 @@ if (typeof window !== "undefined") {
     } catch (e) {
       console.warn('[SmartDownload Analytics Error]', e);
     }
+
+    try {
+      const platform = props.platform || detectPlatform();
+      const detectedApp = props.app || (typeof props.inApp === 'string' ? props.inApp : '') || detectInApp()?.app || 'none';
+      const inApp = ['Instagram', 'Snapchat', 'TikTok', 'Facebook', 'Messenger'].includes(detectedApp)
+        ? detectedApp : detectedApp === 'none' || !detectedApp ? 'none' : 'Other';
+      if (event === 'download_page_view') sendDownloadTracking('page_view', { platform, inApp });
+      if (event === 'platform_detected') sendDownloadTracking('platform_detected', { platform, inApp });
+      if (event === 'inapp_browser_detected') sendDownloadTracking('inapp_detected', { platform, inApp });
+      if (event === 'app_open_tap' || event === 'inapp_auto_open_attempt') {
+        const trigger = event === 'inapp_auto_open_attempt' || props.type === 'auto_normal' ? 'auto' : 'tap';
+        sendDownloadTracking('app_open_attempt', { platform, inApp, trigger });
+        if (props.type === 'retry') sendDownloadTracking('retry_tap', { platform, inApp });
+      }
+      if (event === 'inapp_app_opened' || event === 'app_opened_likely') sendDownloadTracking('app_opened_likely', { platform, inApp });
+      if (event === 'inapp_store_fallback' || event === 'app_open_timeout') {
+        sendDownloadTracking('store_redirect', {
+          platform, inApp,
+          store: platform === 'ios' ? 'appstore' : 'playstore',
+        });
+      }
+      if (event === 'copy_link_click') sendDownloadTracking('copy_link', { platform, inApp });
+      if (event === 'store_tap') {
+        const store = props.store === 'app_store' ? 'appstore' : 'playstore';
+        sendDownloadTracking('store_tap', { platform, inApp, store });
+      }
+      if (event === 'chrome_escape_tap') sendDownloadTracking('escape_tap', { platform, inApp, target: 'Chrome' });
+      if (event === 'safari_escape_tap') sendDownloadTracking('escape_tap', { platform, inApp, target: 'Safari' });
+    } catch (_) {}
   }
 
   // ---------------------------------------------------------------------------
@@ -966,6 +1083,7 @@ if (typeof window !== "undefined") {
       const { universalLink, uriScheme, cleanPath, host } = buildDeepLinkUrl(this.config, params);
 
       track('download_page_view', { platform, isInApp: inApp.isInApp, app: inApp.app });
+      sendDownloadTracking('platform_detected', { platform, inApp: inApp.app });
       if (inApp.isInApp) {
         track('inapp_browser_detected', { app: inApp.app, platform });
       }
@@ -1566,6 +1684,7 @@ if (typeof window !== "undefined") {
         this.appOpened = true;
         this.cleanupListeners();
         clearTimeout(this.redirectTimer);
+        track('app_opened_likely', { platform, app: inApp.app });
 
         this.updateStatus({
           title: t.openedTitle,
@@ -1648,6 +1767,7 @@ if (typeof window !== "undefined") {
           btn.addEventListener('click', () => {
             safeSession.del('dl_attempted');
             safeSession.del('sd_redirect_ts');
+          track('retry_tap', { platform, app: inApp.app });
             this.render();
             this.startFlow(true);
           });

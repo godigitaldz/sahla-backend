@@ -2367,6 +2367,20 @@
         overflow: hidden;
         border-radius: 16px;
       }
+        .download-funnel-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin:14px 0 18px; }
+        .download-funnel-kpi { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px; box-shadow:0 4px 14px rgba(15,23,42,.04); }
+        .download-funnel-kpi strong { display:block; color:#064e3b; font-size:1.65rem; font-variant-numeric:tabular-nums; margin-top:7px; }
+        .download-funnel-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; }
+        .download-funnel-card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px; min-width:0; }
+        .download-funnel-card h3 { margin:0 0 12px; font-size:1rem; color:#0f172a; }
+        .download-funnel-step { margin:12px 0; }
+        .download-funnel-step-head { display:flex; justify-content:space-between; gap:12px; font-size:.88rem; margin-bottom:5px; }
+        .download-funnel-track { height:9px; background:#f1f5f9; border-radius:99px; overflow:hidden; }
+        .download-funnel-fill { height:100%; background:linear-gradient(90deg,#059669,#fbbf24); border-radius:99px; min-width:0; }
+        .download-funnel-footnote { margin:14px 0; color:#64748b; font-size:.82rem; }
+        .download-funnel-state { padding:20px 12px; text-align:center; color:#64748b; }
+        .download-funnel-card table { width:100%; }
+        @media(max-width:600px) { .download-funnel-kpi { padding:12px; } }
         </style>
   </head>
   <body>
@@ -2469,6 +2483,9 @@
           </button>
           <button type="button" class="tab" data-tab="tasks">
             <span class="tab-icon">📑</span> <span data-i18n="tab_tasks">Tasks</span>
+          </button>
+          <button type="button" class="tab" data-tab="download-funnel">
+            <span class="tab-icon">📲</span> <span data-i18n="df_tab">قمع التحميل</span>
           </button>
         </div>
 
@@ -2968,6 +2985,40 @@
               </thead>
               <tbody id="restaurantTablesBody"></tbody>
             </table>
+          </div>
+        </section>
+
+        <section id="panel-download-funnel" class="hidden" dir="auto">
+          <div class="toolbar">
+            <div class="field"><label for="downloadFunnelPreset" data-i18n="df_range">الفترة</label>
+              <select id="downloadFunnelPreset">
+                <option value="today" data-i18n="df_today">اليوم</option>
+                <option value="7d" data-i18n="df_7d">آخر 7 أيام</option>
+                <option value="30d" selected data-i18n="df_30d">آخر 30 يوماً</option>
+                <option value="custom" data-i18n="df_custom">مخصص</option>
+              </select>
+            </div>
+            <div class="field"><label for="downloadFunnelFrom" data-i18n="df_from">من</label><input type="date" id="downloadFunnelFrom"></div>
+            <div class="field"><label for="downloadFunnelTo" data-i18n="df_to">إلى</label><input type="date" id="downloadFunnelTo"></div>
+            <button type="button" class="btn-refresh" id="downloadFunnelRefresh" data-i18n="btn_refresh">تحديث</button>
+          </div>
+          <div id="downloadFunnelState" class="download-funnel-state" role="status" data-i18n="df_loading">جارٍ تحميل الإحصاءات…</div>
+          <div id="downloadFunnelContent" class="hidden">
+            <div class="download-funnel-kpis">
+              <div class="download-funnel-kpi"><span data-i18n="df_entered">دخلوا الصفحة</span><strong id="dfEntered">0</strong></div>
+              <div class="download-funnel-kpi"><span data-i18n="df_store">تم تحويلهم للمتجر</span><strong id="dfStore">0</strong></div>
+              <div class="download-funnel-kpi"><span data-i18n="df_attempts">محاولات فتح التطبيق</span><strong id="dfAttempts">0</strong></div>
+              <div class="download-funnel-kpi"><span data-i18n="df_conversion">نسبة التحويل</span><strong id="dfConversion">0%</strong></div>
+            </div>
+            <div class="download-funnel-grid">
+              <article class="download-funnel-card"><h3 data-i18n="df_steps">مسار التحويل</h3><div id="dfSteps"></div><p class="download-funnel-footnote"><span data-i18n="df_likely">فتح التطبيق على الأرجح</span>: <bdi id="dfLikely">0</bdi> (<bdi id="dfLikelyRate">0%</bdi>)</p></article>
+              <article class="download-funnel-card"><h3 data-i18n="df_device">حسب الجهاز</h3><div class="order-box-wrap"><table><thead><tr><th data-i18n="df_category">الفئة</th><th data-i18n="df_sessions">الجلسات</th></tr></thead><tbody id="dfByPlatform"></tbody></table></div></article>
+              <article class="download-funnel-card"><h3 data-i18n="df_inapp">حسب المتصفح الداخلي</h3><div class="order-box-wrap"><table><thead><tr><th data-i18n="df_category">الفئة</th><th data-i18n="df_sessions">الجلسات</th></tr></thead><tbody id="dfByInApp"></tbody></table></div></article>
+              <article class="download-funnel-card"><h3 data-i18n="df_source">حسب المصدر والحملة</h3><div class="order-box-wrap"><table><thead><tr><th data-i18n="df_category">المصدر</th><th data-i18n="df_sessions">الجلسات</th></tr></thead><tbody id="dfBySource"></tbody></table></div></article>
+              <article class="download-funnel-card"><h3 data-i18n="df_daily">الاتجاه اليومي</h3><div id="dfByDay"></div></article>
+              <article class="download-funnel-card"><h3 data-i18n="df_route">حسب المسار</h3><div class="order-box-wrap"><table><thead><tr><th data-i18n="df_category">المسار</th><th data-i18n="df_sessions">الجلسات</th></tr></thead><tbody id="dfByRoute"></tbody></table></div></article>
+            </div>
+            <p class="download-funnel-footnote" data-i18n="df_note">التحويل للمتجر لا يعني التثبيت. لا يمكن قياس التثبيت أو فتح التطبيق الفعلي من صفحة الويب وحدها.</p>
           </div>
         </section>
 
@@ -8227,6 +8278,7 @@
         $('panel-restaurant-tables').classList.toggle('hidden', tab !== 'restaurant-tables');
         $('panel-reviews').classList.toggle('hidden', tab !== 'reviews');
         $('panel-delivery-reviews').classList.toggle('hidden', tab !== 'delivery-reviews');
+        $('panel-download-funnel').classList.toggle('hidden', tab !== 'download-funnel');
         $('panel-force-push').classList.toggle('hidden', tab !== 'force-push');
         if (tab === 'tasks') loadTasks();
         if (tab === 'alerts') {
@@ -8244,7 +8296,90 @@
         if (tab === 'restaurant-tables') loadRestaurantTablesPanel().catch(() => {});
         if (tab === 'reviews') loadReviews().catch(() => {});
         if (tab === 'delivery-reviews') loadDeliveryReviews().catch(() => {});
+        if (tab === 'download-funnel') loadDownloadFunnel();
       }
+
+      function downloadFunnelDateRange() {
+        const today = sahlaTodayYmd();
+        const preset = $('downloadFunnelPreset')?.value || '30d';
+        if (preset === 'custom') {
+          return { from: $('downloadFunnelFrom').value || today, to: $('downloadFunnelTo').value || today };
+        }
+        const days = preset === 'today' ? 1 : preset === '7d' ? 7 : 30;
+        const from = new Date(`${today}T00:00:00Z`);
+        from.setUTCDate(from.getUTCDate() - days + 1);
+        return { from: from.toISOString().slice(0, 10), to: today };
+      }
+
+      function downloadFunnelRows(rows, labelFor) {
+        if (!Array.isArray(rows) || !rows.length) return `<tr><td colspan="2" class="meta">${esc(t('df_empty'))}</td></tr>`;
+        return rows.map((row) => `<tr><td><bdi dir="auto">${esc(labelFor(row))}</bdi></td><td class="num">${Number(row.sessions || 0).toLocaleString()}</td></tr>`).join('');
+      }
+
+      async function loadDownloadFunnel() {
+        const state = $('downloadFunnelState');
+        const content = $('downloadFunnelContent');
+        if (!state || !content) return;
+        state.classList.remove('hidden');
+        state.textContent = t('df_loading');
+        content.classList.add('hidden');
+        try {
+          const range = downloadFunnelDateRange();
+          const params = new URLSearchParams({ from: range.from, to: range.to, tz: SAHLA_TIME_ZONE });
+          const data = await api(`/download-stats?${params.toString()}`);
+          const totals = data.totals || {};
+          const number = (v) => Number(v || 0).toLocaleString();
+          $('dfEntered').textContent = number(totals.entered);
+          $('dfStore').textContent = number(totals.reached_store);
+          $('dfAttempts').textContent = number(totals.app_open_attempts);
+          $('dfConversion').textContent = `${Number(totals.conversion_rate || 0).toLocaleString()}%`;
+          $('dfLikely').textContent = number(totals.likely_opened);
+          $('dfLikelyRate').textContent = `${Number(totals.likely_opened_rate || 0).toLocaleString()}%`;
+          const entered = Number(totals.entered || 0);
+          const steps = [
+            [t('df_entered_step'), entered],
+            [t('df_reached_step'), Number(totals.reached_store || 0)],
+            [t('df_attempt_step'), Number(totals.app_open_attempts || 0)],
+          ];
+          $('dfSteps').innerHTML = steps.map(([label, value]) => {
+            const pct = entered > 0 ? Math.min(100, Math.max(0, value * 100 / entered)) : 0;
+            return `<div class="download-funnel-step"><div class="download-funnel-step-head"><span>${esc(label)}</span><bdi class="num">${number(value)}</bdi></div><div class="download-funnel-track"><div class="download-funnel-fill" style="width:${pct}%"></div></div></div>`;
+          }).join('');
+          $('dfByPlatform').innerHTML = downloadFunnelRows(data.byPlatform, (r) => r.key || 'unknown');
+          $('dfByInApp').innerHTML = downloadFunnelRows(data.byInApp, (r) => r.key || 'none');
+          $('dfByRoute').innerHTML = downloadFunnelRows(data.byRoute, (r) => r.key || '/');
+          $('dfBySource').innerHTML = downloadFunnelRows(data.bySource, (r) => `${r.source || 'direct'}${r.campaign ? ` / ${r.campaign}` : ''}`);
+          const daily = Array.isArray(data.byDay) ? data.byDay : [];
+          const maxDay = Math.max(1, ...daily.map((row) => Number(row.entered || 0)));
+          $('dfByDay').innerHTML = daily.length ? daily.map((row) => {
+            const pct = Math.min(100, Number(row.entered || 0) * 100 / maxDay);
+            return `<div class="download-funnel-step"><div class="download-funnel-step-head"><bdi>${esc(row.day || '')}</bdi><bdi class="num">${number(row.entered)}</bdi></div><div class="download-funnel-track"><div class="download-funnel-fill" style="width:${pct}%"></div></div></div>`;
+          }).join('') : `<div class="download-funnel-state">${esc(t('df_empty'))}</div>`;
+          state.classList.add('hidden');
+          content.classList.remove('hidden');
+        } catch (_) {
+          state.textContent = t('df_error');
+          state.classList.remove('hidden');
+        }
+      }
+
+      $('downloadFunnelPreset').addEventListener('change', () => {
+        const custom = $('downloadFunnelPreset').value === 'custom';
+        $('downloadFunnelFrom').disabled = !custom;
+        $('downloadFunnelTo').disabled = !custom;
+        if (custom) {
+          $('downloadFunnelFrom').value = $('downloadFunnelFrom').value || sahlaTodayYmd();
+          $('downloadFunnelTo').value = $('downloadFunnelTo').value || sahlaTodayYmd();
+        }
+        loadDownloadFunnel();
+      });
+      $('downloadFunnelRefresh').addEventListener('click', loadDownloadFunnel);
+      $('downloadFunnelFrom').value = sahlaTodayYmd();
+      $('downloadFunnelTo').value = sahlaTodayYmd();
+      $('downloadFunnelFrom').disabled = true;
+      $('downloadFunnelTo').disabled = true;
+      $('downloadFunnelFrom').addEventListener('change', loadDownloadFunnel);
+      $('downloadFunnelTo').addEventListener('change', loadDownloadFunnel);
 
       document.querySelectorAll('.tab[data-tab]').forEach((btn) => {
         btn.onclick = () => selectTab(btn.getAttribute('data-tab'));
@@ -9335,6 +9470,7 @@
         if (tab === 'delivery-history') loadDeliveryHistory().catch(() => {});
         if (tab === 'tasks') loadTasks().catch(() => {});
         if (tab === 'partner-requests') loadPartnerRequests().catch(() => {});
+        if (tab === 'download-funnel') loadDownloadFunnel();
       }, 30000);
 
       /** Immediately fetch fresh data when admin returns to a backgrounded tab. */

@@ -35,6 +35,7 @@ var CONFIG = {
   // Deep Link Route inside the App & Timeout Duration
   DEEP_LINK_PATH: "/open",
   OPEN_TIMEOUT_MS: 3000,
+  TRACK_ENDPOINT: '/api/track/download',
   AUTO_OPEN_IN_APP: false, // Strictly disabled by default in in-app WebViews; only active if true AND ?auto=1
   TODO_CUSTOM_DOMAIN: "sahla-delivery.com", // Owner custom domain pending DNS cutover
 
