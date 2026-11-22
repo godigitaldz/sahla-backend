@@ -1617,16 +1617,49 @@ if (typeof window !== "undefined") {
 
       // -----------------------------------------------------------------------
       // RULE A: IN-APP BROWSER MODE
-      // ZERO AUTO-NAVIGATION ON LOAD BY DEFAULT. NO TIMERS, NO SCHEME CALLS.
-      // OPTIONAL ISOLATED EXPERIMENT: ONLY IF CONFIG.AUTO_OPEN_IN_APP === true OR ?auto=1
+      // One best-effort app attempt, then the platform store if the app did not open.
+      // ?auto=0 disables the automatic flow and leaves the manual controls available.
       // -----------------------------------------------------------------------
       if (inApp.isInApp) {
         track('inapp_browser_detected', { app: inApp.app, platform });
         const autoParam = new URLSearchParams(window.location.search).get('auto');
-        const isAutoExperiment = (this.config.AUTO_OPEN_IN_APP === true || autoParam === '1') && autoParam !== '0';
-        if (isAutoExperiment) {
-          track('inapp_auto_experiment_attempt', { platform, app: inApp.app });
+        const attemptKey = `sd_inapp_autolaunch:${window.location.pathname}`;
+        const shouldAttempt = autoParam !== '0' &&
+          (autoParam === '1' || this.config.AUTO_OPEN_IN_APP === true) &&
+          (autoParam === '1' || safeSession.get(attemptKey) !== '1');
+        if (shouldAttempt) {
+          safeSession.set(attemptKey, '1');
+          track('inapp_auto_open_attempt', { platform, app: inApp.app });
           const queryString = params.toString();
+          const storeUrl = platform === 'ios' ? iosUrl : androidUrl;
+          let appOpened = false;
+          let cleanedUp = false;
+          const cleanup = () => {
+            if (cleanedUp) return;
+            cleanedUp = true;
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('pagehide', onPageHide);
+          };
+          const onAppOpened = () => {
+            if (appOpened) return;
+            appOpened = true;
+            clearTimeout(fallbackTimer);
+            cleanup();
+            track('inapp_app_opened', { platform, app: inApp.app });
+          };
+          const onVisibilityChange = () => {
+            if (document.hidden) onAppOpened();
+          };
+          const onPageHide = () => onAppOpened();
+          document.addEventListener('visibilitychange', onVisibilityChange);
+          window.addEventListener('pagehide', onPageHide);
+          const fallbackTimer = setTimeout(() => {
+            if (appOpened || document.hidden) return;
+            cleanup();
+            track('inapp_store_fallback', { platform, app: inApp.app, target: storeUrl });
+            window.location.replace(storeUrl);
+          }, Number(this.config.OPEN_TIMEOUT_MS) || 3000);
+
           if (platform === 'ios') {
             safeNavigate(`${this.config.IOS_URI_SCHEME}open${queryString ? '?' + queryString : ''}`);
           } else if (platform === 'android') {
