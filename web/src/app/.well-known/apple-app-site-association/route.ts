@@ -6,10 +6,7 @@ const aasaPayload = {
     details: [
       {
         appIDs: [
-          '9P628XCQ94.com.sahla.sahlaalgerie',
-          '9P628XCQ94.com.godigital.sahla',
-          'T8CTMB48BY.com.sahla.sahlaalgerie',
-          'T8CTMB48BY.com.godigital.sahla'
+          '9P628XCQ94.com.sahla.sahlaalgerie'
         ],
         components: [
           { '/': '/open', comment: 'Matches /open path exactly' },
@@ -23,10 +20,7 @@ const aasaPayload = {
   },
   webcredentials: {
     apps: [
-      '9P628XCQ94.com.sahla.sahlaalgerie',
-      '9P628XCQ94.com.godigital.sahla',
-      'T8CTMB48BY.com.sahla.sahlaalgerie',
-      'T8CTMB48BY.com.godigital.sahla'
+      '9P628XCQ94.com.sahla.sahlaalgerie'
     ]
   }
 };

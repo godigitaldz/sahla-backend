@@ -242,9 +242,6 @@ if (typeof window !== "undefined") {
       googlePlay: 'Google Play',
       qrLabel: 'امسح الرمز للتحميل المباشر',
       qrSub: 'وجّه كاميرا هاتفك نحو الرمز لتحميل التطبيق مباشرة على هاتفك.',
-      sendTitle: 'أرسل رابط التحميل إلى هاتفك',
-      sendPlaceholder: 'أدخل رقم الهاتف أو البريد الإلكتروني',
-      sendBtn: 'إرسال',
       copyBtn: 'نسخ الرابط',
       copiedToast: 'تم نسخ الرابط بنجاح! ✓',
       // In-App Browser Strings
@@ -253,7 +250,6 @@ if (typeof window !== "undefined") {
       inAppNoticeIosGeneric: (b) => `المتصفح الداخلي لتطبيق ${b} يحجب فتح وتثبيت التطبيقات. اضغط على ⋯ أو أيقونة المشاركة، ثم اختر «فتح في Safari».`,
       inAppNoticeAndroid: (b) => `المتصفح الداخلي لتطبيق ${b} يحجب تثبيت التطبيقات. اضغط على الزر أدناه أو قائمة ⋮ لفتح الرابط في متصفح Chrome.`,
       openInChromeBtn: 'افتح في Chrome',
-      openInSafariBtn: 'فتح في Safari (اختياري)',
       copyDownloadLink: 'نسخ رابط التحميل',
       storePromptInApp: 'أو حمّل التطبيق مباشرة من المتجر:',
       inAppStoreHint: 'لم يفتح التطبيق؟ حمّله مجاناً من متجر التطبيقات أدناه:',
@@ -284,9 +280,6 @@ if (typeof window !== "undefined") {
       googlePlay: 'Google Play',
       qrLabel: 'Scan to download on mobile',
       qrSub: 'Point your camera at the QR code to install or open Sahla directly.',
-      sendTitle: 'Send download link to phone',
-      sendPlaceholder: 'Enter phone or email',
-      sendBtn: 'Send',
       copyBtn: 'Copy Link',
       copiedToast: 'Link copied to clipboard! ✓',
       inAppNoticeInstagram: 'In-app browsers block app store redirects. Tap ⋯ at the top, then select "Open in Safari".',
@@ -294,7 +287,6 @@ if (typeof window !== "undefined") {
       inAppNoticeIosGeneric: (b) => `The in-app browser for ${b} blocks store redirects. Tap ⋯ or Share, then select "Open in Safari".`,
       inAppNoticeAndroid: (b) => `The in-app browser blocks app installation. Tap the button below or ⋮ menu to open in Chrome.`,
       openInChromeBtn: 'Open in Chrome',
-      openInSafariBtn: 'Open in Safari (optional)',
       copyDownloadLink: 'Copy Download Link',
       storePromptInApp: 'Or download directly from the store:',
       inAppStoreHint: 'Didn’t open? Download free from the store below:',
@@ -325,9 +317,6 @@ if (typeof window !== "undefined") {
       googlePlay: 'Google Play',
       qrLabel: 'Scannez pour ouvrir sur mobile',
       qrSub: 'Pointez votre appareil photo pour télécharger Sahla directement.',
-      sendTitle: 'Envoyer le lien sur votre mobile',
-      sendPlaceholder: 'Numéro de téléphone ou email',
-      sendBtn: 'Envoyer',
       copyBtn: 'Copier le lien',
       copiedToast: 'Lien copié dans le presse-papiers ! ✓',
       inAppNoticeInstagram: 'Le navigateur intégré bloque les redirections. Appuyez sur ⋯ en haut, puis sélectionnez « Ouvrir dans Safari ».',
@@ -335,7 +324,6 @@ if (typeof window !== "undefined") {
       inAppNoticeIosGeneric: (b) => `Le navigateur intégré de ${b} bloque les redirections. Appuyez sur ⋯ ou Partager, puis « Ouvrir dans Safari ».`,
       inAppNoticeAndroid: (b) => `Le navigateur intégré bloque l’installation. Appuyez ci-dessous ou sur ⋮ pour ouvrir dans Chrome.`,
       openInChromeBtn: 'Ouvrir dans Chrome',
-      openInSafariBtn: 'Ouvrir dans Safari (optionnel)',
       copyDownloadLink: 'Copier le lien',
       storePromptInApp: 'Ou téléchargez directement depuis le store :',
       inAppStoreHint: 'L’application ne s’est pas ouverte ? Téléchargez-la ci-dessous :',
@@ -406,7 +394,6 @@ if (typeof window !== "undefined") {
         sendDownloadTracking('store_tap', { platform, inApp, store });
       }
       if (event === 'chrome_escape_tap') sendDownloadTracking('escape_tap', { platform, inApp, target: 'Chrome' });
-      if (event === 'safari_escape_tap') sendDownloadTracking('escape_tap', { platform, inApp, target: 'Safari' });
     } catch (_) {}
   }
 
@@ -985,7 +972,6 @@ if (typeof window !== "undefined") {
     const queryString = params.toString();
     const appIntentUrl = `intent://${cleanPath}${queryString ? '?' + queryString : ''}#Intent;scheme=${cleanScheme};package=${ACTIVE_CONFIG.ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(androidUrl)};end`;
     const chromeIntentUrl = buildChromeIntent(window.location.href);
-    const safariProtocolUrl = `x-safari-https://${host}${window.location.pathname}${window.location.search}`;
 
     let storageAvail = true;
     try { sessionStorage.setItem('__sd_t', '1'); sessionStorage.removeItem('__sd_t'); } catch (e) { storageAvail = false; }
@@ -1005,7 +991,6 @@ if (typeof window !== "undefined") {
       generatedHrefs: {
         appSchemeOrIntent: platform === 'ios' ? uriScheme : appIntentUrl,
         chromeEscapeIntent: chromeIntentUrl,
-        safariEscapeUrl: safariProtocolUrl,
         iosAppStore: iosUrl,
         androidPlayStore: androidUrl,
         androidMarketScheme: `market://details?id=${ACTIVE_CONFIG.ANDROID_PACKAGE}`
@@ -1137,25 +1122,12 @@ if (typeof window !== "undefined") {
             </button>
           `;
         } else {
-          // iOS in-app mode:
-          // x-safari-https:// is blocked/unhandled by modern Instagram and Snapchat WebViews.
-          // The reliable, high-contrast action is copying the link with instant toast feedback.
-          // If ?debug=1 is enabled, render the experimental Safari anchor for testing purposes.
-          const isDebug = window.location.search.includes('debug=1');
-          const safariProtocolUrl = `x-safari-https://${host}${window.location.pathname}${window.location.search}${window.location.hash}`;
-          const experimentalSafariHtml = isDebug ? `
-            <a href="${safariProtocolUrl}" class="sd-inapp-btn sd-btn-safari" id="sdEscapeBtn" rel="noopener">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-              <span>${t.openInSafariBtn} (تجريبي)</span>
-            </a>
-          ` : '';
-
+          // iOS in-app mode: provide copy-link with manual copy fallback rather than undocumented browser schemes.
           inAppActionsHtml = `
             <button class="sd-inapp-btn sd-btn-copy" id="sdInAppCopyBtn" type="button">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               <span>${t.copyDownloadLink}</span>
             </button>
-            ${experimentalSafariHtml}
           `;
         }
 
@@ -1355,13 +1327,6 @@ if (typeof window !== "undefined") {
               </div>
 
               <div class="sd-send-section">
-                <h4 class="sd-send-title">${t.sendTitle}</h4>
-                <form class="sd-send-form" id="sdSendForm">
-                  <input type="text" class="sd-input" id="sdSendInput" placeholder="${t.sendPlaceholder}" required aria-label="Phone or Email">
-                  <button type="submit" class="sd-btn-send" id="sdSendSubmit">${t.sendBtn}</button>
-                </form>
-                <div class="sd-send-feedback" id="sdSendFeedback" role="status" aria-live="polite"></div>
-
                 <div class="sd-copy-row">
                   <span class="sd-copy-url" id="sdCopyUrl">${fullDownloadUrl}</span>
                   <button type="button" class="sd-btn-copy" id="sdCopyBtn">
@@ -1482,14 +1447,12 @@ if (typeof window !== "undefined") {
         });
       }
 
-      // Escape buttons tracking
+      // Escape button tracking (Android Chrome Intent)
       const escapeBtn = document.getElementById('sdEscapeBtn');
       if (escapeBtn) {
         escapeBtn.addEventListener('click', () => {
           if (platform === 'android') {
             track('chrome_escape_tap', { platform, url: escapeBtn.getAttribute('href') });
-          } else {
-            track('safari_escape_tap', { platform, url: escapeBtn.getAttribute('href') });
           }
         });
       }
@@ -1561,49 +1524,6 @@ if (typeof window !== "undefined") {
         });
       }
 
-      // Desktop Send Link to phone form
-      const sendForm = document.getElementById('sdSendForm');
-      if (sendForm) {
-        sendForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const input = document.getElementById('sdSendInput');
-          const feedback = document.getElementById('sdSendFeedback');
-          const submitBtn = document.getElementById('sdSendSubmit');
-          if (!input || !feedback) return;
-
-          const recipient = input.value.trim();
-          if (!recipient) return;
-
-          submitBtn.disabled = true;
-          submitBtn.textContent = '…';
-          feedback.textContent = '';
-          feedback.className = 'sd-send-feedback';
-
-          try {
-            const res = await fetch('/api/send-link', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ recipient, url: fullDownloadUrl })
-            });
-            const data = await res.json();
-            if (res.ok && data.success) {
-              feedback.textContent = data.message || 'تم إرسال الرابط بنجاح!';
-              feedback.classList.add('is-success');
-              input.value = '';
-            } else {
-              feedback.textContent = data.error || 'تعذر الإرسال حالياً. يرجى نسخ الرابط مباشرة.';
-              feedback.classList.add('is-error');
-            }
-          } catch (err) {
-            feedback.textContent = 'تم إرسال الرابط! تفقد بريدك أو هاتفك قريباً.';
-            feedback.classList.add('is-success');
-            input.value = '';
-          } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = t.sendBtn;
-          }
-        });
-      }
     }
 
     startFlow(force = false) {

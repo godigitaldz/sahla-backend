@@ -3,7 +3,7 @@ import { paginationMeta, successResponse } from '../utils/response.js';
 
 export const getOrders = async (req, res, next) => {
   try {
-    const userId = req.user?.id; // From auth middleware
+    const userId = req.supabaseUser?.id || req.user?.id;
     const { status, limit = 50, offset = 0 } = req.query;
 
     if (!userId) {
@@ -32,7 +32,7 @@ export const getOrders = async (req, res, next) => {
 
 export const createOrder = async (req, res, next) => {
   try {
-    const userId = req.user?.id; // From auth middleware
+    const userId = req.supabaseUser?.id || req.user?.id;
 
     if (!userId) {
       return res.status(401).json({
@@ -50,13 +50,19 @@ export const createOrder = async (req, res, next) => {
 
     res.status(201).json(successResponse(data, 'Order created successfully'));
   } catch (error) {
+    if (error?.statusCode) {
+      return res.status(error.statusCode).json({
+        success: false,
+        error: error.message,
+      });
+    }
     next(error);
   }
 };
 
 export const getOrderById = async (req, res, next) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.supabaseUser?.id || req.user?.id;
     const { id } = req.params;
 
     if (!userId) {
@@ -83,20 +89,34 @@ export const getOrderById = async (req, res, next) => {
 
 export const updateOrderStatus = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { status } = req.body;
+    const actorUserId = req.supabaseUser?.id || req.user?.id;
+    if (!actorUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+    }
 
-    if (!status) {
+    const { id } = req.params;
+    const { status } = req.body || {};
+
+    if (!status || typeof status !== 'string') {
       return res.status(400).json({
         success: false,
         error: 'Status is required',
       });
     }
 
-    const data = await orderService.updateOrderStatus(id, status);
+    const data = await orderService.updateOrderStatus(id, status.trim(), actorUserId);
 
     res.json(successResponse(data, 'Order status updated successfully'));
   } catch (error) {
+    if (error?.statusCode) {
+      return res.status(error.statusCode).json({
+        success: false,
+        error: error.message,
+      });
+    }
     next(error);
   }
 };

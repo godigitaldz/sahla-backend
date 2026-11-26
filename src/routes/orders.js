@@ -5,8 +5,11 @@ import {
     getOrders,
     updateOrderStatus,
 } from '../controllers/orderController.js';
+import { requireSupabaseUser } from '../middleware/supabaseAuth.js';
 
 const router = express.Router();
+
+router.use(requireSupabaseUser);
 
 router.get('/', getOrders);
 router.post('/', createOrder);

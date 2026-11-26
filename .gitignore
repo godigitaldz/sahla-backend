@@ -12,3 +12,5 @@ coverage/
 .env*.local
 supabase/.temp/
 test-artifacts/
+.clerk/
+web/.clerk/

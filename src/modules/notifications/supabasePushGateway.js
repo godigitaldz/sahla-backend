@@ -15,7 +15,7 @@ function pushAuthToken() {
 }
 
 export class SupabasePushGateway {
-  async sendPush({ userIds, title, body, data }) {
+  async sendPush({ userIds, title, body, data, forceActivateInactiveTokens = false }) {
     const ids = [...new Set((userIds || []).map((v) => String(v || '').trim()).filter(Boolean))];
     if (!ids.length) return { success: false, total_sent: 0, reason: 'no_recipients' };
 
@@ -41,7 +41,7 @@ export class SupabasePushGateway {
             title,
             body,
             data: data || {},
-            force_activate_inactive_tokens: true,
+            force_activate_inactive_tokens: Boolean(forceActivateInactiveTokens),
           }),
         });
 

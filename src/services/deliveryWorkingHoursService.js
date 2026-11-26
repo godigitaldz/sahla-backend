@@ -440,7 +440,7 @@ export async function sendMorningGreetingToAvailableCouriers({
             title,
             body,
             persist_notification: true,
-            force_activate_inactive_tokens: true,
+            force_activate_inactive_tokens: false,
             data: {
               type: 'delivery_morning_greeting',
               sound: 'default',

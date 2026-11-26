@@ -120,29 +120,12 @@ app.get(['/download', '/download/', '/download/*', '/download.html'], (req, res)
   });
 });
 
-// Send-Link to Phone/Email Stub Endpoint
+// Send-Link endpoint disabled (SMS/email link dispatch is not configured; clients use QR/copy)
 app.post('/api/send-link', (req, res) => {
-  const { recipient, to, target, phone, email, url } = req.body || {};
-  const rawRecipient = recipient || to || target || phone || email;
-  if (!rawRecipient || typeof rawRecipient !== 'string') {
-    return res.status(400).json({ success: false, error: 'Recipient phone or email is required.' });
-  }
-
-  const cleanRecipient = rawRecipient.trim();
-  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanRecipient);
-  const isPhone = /^\+?[0-9\s\-()]{7,20}$/.test(cleanRecipient);
-
-  if (!isEmail && !isPhone) {
-    return res.status(400).json({ success: false, error: 'Please enter a valid phone number or email address.' });
-  }
-
-  console.log(`[Send-Link API Stub] Dispatching download link to ${isEmail ? 'email' : 'phone'}: ${cleanRecipient} (URL: ${url || 'default'})`);
-
-  return res.status(200).json({
-    success: true,
-    message: isEmail ? 'Download link sent to your email!' : 'Download link sent to your phone via SMS!',
-    type: isEmail ? 'email' : 'sms',
-    recipient: cleanRecipient
+  return res.status(501).json({
+    success: false,
+    error: 'send_link_unavailable',
+    message: 'Direct SMS and email link delivery is not enabled. Copy the download link or scan the QR code instead.',
   });
 });
 

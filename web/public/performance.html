@@ -2509,8 +2509,8 @@
                 <textarea id="forcePushDeviceToken" rows="3" data-i18n-placeholder="fp_device_token_ph" placeholder="Paste exact FCM token"></textarea>
               </div>
 
-              <label class="checkbox-row" for="forcePushActivate">
-                <input id="forcePushActivate" type="checkbox" checked />
+              <label class="checkbox-row hidden" for="forcePushActivate" aria-hidden="true">
+                <input id="forcePushActivate" type="checkbox" disabled />
                 <span data-i18n="fp_force_activate">Force activate inactive tokens</span>
               </label>
 
@@ -4146,7 +4146,7 @@
         const deviceToken = ($('forcePushDeviceToken') && $('forcePushDeviceToken').value.trim()) || '';
         const title = ($('forcePushTitle') && $('forcePushTitle').value.trim()) || '';
         const bodyText = ($('forcePushBody') && $('forcePushBody').value.trim()) || '';
-        const forceActivate = !$('forcePushActivate') || $('forcePushActivate').checked;
+        const forceActivate = false;
         const useCampaign = sendAll || scheduleSend;
 
         setForcePushResult('', '');

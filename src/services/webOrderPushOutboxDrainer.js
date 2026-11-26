@@ -60,7 +60,7 @@ export async function runWebOrderPushOutboxDrainerOnce({ logger = console } = {}
             title: payload.title || 'Order Update',
             body: payload.body || '',
             data: payload.data || {},
-            force_activate_inactive_tokens: true,
+            force_activate_inactive_tokens: false,
           },
         });
 

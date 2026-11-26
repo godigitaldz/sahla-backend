@@ -150,8 +150,13 @@ function createRestaurantCard(restaurant) {
 
     const rating = document.createElement('div');
     rating.className = 'restaurant-rating';
-    const stars = '⭐'.repeat(Math.floor(restaurant.rating || 4));
-    rating.textContent = `${stars} ${(restaurant.rating || 4.0).toFixed(1)}`;
+    const numericRating = Number(restaurant.rating);
+    if (Number.isFinite(numericRating) && numericRating > 0) {
+        const stars = '⭐'.repeat(Math.max(1, Math.floor(numericRating)));
+        rating.textContent = `${stars} ${numericRating.toFixed(1)}`;
+    } else {
+        rating.textContent = '★ —';
+    }
 
     info.appendChild(name);
     info.appendChild(cuisine);
@@ -170,70 +175,29 @@ function createRestaurantCard(restaurant) {
     return card;
 }
 
-// Show placeholder restaurants
+// Show honest empty state when restaurant list cannot be loaded
 function showPlaceholderRestaurants() {
     const restaurantsGrid = document.getElementById('restaurantsGrid');
     if (!restaurantsGrid) return;
 
-    const placeholderRestaurants = [
-        { name: 'The Gourmet Kitchen', cuisine: 'Italian Cuisine', rating: 4.8 },
-        { name: 'Spice Garden', cuisine: 'Indian Cuisine', rating: 4.7 },
-        { name: 'Sushi Master', cuisine: 'Japanese Cuisine', rating: 4.9 }
-    ];
-
     restaurantsGrid.innerHTML = '';
-    placeholderRestaurants.forEach((restaurant, index) => {
-        const card = document.createElement('div');
-        card.className = 'restaurant-card';
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
+    const notice = document.createElement('div');
+    notice.className = 'restaurant-card';
+    notice.style.gridColumn = '1 / -1';
+    notice.style.padding = '24px';
+    notice.style.textAlign = 'center';
 
-        const image = document.createElement('div');
-        image.className = 'restaurant-image';
-        const gradients = [
-            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
-        ];
-        image.style.background = gradients[index];
-        image.style.display = 'flex';
-        image.style.alignItems = 'center';
-        image.style.justifyContent = 'center';
-        image.style.fontSize = '4rem';
-        const emojis = ['🍝', '🍛', '🍣'];
-        image.textContent = emojis[index];
+    const title = document.createElement('h3');
+    title.className = 'restaurant-name';
+    title.textContent = 'Restaurants unavailable right now';
 
-        const info = document.createElement('div');
-        info.className = 'restaurant-info';
+    const desc = document.createElement('p');
+    desc.className = 'restaurant-cuisine';
+    desc.textContent = 'Please check back shortly or open the Sahla app to browse live local restaurants in Biskra.';
 
-        const name = document.createElement('h3');
-        name.className = 'restaurant-name';
-        name.textContent = restaurant.name;
-
-        const cuisine = document.createElement('p');
-        cuisine.className = 'restaurant-cuisine';
-        cuisine.textContent = restaurant.cuisine;
-
-        const rating = document.createElement('div');
-        rating.className = 'restaurant-rating';
-        rating.textContent = `⭐${'⭐'.repeat(Math.floor(restaurant.rating - 1))} ${restaurant.rating}`;
-
-        info.appendChild(name);
-        info.appendChild(cuisine);
-        info.appendChild(rating);
-
-        card.appendChild(image);
-        card.appendChild(info);
-
-        restaurantsGrid.appendChild(card);
-
-        // Animate in with delay
-        setTimeout(() => {
-            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 150);
-    });
+    notice.appendChild(title);
+    notice.appendChild(desc);
+    restaurantsGrid.appendChild(notice);
 }
 
 // Add click handlers to restaurant cards

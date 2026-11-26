@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 
@@ -24,26 +25,28 @@ function phoneDigits(p) {
  * then returns a normal Supabase session (anon JWT exchange).
  *
  * Env:
- * - ADMIN_FIXED_OTP (default "05102002")
+ * - ADMIN_FIXED_OTP (required to enable this route; no default fallback)
  * - SUPABASE_SERVICE_ROLE_KEY (required for this route)
  */
 router.post('/admin-fixed-otp', async (req, res) => {
   try {
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const fixedOtp = String(process.env.ADMIN_FIXED_OTP || '').trim();
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !fixedOtp) {
       return res.status(503).json({
         success: false,
-        error: 'Admin bypass is not configured (missing SUPABASE_SERVICE_ROLE_KEY)',
+        error: 'Admin fixed OTP is not configured on this server',
       });
     }
 
-    const fixedOtp = (process.env.ADMIN_FIXED_OTP || '05102002').trim();
     const phone = normalizePhone(req.body?.phone);
     const otp = String(req.body?.otp || '').trim();
 
     if (!phone) {
       return res.status(400).json({ success: false, error: 'Invalid phone (use E.164, e.g. +213...)' });
     }
-    if (!otp || otp !== fixedOtp) {
+    const otpBuf = Buffer.from(otp, 'utf8');
+    const fixedBuf = Buffer.from(fixedOtp, 'utf8');
+    if (!otp || otpBuf.length !== fixedBuf.length || !crypto.timingSafeEqual(otpBuf, fixedBuf)) {
       return res.status(401).json({ success: false, error: 'Invalid admin code' });
     }
 

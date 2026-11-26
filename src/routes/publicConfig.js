@@ -134,6 +134,9 @@ router.get('/app-version-policy', async (req, res) => {
     );
     const message = values.get('app_update_message');
 
+    const normalizedUpdateUrl =
+      typeof updateUrl === 'string' && updateUrl.trim() ? updateUrl.trim() : null;
+
     const payload = {
       platform,
       forceUpdate,
@@ -142,9 +145,9 @@ router.get('/app-version-policy', async (req, res) => {
           ? minimumVersion.trim()
           : null,
       updateUrl:
-        typeof updateUrl === 'string' && updateUrl.trim()
-          ? updateUrl.trim()
-          : null,
+        platform === 'ios'
+          ? sanitizeIosAppStoreUrl(normalizedUpdateUrl, null)
+          : normalizedUpdateUrl,
       message:
         typeof message === 'string' && message.trim() ? message.trim() : null,
     };
@@ -253,6 +256,28 @@ router.get('/free-delivery-zone/check', async (req, res) => {
  * GET /api/public/system-urls
  * Returns official production URLs for legal policies, dashboards, and redirects.
  */
+/**
+ * Restricts iOS App Store / update redirects to official Apple App Store HTTPS URLs.
+ * Prevents remote config from pointing iOS builds to external/enterprise IPA hosts.
+ */
+export function sanitizeIosAppStoreUrl(rawUrl, fallback = null) {
+  if (typeof rawUrl !== 'string') return fallback;
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return fallback;
+  try {
+    const parsed = new URL(trimmed);
+    if (
+      parsed.protocol === 'https:' &&
+      (parsed.hostname === 'apps.apple.com' || parsed.hostname === 'itunes.apple.com')
+    ) {
+      return parsed.toString();
+    }
+  } catch (_) {
+    // Ignore malformed URLs and return safe fallback.
+  }
+  return fallback;
+}
+
 router.get('/system-urls', async (req, res) => {
   try {
     const keys = [
@@ -289,10 +314,10 @@ router.get('/system-urls', async (req, res) => {
       deleteAccountUrl: map.get('delete_account_url') || `${baseUrl}/delete-account`,
       dashboardUrl: map.get('dashboard_url') || `${baseUrl}/performance`,
       adminDashboardUrl: map.get('admin_dashboard_url') || `${baseUrl}/performance`,
-      appStoreUrlIos:
-        map.get('app_store_url_ios') ||
-        map.get('app_update_url_ios') ||
+      appStoreUrlIos: sanitizeIosAppStoreUrl(
+        map.get('app_store_url_ios') || map.get('app_update_url_ios'),
         'https://apps.apple.com/dz/app/sahla-algerie/id6834895657',
+      ),
       appStoreUrlAndroid:
         map.get('app_store_url_android') ||
         'https://play.google.com/store/apps/details?id=com.godigital.sahla',

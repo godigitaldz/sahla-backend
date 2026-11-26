@@ -328,15 +328,15 @@ function openingHoursPayload(h) {
 }
 
 function dashboardPassword() {
-  return process.env.PERFORMANCE_DASHBOARD_PASSWORD || '@Khazani05102002';
+  return String(process.env.PERFORMANCE_DASHBOARD_PASSWORD || '').trim();
 }
 
 function sessionSecret() {
-  return (
+  return String(
     process.env.PERFORMANCE_SESSION_SECRET ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    'change-PERFORMANCE_SESSION_SECRET'
-  );
+    ''
+  ).trim();
 }
 
 function parseCookies(req) {
@@ -354,19 +354,22 @@ function parseCookies(req) {
 }
 
 function signSession() {
+  const secret = sessionSecret();
+  if (!secret) throw new Error('PERFORMANCE_SESSION_SECRET is not configured');
   const exp = Date.now() + 12 * 3600 * 1000;
   const payload = Buffer.from(JSON.stringify({ exp }), 'utf8').toString('base64url');
-  const sig = crypto.createHmac('sha256', sessionSecret()).update(payload).digest('base64url');
+  const sig = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
   return `${payload}.${sig}`;
 }
 
 function verifySession(token) {
-  if (!token || typeof token !== 'string') return false;
+  const secret = sessionSecret();
+  if (!secret || !token || typeof token !== 'string') return false;
   const dot = token.indexOf('.');
   if (dot === -1) return false;
   const payloadB64 = token.slice(0, dot);
   const sig = token.slice(dot + 1);
-  const expected = crypto.createHmac('sha256', sessionSecret()).update(payloadB64).digest('base64url');
+  const expected = crypto.createHmac('sha256', secret).update(payloadB64).digest('base64url');
   if (sig.length !== expected.length) return false;
   if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false;
   try {
@@ -406,8 +409,13 @@ function safeEqualUtf8(a, b) {
 /* ========================================================================= */
 
 router.post('/auth', (req, res) => {
+  const expectedPwd = dashboardPassword();
+  const secret = sessionSecret();
+  if (!expectedPwd || !secret) {
+    return res.status(503).json({ success: false, error: 'Performance dashboard auth is not configured' });
+  }
   const pwd = String(req.body?.password ?? '');
-  if (!safeEqualUtf8(pwd, dashboardPassword())) {
+  if (!pwd || !safeEqualUtf8(pwd, expectedPwd)) {
     return res.status(401).json({ success: false, error: 'Invalid password' });
   }
   const token = signSession();
@@ -711,7 +719,7 @@ router.post('/delivery-man-requests/:id/approve', requirePerformanceAuth, async 
         work_phone: request.phone?.trim() || null,
         is_available: true,
         is_online: true,
-        rating: 5.0,
+        rating: 0,
         total_deliveries: 0,
         created_at: now,
         updated_at: now,
@@ -860,7 +868,7 @@ router.post('/restaurant-requests/:id/approve', requirePerformanceAuth, async (r
       is_active: true,
       is_verified: true,
       owner_id: request.user_id,
-      rating: 5.0,
+      rating: 0,
       delivery_time: '30-45 min',
       minimum_order: 0,
       delivery_fee: 0,
@@ -2218,7 +2226,7 @@ router.post('/force-push-notification', requirePerformanceAuth, async (req, res)
         send_all_devices: Boolean(send_all_devices),
         user_id: user_id ? String(user_id).trim() : undefined,
         device_token: device_token ? String(device_token).trim() : undefined,
-        force_activate_inactive_tokens: Boolean(force_activate_inactive_tokens),
+        force_activate_inactive_tokens: false,
         scheduled_for: scheduled_for ? String(scheduled_for).trim() : undefined,
         enqueue_now: !schedule_send,
         data: {
