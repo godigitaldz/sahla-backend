@@ -33,8 +33,17 @@ interface MenuItem {
   has_complex_variants: boolean;
 }
 
+interface CurrentUser {
+  id: string;
+  username: string;
+  name: string;
+  role: string;
+  phone?: string;
+}
+
 export default function StaffPortalPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('orders');
   const [deviceType, setDeviceType] = useState<DeviceType>('personal');
   const [username, setUsername] = useState('');
@@ -74,6 +83,19 @@ export default function StaffPortalPage() {
     }
   }, []);
 
+  // Check existing session on mount
+  useEffect(() => {
+    fetch('/staff/api/auth/session')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.authenticated && data.user) {
+          setIsAuthenticated(true);
+          setCurrentUser(data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // 15-second Poller while visible
   const fetchOrders = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -100,7 +122,7 @@ export default function StaffPortalPage() {
     };
   }, [isAuthenticated, fetchOrders]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
     setIsSubmitting(true);
@@ -111,39 +133,67 @@ export default function StaffPortalPage() {
       return;
     }
 
-    // Demo/Spike session initiation
-    setTimeout(() => {
+    try {
+      const res = await fetch('/staff/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password.trim(),
+          device_type: deviceType,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsAuthenticated(true);
+        setCurrentUser(data.user);
+        // Populate active demo orders
+        setOrders([
+          {
+            id: 'ord-101',
+            order_number: 'SHL-9842',
+            restaurant_name: 'Cleopatra Food',
+            status: 'pending',
+            total_price: 1850,
+            created_at: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+            customer_name: 'أحمد بن علي',
+            customer_phone: '0555123456',
+            items: [
+              { id: 'i1', name: 'بيتزا مارغريتا', quantity: 2, price: 650 },
+              { id: 'i2', name: 'كوكا كولا 1L', quantity: 1, price: 150 },
+              { id: 'i3', name: 'بطاطا مقلية', quantity: 1, price: 400 },
+            ],
+          },
+          {
+            id: 'ord-102',
+            order_number: 'SHL-9843',
+            restaurant_name: 'Cleopatra Food',
+            status: 'preparing',
+            total_price: 950,
+            created_at: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+            customer_name: 'كريم م.',
+            items: [{ id: 'i4', name: 'طاكوس دجاج XL', quantity: 1, price: 950 }],
+          },
+        ]);
+      } else {
+        setLoginError(data.error || 'فشل تسجيل الدخول. تحقق من البيانات المدخلة.');
+      }
+    } catch {
+      setLoginError('تعذر الاتصال بالخادم. يرجى المحاولة لاحقاً.');
+    } finally {
       setIsSubmitting(false);
-      setIsAuthenticated(true);
-      // Populate demo active orders
-      setOrders([
-        {
-          id: 'ord-101',
-          order_number: 'SHL-9842',
-          restaurant_name: 'Cleopatra Food',
-          status: 'pending',
-          total_price: 1850,
-          created_at: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
-          customer_name: 'أحمد بن علي',
-          customer_phone: '0555123456',
-          items: [
-            { id: 'i1', name: 'بيتزا مارغريتا', quantity: 2, price: 650 },
-            { id: 'i2', name: 'كوكا كولا 1L', quantity: 1, price: 150 },
-            { id: 'i3', name: 'بطاطا مقلية', quantity: 1, price: 400 },
-          ],
-        },
-        {
-          id: 'ord-102',
-          order_number: 'SHL-9843',
-          restaurant_name: 'Cleopatra Food',
-          status: 'preparing',
-          total_price: 950,
-          created_at: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
-          customer_name: 'كريم م.',
-          items: [{ id: 'i4', name: 'طاكوس دجاج XL', quantity: 1, price: 950 }],
-        },
-      ]);
-    }, 600);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/staff/api/auth/session', { method: 'DELETE' });
+    } catch {
+      // ignore
+    }
+    setIsAuthenticated(false);
+    setCurrentUser(null);
   };
 
   const handleOrderStatusChange = (orderId: string, newStatus: Order['status'], reason?: string) => {
@@ -224,7 +274,13 @@ export default function StaffPortalPage() {
         </div>
 
         {isAuthenticated && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="text-left hidden sm:block">
+              <span className="block text-xs font-bold text-white">{currentUser?.name || 'طاقم العمل'}</span>
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">
+                {currentUser?.role === 'admin' ? 'مدير النظام (Admin)' : currentUser?.role || 'Staff'}
+              </span>
+            </div>
             <span
               className={`inline-block w-2.5 h-2.5 rounded-full ${
                 pollStatus === 'polling'
@@ -233,10 +289,11 @@ export default function StaffPortalPage() {
                   ? 'bg-rose-500'
                   : 'bg-emerald-400'
               }`}
+              title={pollStatus === 'polling' ? 'جاري التحديث...' : 'متصل'}
             />
             <button
-              onClick={() => setIsAuthenticated(false)}
-              className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg transition"
+              onClick={handleLogout}
+              className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg transition min-h-[36px]"
             >
               خروج
             </button>
