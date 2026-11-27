@@ -480,82 +480,46 @@ export default function StaffPortalPage() {
       className="flex flex-col min-h-screen max-w-4xl mx-auto w-full px-4 pb-16 pt-[max(env(safe-area-inset-top),20px)] transition-colors duration-200"
       dir="rtl"
     >
-      {/* Top Header with Safe Area Separation to avoid notch/island conflict */}
-      <header className="bg-white border border-slate-200/90 rounded-2xl p-4 mb-5 shadow-sm mt-2">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5">
-          {/* Brand Info */}
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-white font-extrabold text-2xl shadow-md shadow-orange-500/20 shrink-0">
-              س
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">
-                  بوابة ساهلة لإدارة المطعم
-                </h1>
-                <span className="text-[11px] bg-orange-100/80 text-orange-700 px-2.5 py-0.5 rounded-full font-semibold border border-orange-200/70">
-                  Staff PWA
-                </span>
-                {isAuthenticated && (
-                  <span
-                    className={`inline-block w-2.5 h-2.5 rounded-full mr-1 ${
-                      pollStatus === 'polling'
-                        ? 'bg-amber-400 animate-ping'
-                        : pollStatus === 'error'
-                        ? 'bg-rose-500'
-                        : 'bg-emerald-500'
-                    }`}
-                    title={pollStatus === 'polling' ? 'جاري التحديث...' : 'متصل بالخادم'}
-                  />
-                )}
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                إدارة الطلبات المباشرة، التنبيهات الفورية، وتوفر قائمة الطعام
-              </p>
-            </div>
-          </div>
-
-          {/* User Controls & Restaurant Selector */}
-          {isAuthenticated && (
-            <div className="flex items-center gap-2.5 flex-wrap justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
-              {restaurants.length > 0 && (
-                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
-                  <select
-                    value={selectedRestaurantId}
-                    onChange={(e) => setSelectedRestaurantId(e.target.value)}
-                    className="w-full md:w-auto bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition shadow-inner"
-                  >
-                    {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin') && (
-                      <option value="all">🏢 جميع المطاعم ({restaurants.length})</option>
-                    )}
-                    {restaurants.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name} {r.is_open ? '🟢' : '🔴'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="hidden lg:block text-left pl-2">
-                <span className="block text-xs font-bold text-slate-800 leading-tight">
-                  {currentUser?.name || 'طاقم العمل'}
-                </span>
-                <span className="text-[10px] text-slate-500 font-medium">
-                  {currentUser?.role === 'admin' ? 'مدير النظام' : currentUser?.role || 'Staff'}
-                </span>
-              </div>
-
-              <button
-                onClick={handleLogout}
-                className="text-xs bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 font-semibold border border-slate-200 hover:border-rose-200 px-3.5 py-2 rounded-xl transition min-h-[38px] shrink-0"
+      {/* Top Header: Clean minimal toolbar with dropdown and signout only */}
+      {isAuthenticated && (
+        <header className="bg-white border border-slate-200/90 rounded-2xl p-2.5 mb-4 shadow-sm mt-1 flex items-center justify-between gap-2.5">
+          {restaurants.length > 0 && (
+            <div className="flex items-center gap-2 flex-1">
+              <span
+                className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${
+                  pollStatus === 'polling'
+                    ? 'bg-amber-400 animate-ping'
+                    : pollStatus === 'error'
+                    ? 'bg-rose-500'
+                    : 'bg-emerald-500'
+                }`}
+                title={pollStatus === 'polling' ? 'جاري التحديث...' : 'متصل بالخادم'}
+              />
+              <select
+                value={selectedRestaurantId}
+                onChange={(e) => setSelectedRestaurantId(e.target.value)}
+                className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-900 font-bold text-xs md:text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition shadow-inner"
               >
-                خروج
-              </button>
+                {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin') && (
+                  <option value="all">🏢 جميع المطاعم ({restaurants.length})</option>
+                )}
+                {restaurants.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} {r.is_open ? '🟢' : '🔴'}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
-        </div>
-      </header>
+
+          <button
+            onClick={handleLogout}
+            className="text-xs bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 font-bold border border-slate-200 hover:border-rose-200 px-4 py-2.5 rounded-xl transition min-h-[40px] shrink-0"
+          >
+            خروج
+          </button>
+        </header>
+      )}
 
       {/* Login Screen (Polished White SaaS Aesthetic) */}
       {!isAuthenticated ? (
