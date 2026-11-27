@@ -2,84 +2,112 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-type Tab = 'orders' | 'menu' | 'notifications';
-type DeviceType = 'personal' | 'shared_tablet';
-
-interface OrderItem {
+export interface OrderItem {
   id: string;
   name: string;
   quantity: number;
   price: number;
 }
 
-interface Order {
+export interface Order {
   id: string;
   order_number: string;
   restaurant_name: string;
-  status: 'pending' | 'preparing' | 'ready_for_pickup' | 'delivered' | 'cancelled';
+  restaurant_id?: string;
+  status: 'pending' | 'preparing' | 'ready_for_pickup' | 'delivering' | 'delivered' | 'cancelled';
   total_price: number;
   created_at: string;
-  items: OrderItem[];
-  customer_name?: string;
+  customer_name: string;
   customer_phone?: string;
+  items: OrderItem[];
+  cancel_reason?: string;
 }
 
-interface MenuItem {
+export interface MenuItem {
   id: string;
   name: string;
+  category?: string;
   price: number;
   preparation_time: number;
   is_available: boolean;
   has_complex_variants: boolean;
 }
 
-interface CurrentUser {
+export interface Restaurant {
+  id: string;
+  name: string;
+  is_open: boolean;
+  public_slug?: string;
+}
+
+export interface StaffUser {
   id: string;
   username: string;
   name: string;
   role: string;
   phone?: string;
+  device_type?: 'personal' | 'kitchen_tablet';
 }
 
 export default function StaffPortalPage() {
+  // Authentication & session state
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>('orders');
-  const [deviceType, setDeviceType] = useState<DeviceType>('personal');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState<StaffUser | null>(null);
+  const [username, setUsername] = useState<string>('AminKha');
+  const [password, setPassword] = useState<string>('');
+  const [deviceType, setDeviceType] = useState<'personal' | 'kitchen_tablet'>('personal');
+  const [loginError, setLoginError] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Orders state
-  const [orders, setOrders] = useState<Order[]>([]);
+  // Active view tabs
+  const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'notifications'>('orders');
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'preparing' | 'ready_for_pickup'>('pending');
-  const [selectedOrderForCancel, setSelectedOrderForCancel] = useState<Order | null>(null);
-  const [cancelReason, setCancelReason] = useState('');
   const [pollStatus, setPollStatus] = useState<'idle' | 'polling' | 'error'>('idle');
 
-  // Menu items state
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    { id: '1', name: 'بيتزا مارغريتا (Pizza Margherita)', price: 650, preparation_time: 15, is_available: true, has_complex_variants: false },
-    { id: '2', name: 'طاكوس دجاج مقرمش (Crispy Chicken Tacos)', price: 500, preparation_time: 12, is_available: true, has_complex_variants: true },
-    { id: '3', name: 'برغر كلاسيك (Classic Burger)', price: 450, preparation_time: 10, is_available: true, has_complex_variants: false },
-    { id: '4', name: 'علبة توفير كليوباترا (Special Box LTO)', price: 1200, preparation_time: 25, is_available: false, has_complex_variants: true },
-  ]);
+  // Multi-restaurant selector state
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>('all');
 
-  // Push notifications state
+  // Real Orders and Menu state
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
+  const [isLoadingMenu, setIsLoadingMenu] = useState<boolean>(false);
+
+  // Cancellation modal state
+  const [selectedOrderForCancel, setSelectedOrderForCancel] = useState<Order | null>(null);
+  const [cancelReason, setCancelReason] = useState<string>('');
+
+  // Push notifications & iOS standalone state
   const [pushSupported, setPushSupported] = useState<boolean>(false);
   const [pushSubscribed, setPushSubscribed] = useState<boolean>(false);
   const [pushStatusMessage, setPushStatusMessage] = useState<string>('');
+  const [isIOSInBrowser, setIsIOSInBrowser] = useState<boolean>(false);
 
-  // Register staff Service Worker
+  // Detect iOS browser vs Standalone PWA
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isStandalone =
+        (window.navigator as any).standalone === true ||
+        window.matchMedia('(display-mode: standalone)').matches;
+
+      setIsIOSInBrowser(isIOS && !isStandalone);
+      setPushSupported('serviceWorker' in navigator && 'Notification' in window);
+    }
+  }, []);
+
+  // Register staff Service Worker on mount
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/staff-sw.js', { scope: '/staff/' })
-        .then(() => {
-          setPushSupported('PushManager' in window);
+        .then((reg) => {
+          console.log('[Staff SW] Registered at scope:', reg.scope);
         })
-        .catch((err) => console.error('[staff] SW registration error:', err));
+        .catch((err) => console.error('[Staff SW] Registration error:', err));
     }
   }, []);
 
@@ -96,20 +124,90 @@ export default function StaffPortalPage() {
       .catch(() => {});
   }, []);
 
-  // 15-second Poller while visible
+  // Fetch available restaurants for this user
+  const fetchRestaurants = useCallback(async () => {
+    try {
+      const res = await fetch('/staff/api/restaurants');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.restaurants) && data.restaurants.length > 0) {
+          setRestaurants(data.restaurants);
+        }
+      }
+    } catch (err) {
+      console.error('[staff] Error fetching restaurants:', err);
+    }
+  }, []);
+
+  // Fetch real orders from database
   const fetchOrders = useCallback(async () => {
     if (!isAuthenticated) return;
     setPollStatus('polling');
     try {
-      // Poller endpoint mock/fallback for Release 1
-      setTimeout(() => {
+      const query = selectedRestaurantId && selectedRestaurantId !== 'all' ? `?restaurant_id=${selectedRestaurantId}` : '';
+      const res = await fetch(`/staff/api/orders${query}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.orders)) {
+          setOrders(data.orders);
+        }
         setPollStatus('idle');
-      }, 500);
+      } else {
+        setPollStatus('error');
+      }
     } catch {
       setPollStatus('error');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, selectedRestaurantId]);
 
+  // Fetch real menu items for selected restaurant
+  const fetchMenu = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setIsLoadingMenu(true);
+    try {
+      // If 'all' is selected, default menu items to first restaurant
+      let restId = selectedRestaurantId;
+      if (restId === 'all' && restaurants.length > 0) {
+        restId = restaurants[0].id;
+      }
+      const query = restId ? `?restaurant_id=${restId}` : '';
+      const res = await fetch(`/staff/api/menu${query}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.items)) {
+          setMenuItems(data.items);
+        }
+      }
+    } catch (err) {
+      console.error('[staff] Error fetching menu:', err);
+    } finally {
+      setIsLoadingMenu(false);
+    }
+  }, [isAuthenticated, selectedRestaurantId, restaurants]);
+
+  // Run initial data loading on authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchRestaurants();
+      fetchOrders();
+    }
+  }, [isAuthenticated, fetchRestaurants, fetchOrders]);
+
+  // Refresh menu when activeTab switches to 'menu' or restaurant changes
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'menu') {
+      fetchMenu();
+    }
+  }, [isAuthenticated, activeTab, selectedRestaurantId, fetchMenu]);
+
+  // Refresh orders when selected restaurant changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchOrders();
+    }
+  }, [isAuthenticated, selectedRestaurantId, fetchOrders]);
+
+  // 15-second live poller
   useEffect(() => {
     if (!isAuthenticated) return;
     const interval = setInterval(fetchOrders, 15000);
@@ -148,34 +246,6 @@ export default function StaffPortalPage() {
       if (res.ok && data.success) {
         setIsAuthenticated(true);
         setCurrentUser(data.user);
-        // Populate active demo orders
-        setOrders([
-          {
-            id: 'ord-101',
-            order_number: 'SHL-9842',
-            restaurant_name: 'Cleopatra Food',
-            status: 'pending',
-            total_price: 1850,
-            created_at: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
-            customer_name: 'أحمد بن علي',
-            customer_phone: '0555123456',
-            items: [
-              { id: 'i1', name: 'بيتزا مارغريتا', quantity: 2, price: 650 },
-              { id: 'i2', name: 'كوكا كولا 1L', quantity: 1, price: 150 },
-              { id: 'i3', name: 'بطاطا مقلية', quantity: 1, price: 400 },
-            ],
-          },
-          {
-            id: 'ord-102',
-            order_number: 'SHL-9843',
-            restaurant_name: 'Cleopatra Food',
-            status: 'preparing',
-            total_price: 950,
-            created_at: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
-            customer_name: 'كريم م.',
-            items: [{ id: 'i4', name: 'طاكوس دجاج XL', quantity: 1, price: 950 }],
-          },
-        ]);
       } else {
         setLoginError(data.error || 'فشل تسجيل الدخول. تحقق من البيانات المدخلة.');
       }
@@ -194,36 +264,78 @@ export default function StaffPortalPage() {
     }
     setIsAuthenticated(false);
     setCurrentUser(null);
+    setOrders([]);
+    setMenuItems([]);
   };
 
-  const handleOrderStatusChange = (orderId: string, newStatus: Order['status'], reason?: string) => {
+  const handleOrderStatusChange = async (orderId: string, newStatus: Order['status'], reason?: string) => {
+    // Optimistic UI update
     setOrders((prev) =>
-      prev.map((ord) => {
-        if (ord.id === orderId) {
-          return { ...ord, status: newStatus };
-        }
-        return ord;
-      }),
+      prev.map((ord) => (ord.id === orderId ? { ...ord, status: newStatus } : ord)),
     );
+
     if (newStatus === 'cancelled') {
       setSelectedOrderForCancel(null);
       setCancelReason('');
     }
+
+    try {
+      const res = await fetch(`/staff/api/orders/${orderId}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus, reason }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alert(data.error || 'فشل تحديث حالة الطلب');
+        fetchOrders(); // Rollback to actual server state
+      } else {
+        // Refetch to ensure all timestamps and statuses are synced
+        fetchOrders();
+      }
+    } catch {
+      alert('حدث خطأ أثناء الاتصال بالخادم لتحديث الطلب');
+      fetchOrders();
+    }
   };
 
-  const handleMenuAvailabilityToggle = (id: string) => {
+  const handleMenuAvailabilityToggle = async (id: string) => {
+    const item = menuItems.find((m) => m.id === id);
+    if (!item) return;
+
+    const newAvailability = !item.is_available;
+    // Optimistic update
     setMenuItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, is_available: !item.is_available } : item)),
+      prev.map((m) => (m.id === id ? { ...m, is_available: newAvailability } : m)),
     );
+
+    try {
+      const res = await fetch(`/staff/api/menu/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_available: newAvailability }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alert(data.error || 'فشل تحديث حالة توفر الطبق');
+        // Rollback
+        setMenuItems((prev) =>
+          prev.map((m) => (m.id === id ? { ...m, is_available: !newAvailability } : m)),
+        );
+      }
+    } catch {
+      alert('تعذر الاتصال بالخادم لتحديث توفر الطبق');
+      fetchMenu();
+    }
   };
 
-  const handlePriceUpdate = (id: string, newPriceStr: string) => {
+  const handlePriceUpdate = async (id: string, newPriceStr: string) => {
     const item = menuItems.find((m) => m.id === id);
     if (!item) return;
 
     if (item.has_complex_variants) {
       alert(
-        '⚠️ تنبيه أمان: هذا الطبق يحتوي على أحجام أو إضافات متعددة (Variants). تعديل السعر المباشر محجوب لحماية تناسق القائمة. يرجى استخدام لوحة تحكم الأصناف الكاملة.',
+        '⚠️ تنبيه أمان: هذا الطبق يحتوي على أحجام أو إضافات متعددة (Variants). تعديل السعر المباشر محجوب لحماية تناسق القائمة.',
       );
       return;
     }
@@ -231,33 +343,110 @@ export default function StaffPortalPage() {
     const price = Number(newPriceStr);
     if (isNaN(price) || price < 0) return;
 
-    setMenuItems((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, price } : m)),
-    );
+    try {
+      const res = await fetch(`/staff/api/menu/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alert(data.error || 'فشل تعديل السعر');
+        fetchMenu();
+      } else {
+        setMenuItems((prev) =>
+          prev.map((m) => (m.id === id ? { ...m, price } : m)),
+        );
+      }
+    } catch {
+      alert('تعذر الاتصال بالخادم لتحديث السعر');
+    }
   };
 
   const subscribePush = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      setPushStatusMessage('المتصفح لا يدعم الإشعارات الفورية');
+    if (isIOSInBrowser) {
+      setPushStatusMessage(
+        '⚠️ لتفعيل الإشعارات على أجهزة iPhone:\n1. اضغط على أيقونة المشاركة (⎋ Share) أسفل الشاشة.\n2. اختر «إضافة إلى الصفحة الرئيسية» (Add to Home Screen).\n3. افتح التطبيق من الشاشة الرئيسية واضغط تفعيل.',
+      );
       return;
     }
+
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setPushStatusMessage('المتصفح لا يدعم نظام الإشعارات.');
+      return;
+    }
+
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
-      });
+      setPushStatusMessage('جاري طلب إذن الإشعارات من المتصفح...');
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') {
+        setPushStatusMessage('تم رفض إذن الإشعارات من المتصفح. يرجى السماح بالإشعارات من إعدادات المتصفح.');
+        return;
+      }
+
+      if (!('serviceWorker' in navigator)) {
+        setPushStatusMessage('المتصفح لا يدعم Service Worker.');
+        return;
+      }
+
+      let reg = await navigator.serviceWorker.getRegistration('/staff/');
+      if (!reg) {
+        reg = await navigator.serviceWorker.register('/staff-sw.js', { scope: '/staff/' });
+      }
+
+      if ('PushManager' in window && reg.pushManager) {
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey:
+              'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
+          });
+        }
+
+        await fetch('/staff/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription: sub, device_type: deviceType }),
+        });
+      }
+
+      // Test chime sound immediately so user gets positive confirmation
+      try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+
+        if (reg?.showNotification) {
+          reg.showNotification('بوابة ساهلة لإدارة المطعم 🔔', {
+            body: 'تم تفعيل التنبيهات الفورية بنجاح! ستتلقى رنيناً مع كل طلب جديد.',
+            icon: '/icon-192.png',
+            tag: 'staff-welcome',
+          });
+        }
+      } catch (soundErr) {
+        console.warn('Audio/Notification test warning:', soundErr);
+      }
+
       setPushSubscribed(true);
-      setPushStatusMessage('تم تفعيل التنبيهات الفورية بنجاح');
+      setPushStatusMessage('تم تفعيل التنبيهات الفورية بنجاح على هذا الجهاز ✓');
     } catch (err: any) {
-      setPushStatusMessage('تم رفض الإذن أو تعذر الاشتراك: ' + err.message);
+      setPushStatusMessage('تعذر تفعيل الإشعارات: ' + (err.message || err));
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen max-w-4xl mx-auto w-full px-4 py-4 pb-16" dir="rtl">
       {/* Top Header */}
-      <header className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 mb-4 gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-orange-950">
             س
@@ -269,18 +458,39 @@ export default function StaffPortalPage() {
                 Staff PWA
               </span>
             </h1>
-            <p className="text-xs text-slate-400">إدارة الطلبات، التنبيهات المباشرة، وحالة قائمة الطعام</p>
+            <p className="text-xs text-slate-400">إدارة الطلبات المباشرة، التنبيهات الفورية، وتوفر الأطباق</p>
           </div>
         </div>
 
         {isAuthenticated && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            {/* Restaurant Selector for Admin & Multi-restaurant owners */}
+            {restaurants.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={selectedRestaurantId}
+                  onChange={(e) => setSelectedRestaurantId(e.target.value)}
+                  className="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-orange-500 max-w-[160px] truncate"
+                >
+                  {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin') && (
+                    <option value="all">🏢 جميع المطاعم ({restaurants.length})</option>
+                  )}
+                  {restaurants.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name} {r.is_open ? '🟢' : '🔴'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="text-left hidden sm:block">
               <span className="block text-xs font-bold text-white">{currentUser?.name || 'طاقم العمل'}</span>
               <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">
                 {currentUser?.role === 'admin' ? 'مدير النظام (Admin)' : currentUser?.role || 'Staff'}
               </span>
             </div>
+
             <span
               className={`inline-block w-2.5 h-2.5 rounded-full ${
                 pollStatus === 'polling'
@@ -289,8 +499,9 @@ export default function StaffPortalPage() {
                   ? 'bg-rose-500'
                   : 'bg-emerald-400'
               }`}
-              title={pollStatus === 'polling' ? 'جاري التحديث...' : 'متصل'}
+              title={pollStatus === 'polling' ? 'جاري التحديث...' : 'متصل بقاعدة البيانات'}
             />
+
             <button
               onClick={handleLogout}
               className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg transition min-h-[36px]"
@@ -323,7 +534,7 @@ export default function StaffPortalPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="مثال: chef_amine أو manager_biskra"
+                  placeholder="مثال: AminKha"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500 transition"
                   dir="ltr"
                 />
@@ -359,9 +570,9 @@ export default function StaffPortalPage() {
 
                   <button
                     type="button"
-                    onClick={() => setDeviceType('shared_tablet')}
+                    onClick={() => setDeviceType('kitchen_tablet')}
                     className={`p-3 rounded-xl border text-xs font-medium flex flex-col items-center gap-1 transition ${
-                      deviceType === 'shared_tablet'
+                      deviceType === 'kitchen_tablet'
                         ? 'border-orange-500 bg-orange-950/30 text-orange-300'
                         : 'border-slate-800 bg-slate-950 text-slate-400'
                     }`}
@@ -375,7 +586,7 @@ export default function StaffPortalPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold rounded-xl text-sm shadow-lg shadow-orange-950 transition disabled:opacity-50 min-h-[44px]"
+                className="w-full py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold rounded-xl text-sm shadow-lg shadow-orange-950 transition disabled:opacity-50 min-h-[48px]"
               >
                 {isSubmitting ? 'جاري التحقق...' : 'دخول إلى البوابة'}
               </button>
@@ -424,25 +635,43 @@ export default function StaffPortalPage() {
             <div className="flex flex-col gap-4">
               {/* Order status filters */}
               <div className="flex gap-2 overflow-x-auto pb-1 text-xs">
-                {(['pending', 'preparing', 'ready_for_pickup', 'all'] as const).map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => setOrderFilter(filter)}
-                    className={`px-3 py-1.5 rounded-full border transition whitespace-nowrap min-h-[36px] ${
-                      orderFilter === filter
-                        ? 'bg-orange-500 border-orange-500 text-white font-bold'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    {filter === 'pending'
-                      ? 'قيد الانتظار'
-                      : filter === 'preparing'
-                      ? 'قيد التحضير'
-                      : filter === 'ready_for_pickup'
-                      ? 'جاهز للاستلام'
-                      : 'الكل'}
-                  </button>
-                ))}
+                {(['pending', 'preparing', 'ready_for_pickup', 'all'] as const).map((filter) => {
+                  const count =
+                    filter === 'all'
+                      ? orders.length
+                      : orders.filter((o) => o.status === filter).length;
+
+                  return (
+                    <button
+                      key={filter}
+                      onClick={() => setOrderFilter(filter)}
+                      className={`px-3 py-1.5 rounded-full border transition whitespace-nowrap min-h-[36px] flex items-center gap-1.5 ${
+                        orderFilter === filter
+                          ? 'bg-orange-500 border-orange-500 text-white font-bold'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <span>
+                        {filter === 'pending'
+                          ? 'قيد الانتظار'
+                          : filter === 'preparing'
+                          ? 'قيد التحضير'
+                          : filter === 'ready_for_pickup'
+                          ? 'جاهز للاستلام'
+                          : 'الكل'}
+                      </span>
+                      {count > 0 && (
+                        <span
+                          className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                            orderFilter === filter ? 'bg-orange-700 text-white' : 'bg-slate-800 text-slate-300'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Order Cards List */}
@@ -456,8 +685,15 @@ export default function StaffPortalPage() {
                     >
                       <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
                         <div>
-                          <span className="text-base font-bold text-white tracking-wide">{order.order_number}</span>
-                          <span className="text-xs text-slate-400 mr-2">{order.customer_name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-base font-bold text-white tracking-wide">{order.order_number}</span>
+                            <span className="text-xs bg-slate-800 text-orange-300 px-2 py-0.5 rounded-lg border border-slate-700">
+                              {order.restaurant_name}
+                            </span>
+                          </div>
+                          <span className="text-xs text-slate-400 block mt-0.5">
+                            {order.customer_name} {order.customer_phone ? `• ${order.customer_phone}` : ''}
+                          </span>
                         </div>
                         <span
                           className={`text-xs px-2.5 py-1 rounded-full font-bold ${
@@ -467,6 +703,8 @@ export default function StaffPortalPage() {
                               ? 'bg-amber-950/80 text-amber-300 border border-amber-800/50'
                               : order.status === 'ready_for_pickup'
                               ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/50'
+                              : order.status === 'delivered'
+                              ? 'bg-blue-950/80 text-blue-300 border border-blue-800/50'
                               : 'bg-slate-800 text-slate-400'
                           }`}
                         >
@@ -476,6 +714,10 @@ export default function StaffPortalPage() {
                             ? 'جاري التحضير'
                             : order.status === 'ready_for_pickup'
                             ? 'جاهز للاستلام'
+                            : order.status === 'delivered'
+                            ? 'تم التوصيل'
+                            : order.status === 'cancelled'
+                            ? 'ملغي'
                             : order.status}
                         </span>
                       </div>
@@ -491,6 +733,13 @@ export default function StaffPortalPage() {
                           </div>
                         ))}
                       </div>
+
+                      {/* Cancellation reason note if exists */}
+                      {order.cancel_reason && (
+                        <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-900/50 text-rose-300 text-[11px]">
+                          سبب الإلغاء: {order.cancel_reason}
+                        </div>
+                      )}
 
                       {/* Total & Action Buttons */}
                       <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
@@ -543,65 +792,77 @@ export default function StaffPortalPage() {
           {activeTab === 'menu' && (
             <div className="flex flex-col gap-4">
               <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-xs text-slate-400 leading-relaxed">
-                ℹ️ <strong className="text-slate-200">الإصدار 1 (Release 1):</strong> يمكنك تفعيل/تعطيل توفر الأطباق،
-                تعديل وقت التحضير، وتحديث السعر الأساسي للأطباق البسيطة. الأطباق التي تحتوي على مقاسات متعددة أو عروض LTO
-                محمية من تعديل السعر المباشر لمنع فقدان البيانات.
+                ℹ️ <strong className="text-slate-200">إدارة القائمة المباشرة:</strong> يمكنك تفعيل/تعطيل توفر الأطباق،
+                وتحديث السعر الأساسي للأطباق البسيطة. الأطباق التي تحتوي على مقاسات متعددة أو إضافات (Variants/Supplements)
+                محمية بحارس البيانات لمنع تشوه التسعير.
               </div>
 
-              <div className="flex flex-col gap-3">
-                {menuItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleMenuAvailabilityToggle(item.id)}
-                        className={`w-12 h-6 rounded-full transition relative flex items-center p-0.5 ${
-                          item.is_available ? 'bg-emerald-600' : 'bg-slate-700'
-                        }`}
-                        title={item.is_available ? 'متوفر' : 'غير متوفر'}
-                      >
-                        <div
-                          className={`w-5 h-5 rounded-full bg-white transition transform ${
-                            item.is_available ? '-translate-x-6' : 'translate-x-0'
+              {isLoadingMenu ? (
+                <div className="py-12 text-center text-slate-500 text-xs">جاري تحميل قائمة الطعام...</div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {menuItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleMenuAvailabilityToggle(item.id)}
+                          className={`w-12 h-6 rounded-full transition relative flex items-center p-0.5 ${
+                            item.is_available ? 'bg-emerald-600' : 'bg-slate-700'
                           }`}
-                        />
-                      </button>
-                      <div>
-                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                          {item.name}
-                          {item.has_complex_variants && (
-                            <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">
-                              أحجام متعددة
-                            </span>
-                          )}
-                        </h4>
-                        <span className="text-xs text-slate-400">وقت التحضير: {item.preparation_time} دقيقة</span>
+                          title={item.is_available ? 'متوفر' : 'غير متوفر'}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded-full bg-white transition transform ${
+                              item.is_available ? '-translate-x-6' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                        <div>
+                          <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                            {item.name}
+                            {item.has_complex_variants && (
+                              <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">
+                                أحجام / إضافات متعددة
+                              </span>
+                            )}
+                          </h4>
+                          <span className="text-xs text-slate-400">
+                            التصنيف: {item.category || 'عام'} • وقت التحضير: {item.preparation_time} دقيقة
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-slate-400">السعر:</span>
-                        <input
-                          type="number"
-                          defaultValue={item.price}
-                          disabled={item.has_complex_variants}
-                          onBlur={(e) => handlePriceUpdate(item.id, e.target.value)}
-                          className={`w-24 bg-slate-950 border rounded-lg px-2 py-1 text-sm text-center font-bold text-white focus:outline-none ${
-                            item.has_complex_variants
-                              ? 'border-slate-800 text-slate-500 cursor-not-allowed opacity-60'
-                              : 'border-slate-700 focus:border-orange-500'
-                          }`}
-                          dir="ltr"
-                        />
-                        <span className="text-xs text-slate-400">دج</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-slate-400">السعر:</span>
+                          <input
+                            type="number"
+                            defaultValue={item.price}
+                            disabled={item.has_complex_variants}
+                            onBlur={(e) => handlePriceUpdate(item.id, e.target.value)}
+                            className={`w-24 bg-slate-950 border rounded-lg px-2 py-1 text-sm text-center font-bold text-white focus:outline-none ${
+                              item.has_complex_variants
+                                ? 'border-slate-800 text-slate-500 cursor-not-allowed opacity-60'
+                                : 'border-slate-700 focus:border-orange-500'
+                            }`}
+                            dir="ltr"
+                          />
+                          <span className="text-xs text-slate-400">دج</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+
+                  {menuItems.length === 0 && (
+                    <div className="py-12 text-center text-slate-500 text-xs">
+                      لا توجد أطباق مسجلة لهذا المطعم
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -610,12 +871,29 @@ export default function StaffPortalPage() {
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col gap-4">
               <h3 className="text-base font-bold text-white">إعداد التنبيهات الفورية (Web Push)</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                قم بتفعيل الإشعارات الفورية على هذا الجهاز لتلقي رنين مميز فور وصول طلب جديد لمطعمك، حتى وإن كان المتصفح في
-                الخلفية.
+                قم بتفعيل الإشعارات الفورية على هذا الجهاز لتلقي رنين صوتي مميز فور وصول طلب جديد لمطعمك، حتى وإن كان المتصفح
+                في الخلفية أو الجهاز مقفلاً.
               </p>
 
+              {/* iOS Safari Instruction Card */}
+              {isIOSInBrowser && (
+                <div className="p-4 bg-orange-950/40 border border-orange-700/60 rounded-xl text-xs text-orange-200 flex flex-col gap-2">
+                  <span className="font-bold text-sm">📱 خطوة تفعيل لمستخدمي iPhone (iOS):</span>
+                  <p>أبل تشترط إضافة الموقع للشاشة الرئيسية لتشغيل الإشعارات في الخلفية:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-slate-300">
+                    <li>
+                      اضغط على زر المشاركة أسفل Safari <strong className="text-white">(أيقونة ⎋ المربع بسهم)</strong>.
+                    </li>
+                    <li>
+                      مرر للأسفل واختر <strong className="text-white">«إضافة إلى الصفحة الرئيسية» (Add to Home Screen)</strong>.
+                    </li>
+                    <li>افتح التطبيق من الأيقونة على شاشتك واضغط تفعيل ليعمل الرنين والتنبيه مثل التطبيقات الأصلية!</li>
+                  </ol>
+                </div>
+              )}
+
               {pushStatusMessage && (
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300">
+                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 whitespace-pre-line">
                   {pushStatusMessage}
                 </div>
               )}
