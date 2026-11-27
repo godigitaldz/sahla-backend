@@ -73,6 +73,7 @@ self.addEventListener('push', (event) => {
     body: payload.body || 'تنبيه جديد من ساهلة',
     icon: '/favicon.ico',
     badge: '/favicon.ico',
+    sound: '/sounds/new_order_alert.mp3',
     vibrate: [500, 200, 500, 200, 500, 200, 500],
     data: payload.data || { url: '/staff/' },
     tag: payload.data?.order_id || 'staff-order-alert',

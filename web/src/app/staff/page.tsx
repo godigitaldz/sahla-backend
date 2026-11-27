@@ -169,6 +169,17 @@ export default function StaffPortalPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.orders)) {
+          // Play loud new order sound when new pending order arrives
+          const hasNewPending = data.orders.some(
+            (newO: Order) => newO.status === 'pending' && !orders.some((oldO) => oldO.id === newO.id),
+          );
+          if (hasNewPending && orders.length > 0) {
+            try {
+              const audio = new Audio('/sounds/new_order_alert.mp3');
+              audio.volume = 1.0;
+              audio.play().catch(() => {});
+            } catch {}
+          }
           setOrders(data.orders);
         }
         setPollStatus('idle');
@@ -178,7 +189,7 @@ export default function StaffPortalPage() {
     } catch {
       setPollStatus('error');
     }
-  }, [isAuthenticated, selectedRestaurantId]);
+  }, [isAuthenticated, selectedRestaurantId, orders]);
 
   // Fetch real menu items for selected restaurant
   const fetchMenu = useCallback(async () => {
@@ -452,19 +463,24 @@ export default function StaffPortalPage() {
         });
       }
 
-      // Audio test chime
+      // Audio test alert using the app alert sound file
       try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.35);
+        const audio = new Audio('/sounds/new_order_alert.mp3');
+        audio.volume = 1.0;
+        await audio.play().catch(() => {
+          // Fallback oscillator chime
+          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.35);
+        });
 
         if (reg?.showNotification) {
           reg.showNotification('بوابة ساهلة لإدارة المطعم 🔔', {
