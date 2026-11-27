@@ -49,13 +49,17 @@ export interface StaffUser {
   device_type?: 'personal' | 'kitchen_tablet';
 }
 
+const STORAGE_SAVED_USERNAME_KEY = 'sahla_staff_saved_username';
+const STORAGE_REMEMBER_ME_KEY = 'sahla_staff_remember_me';
+
 export default function StaffPortalPage() {
   // Authentication & session state
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<StaffUser | null>(null);
-  const [username, setUsername] = useState<string>('AminKha');
+  const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [deviceType, setDeviceType] = useState<'personal' | 'kitchen_tablet'>('personal');
+  const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [loginError, setLoginError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -84,9 +88,22 @@ export default function StaffPortalPage() {
   const [pushStatusMessage, setPushStatusMessage] = useState<string>('');
   const [isIOSInBrowser, setIsIOSInBrowser] = useState<boolean>(false);
 
-  // Detect iOS browser vs Standalone PWA
+  // Load saved identity on client mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem(STORAGE_SAVED_USERNAME_KEY);
+      const savedRemember = localStorage.getItem(STORAGE_REMEMBER_ME_KEY);
+
+      if (savedUser) {
+        setUsername(savedUser);
+      } else {
+        setUsername('AminKha');
+      }
+
+      if (savedRemember !== null) {
+        setRememberMe(savedRemember === 'true');
+      }
+
       const isIOS =
         /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -144,7 +161,10 @@ export default function StaffPortalPage() {
     if (!isAuthenticated) return;
     setPollStatus('polling');
     try {
-      const query = selectedRestaurantId && selectedRestaurantId !== 'all' ? `?restaurant_id=${selectedRestaurantId}` : '';
+      const query =
+        selectedRestaurantId && selectedRestaurantId !== 'all'
+          ? `?restaurant_id=${selectedRestaurantId}`
+          : '';
       const res = await fetch(`/staff/api/orders${query}`);
       if (res.ok) {
         const data = await res.json();
@@ -165,7 +185,6 @@ export default function StaffPortalPage() {
     if (!isAuthenticated) return;
     setIsLoadingMenu(true);
     try {
-      // If 'all' is selected, default menu items to first restaurant
       let restId = selectedRestaurantId;
       if (restId === 'all' && restaurants.length > 0) {
         restId = restaurants[0].id;
@@ -244,6 +263,17 @@ export default function StaffPortalPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
+        // Save or clear remembered username
+        if (typeof window !== 'undefined') {
+          if (rememberMe) {
+            localStorage.setItem(STORAGE_SAVED_USERNAME_KEY, username.trim());
+            localStorage.setItem(STORAGE_REMEMBER_ME_KEY, 'true');
+          } else {
+            localStorage.removeItem(STORAGE_SAVED_USERNAME_KEY);
+            localStorage.setItem(STORAGE_REMEMBER_ME_KEY, 'false');
+          }
+        }
+
         setIsAuthenticated(true);
         setCurrentUser(data.user);
       } else {
@@ -268,8 +298,11 @@ export default function StaffPortalPage() {
     setMenuItems([]);
   };
 
-  const handleOrderStatusChange = async (orderId: string, newStatus: Order['status'], reason?: string) => {
-    // Optimistic UI update
+  const handleOrderStatusChange = async (
+    orderId: string,
+    newStatus: Order['status'],
+    reason?: string,
+  ) => {
     setOrders((prev) =>
       prev.map((ord) => (ord.id === orderId ? { ...ord, status: newStatus } : ord)),
     );
@@ -288,9 +321,8 @@ export default function StaffPortalPage() {
       const data = await res.json();
       if (!res.ok || !data.success) {
         alert(data.error || 'فشل تحديث حالة الطلب');
-        fetchOrders(); // Rollback to actual server state
+        fetchOrders();
       } else {
-        // Refetch to ensure all timestamps and statuses are synced
         fetchOrders();
       }
     } catch {
@@ -304,7 +336,6 @@ export default function StaffPortalPage() {
     if (!item) return;
 
     const newAvailability = !item.is_available;
-    // Optimistic update
     setMenuItems((prev) =>
       prev.map((m) => (m.id === id ? { ...m, is_available: newAvailability } : m)),
     );
@@ -318,7 +349,6 @@ export default function StaffPortalPage() {
       const data = await res.json();
       if (!res.ok || !data.success) {
         alert(data.error || 'فشل تحديث حالة توفر الطبق');
-        // Rollback
         setMenuItems((prev) =>
           prev.map((m) => (m.id === id ? { ...m, is_available: !newAvailability } : m)),
         );
@@ -380,7 +410,9 @@ export default function StaffPortalPage() {
       setPushStatusMessage('جاري طلب إذن الإشعارات من المتصفح...');
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') {
-        setPushStatusMessage('تم رفض إذن الإشعارات من المتصفح. يرجى السماح بالإشعارات من إعدادات المتصفح.');
+        setPushStatusMessage(
+          'تم رفض إذن الإشعارات من المتصفح. يرجى السماح بالإشعارات من إعدادات المتصفح.',
+        );
         return;
       }
 
@@ -411,15 +443,15 @@ export default function StaffPortalPage() {
         });
       }
 
-      // Test chime sound immediately so user gets positive confirmation
+      // Audio test chime
       try {
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
         osc.start();
@@ -444,124 +476,166 @@ export default function StaffPortalPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen max-w-4xl mx-auto w-full px-4 py-4 pb-16" dir="rtl">
-      {/* Top Header */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 mb-4 gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-orange-950">
-            س
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              بوابة ساهلة لإدارة المطعم
-              <span className="text-xs bg-orange-900/60 text-orange-400 px-2 py-0.5 rounded-full border border-orange-700/50">
-                Staff PWA
-              </span>
-            </h1>
-            <p className="text-xs text-slate-400">إدارة الطلبات المباشرة، التنبيهات الفورية، وتوفر الأطباق</p>
-          </div>
-        </div>
-
-        {isAuthenticated && (
-          <div className="flex items-center gap-3 self-end sm:self-auto">
-            {/* Restaurant Selector for Admin & Multi-restaurant owners */}
-            {restaurants.length > 0 && (
-              <div className="flex items-center gap-1.5">
-                <select
-                  value={selectedRestaurantId}
-                  onChange={(e) => setSelectedRestaurantId(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-orange-500 max-w-[160px] truncate"
-                >
-                  {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin') && (
-                    <option value="all">🏢 جميع المطاعم ({restaurants.length})</option>
-                  )}
-                  {restaurants.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} {r.is_open ? '🟢' : '🔴'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div className="text-left hidden sm:block">
-              <span className="block text-xs font-bold text-white">{currentUser?.name || 'طاقم العمل'}</span>
-              <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">
-                {currentUser?.role === 'admin' ? 'مدير النظام (Admin)' : currentUser?.role || 'Staff'}
-              </span>
+    <div
+      className="flex flex-col min-h-screen max-w-4xl mx-auto w-full px-4 pb-16 pt-[max(env(safe-area-inset-top),20px)] transition-colors duration-200"
+      dir="rtl"
+    >
+      {/* Top Header with Safe Area Separation to avoid notch/island conflict */}
+      <header className="bg-white border border-slate-200/90 rounded-2xl p-4 mb-5 shadow-sm mt-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+          {/* Brand Info */}
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-white font-extrabold text-2xl shadow-md shadow-orange-500/20 shrink-0">
+              س
             </div>
-
-            <span
-              className={`inline-block w-2.5 h-2.5 rounded-full ${
-                pollStatus === 'polling'
-                  ? 'bg-amber-400 animate-ping'
-                  : pollStatus === 'error'
-                  ? 'bg-rose-500'
-                  : 'bg-emerald-400'
-              }`}
-              title={pollStatus === 'polling' ? 'جاري التحديث...' : 'متصل بقاعدة البيانات'}
-            />
-
-            <button
-              onClick={handleLogout}
-              className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg transition min-h-[36px]"
-            >
-              خروج
-            </button>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">
+                  بوابة ساهلة لإدارة المطعم
+                </h1>
+                <span className="text-[11px] bg-orange-100/80 text-orange-700 px-2.5 py-0.5 rounded-full font-semibold border border-orange-200/70">
+                  Staff PWA
+                </span>
+                {isAuthenticated && (
+                  <span
+                    className={`inline-block w-2.5 h-2.5 rounded-full mr-1 ${
+                      pollStatus === 'polling'
+                        ? 'bg-amber-400 animate-ping'
+                        : pollStatus === 'error'
+                        ? 'bg-rose-500'
+                        : 'bg-emerald-500'
+                    }`}
+                    title={pollStatus === 'polling' ? 'جاري التحديث...' : 'متصل بالخادم'}
+                  />
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                إدارة الطلبات المباشرة، التنبيهات الفورية، وتوفر قائمة الطعام
+              </p>
+            </div>
           </div>
-        )}
+
+          {/* User Controls & Restaurant Selector */}
+          {isAuthenticated && (
+            <div className="flex items-center gap-2.5 flex-wrap justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+              {restaurants.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-1 md:flex-none">
+                  <select
+                    value={selectedRestaurantId}
+                    onChange={(e) => setSelectedRestaurantId(e.target.value)}
+                    className="w-full md:w-auto bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-900 font-medium text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition shadow-inner"
+                  >
+                    {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin') && (
+                      <option value="all">🏢 جميع المطاعم ({restaurants.length})</option>
+                    )}
+                    {restaurants.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name} {r.is_open ? '🟢' : '🔴'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="hidden lg:block text-left pl-2">
+                <span className="block text-xs font-bold text-slate-800 leading-tight">
+                  {currentUser?.name || 'طاقم العمل'}
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  {currentUser?.role === 'admin' ? 'مدير النظام' : currentUser?.role || 'Staff'}
+                </span>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="text-xs bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 font-semibold border border-slate-200 hover:border-rose-200 px-3.5 py-2 rounded-xl transition min-h-[38px] shrink-0"
+              >
+                خروج
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
-      {/* Login Screen */}
+      {/* Login Screen (Polished White SaaS Aesthetic) */}
       {!isAuthenticated ? (
-        <div className="flex flex-col items-center justify-center flex-1 py-8">
-          <div className="w-full max-w-md bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur">
-            <h2 className="text-lg font-bold text-white mb-2 text-center">تسجيل دخول طاقم العمل</h2>
-            <p className="text-xs text-slate-400 mb-6 text-center">
-              سجل دخولك باسم المستخدم الخاص بمطعمك (بدون بريد خارجي)
-            </p>
+        <div className="flex flex-col items-center justify-center flex-1 py-6">
+          <div className="w-full max-w-md bg-white border border-slate-200/90 rounded-2xl p-6 md:p-8 shadow-xl shadow-slate-200/50">
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-50 border border-orange-200/60 flex items-center justify-center text-orange-600 font-black text-3xl mb-3 shadow-inner">
+                س
+              </div>
+              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                تسجيل دخول طاقم العمل
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                سجل دخولك باسم المستخدم الخاص بمطعمك للوصول إلى لوحة التحكم
+              </p>
+            </div>
 
             {loginError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs">
-                {loginError}
+              <div className="mb-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{loginError}</span>
               </div>
             )}
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">اسم المستخدم (Username)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  اسم المستخدم (Username)
+                </label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="مثال: AminKha"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500 transition"
+                  className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition shadow-inner"
                   dir="ltr"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">كلمة المرور (Password)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  كلمة المرور (Password)
+                </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500 transition"
+                  className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition shadow-inner"
                   dir="ltr"
                 />
               </div>
 
+              {/* Save My Identity Option */}
+              <div className="flex items-center justify-between pt-1">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 text-orange-600 border-slate-300 rounded focus:ring-orange-500 accent-orange-600 transition"
+                  />
+                  <span className="text-xs font-medium text-slate-700">
+                    حفظ بيانات الدخول على هذا الجهاز
+                  </span>
+                </label>
+              </div>
+
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-2">نوع الجهاز (جلسة العمل)</label>
-                <div className="grid grid-cols-2 gap-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-2">
+                  نوع الجهاز (جلسة العمل)
+                </label>
+                <div className="grid grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setDeviceType('personal')}
                     className={`p-3 rounded-xl border text-xs font-medium flex flex-col items-center gap-1 transition ${
                       deviceType === 'personal'
-                        ? 'border-orange-500 bg-orange-950/30 text-orange-300'
-                        : 'border-slate-800 bg-slate-950 text-slate-400'
+                        ? 'border-orange-500 bg-orange-50/70 text-orange-800 font-bold shadow-sm'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
                     <span>هاتف شخصي</span>
@@ -573,11 +647,11 @@ export default function StaffPortalPage() {
                     onClick={() => setDeviceType('kitchen_tablet')}
                     className={`p-3 rounded-xl border text-xs font-medium flex flex-col items-center gap-1 transition ${
                       deviceType === 'kitchen_tablet'
-                        ? 'border-orange-500 bg-orange-950/30 text-orange-300'
-                        : 'border-slate-800 bg-slate-950 text-slate-400'
+                        ? 'border-orange-500 bg-orange-50/70 text-orange-800 font-bold shadow-sm'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <span>تابلت المطبخ المشترك</span>
+                    <span>تابلت المطبخ</span>
                     <span className="text-[10px] text-slate-500">مهلة خمول: 30 دقيقة</span>
                   </button>
                 </div>
@@ -586,7 +660,7 @@ export default function StaffPortalPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold rounded-xl text-sm shadow-lg shadow-orange-950 transition disabled:opacity-50 min-h-[48px]"
+                className="w-full py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold rounded-xl text-sm shadow-md shadow-orange-600/20 transition disabled:opacity-50 min-h-[48px] mt-2"
               >
                 {isSubmitting ? 'جاري التحقق...' : 'دخول إلى البوابة'}
               </button>
@@ -597,33 +671,33 @@ export default function StaffPortalPage() {
         /* Authenticated Staff Dashboard */
         <div className="flex flex-col flex-1 gap-4">
           {/* Main Tab Navigation */}
-          <div className="flex border-b border-slate-800">
+          <div className="bg-slate-200/80 p-1.5 rounded-2xl flex border border-slate-300/60 shadow-inner">
             <button
               onClick={() => setActiveTab('orders')}
-              className={`flex-1 py-3 text-sm font-semibold border-b-2 transition ${
+              className={`flex-1 py-2.5 text-xs md:text-sm font-bold rounded-xl transition ${
                 activeTab === 'orders'
-                  ? 'border-orange-500 text-orange-400 bg-orange-950/10'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-orange-700 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               الطلبات المباشرة ({orders.filter((o) => o.status !== 'cancelled' && o.status !== 'delivered').length})
             </button>
             <button
               onClick={() => setActiveTab('menu')}
-              className={`flex-1 py-3 text-sm font-semibold border-b-2 transition ${
+              className={`flex-1 py-2.5 text-xs md:text-sm font-bold rounded-xl transition ${
                 activeTab === 'menu'
-                  ? 'border-orange-500 text-orange-400 bg-orange-950/10'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-orange-700 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               قائمة الطعام والأسعار
             </button>
             <button
               onClick={() => setActiveTab('notifications')}
-              className={`flex-1 py-3 text-sm font-semibold border-b-2 transition ${
+              className={`flex-1 py-2.5 text-xs md:text-sm font-bold rounded-xl transition ${
                 activeTab === 'notifications'
-                  ? 'border-orange-500 text-orange-400 bg-orange-950/10'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-orange-700 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               التنبيهات الفورية (Push)
@@ -633,7 +707,7 @@ export default function StaffPortalPage() {
           {/* Orders View */}
           {activeTab === 'orders' && (
             <div className="flex flex-col gap-4">
-              {/* Order status filters */}
+              {/* Status Filter Chips */}
               <div className="flex gap-2 overflow-x-auto pb-1 text-xs">
                 {(['pending', 'preparing', 'ready_for_pickup', 'all'] as const).map((filter) => {
                   const count =
@@ -645,10 +719,10 @@ export default function StaffPortalPage() {
                     <button
                       key={filter}
                       onClick={() => setOrderFilter(filter)}
-                      className={`px-3 py-1.5 rounded-full border transition whitespace-nowrap min-h-[36px] flex items-center gap-1.5 ${
+                      className={`px-3.5 py-2 rounded-xl border transition whitespace-nowrap min-h-[38px] flex items-center gap-1.5 shadow-sm ${
                         orderFilter === filter
-                          ? 'bg-orange-500 border-orange-500 text-white font-bold'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                          ? 'bg-orange-600 border-orange-600 text-white font-bold'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                       }`}
                     >
                       <span>
@@ -662,8 +736,10 @@ export default function StaffPortalPage() {
                       </span>
                       {count > 0 && (
                         <span
-                          className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                            orderFilter === filter ? 'bg-orange-700 text-white' : 'bg-slate-800 text-slate-300'
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            orderFilter === filter
+                              ? 'bg-orange-800 text-white'
+                              : 'bg-slate-100 text-slate-700 border border-slate-200'
                           }`}
                         >
                           {count}
@@ -681,31 +757,33 @@ export default function StaffPortalPage() {
                   .map((order) => (
                     <div
                       key={order.id}
-                      className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3 shadow-md"
+                      className="bg-white border border-slate-200/90 rounded-2xl p-4 md:p-5 flex flex-col gap-3.5 shadow-sm hover:shadow transition"
                     >
-                      <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-base font-bold text-white tracking-wide">{order.order_number}</span>
-                            <span className="text-xs bg-slate-800 text-orange-300 px-2 py-0.5 rounded-lg border border-slate-700">
+                            <span className="text-base font-extrabold text-slate-900 tracking-wide">
+                              {order.order_number}
+                            </span>
+                            <span className="text-xs bg-orange-50 text-orange-700 font-semibold px-2.5 py-0.5 rounded-lg border border-orange-200/60">
                               {order.restaurant_name}
                             </span>
                           </div>
-                          <span className="text-xs text-slate-400 block mt-0.5">
+                          <span className="text-xs text-slate-500 block mt-1">
                             {order.customer_name} {order.customer_phone ? `• ${order.customer_phone}` : ''}
                           </span>
                         </div>
                         <span
-                          className={`text-xs px-2.5 py-1 rounded-full font-bold ${
+                          className={`text-xs px-3 py-1 rounded-full font-bold shadow-xs ${
                             order.status === 'pending'
-                              ? 'bg-rose-950/80 text-rose-300 border border-rose-800/50 animate-pulse'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200 animate-pulse'
                               : order.status === 'preparing'
-                              ? 'bg-amber-950/80 text-amber-300 border border-amber-800/50'
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
                               : order.status === 'ready_for_pickup'
-                              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/50'
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                               : order.status === 'delivered'
-                              ? 'bg-blue-950/80 text-blue-300 border border-blue-800/50'
-                              : 'bg-slate-800 text-slate-400'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-slate-100 text-slate-600 border border-slate-200'
                           }`}
                         >
                           {order.status === 'pending'
@@ -723,29 +801,32 @@ export default function StaffPortalPage() {
                       </div>
 
                       {/* Items */}
-                      <div className="space-y-1">
+                      <div className="space-y-1.5 py-1">
                         {order.items.map((item) => (
-                          <div key={item.id} className="flex justify-between text-xs text-slate-300">
-                            <span>
+                          <div key={item.id} className="flex justify-between text-xs text-slate-800">
+                            <span className="font-medium">
                               {item.quantity}x {item.name}
                             </span>
-                            <span className="text-slate-400">{item.price * item.quantity} دج</span>
+                            <span className="text-slate-500 font-semibold">
+                              {item.price * item.quantity} دج
+                            </span>
                           </div>
                         ))}
                       </div>
 
-                      {/* Cancellation reason note if exists */}
                       {order.cancel_reason && (
-                        <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-900/50 text-rose-300 text-[11px]">
-                          سبب الإلغاء: {order.cancel_reason}
+                        <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+                          <strong className="font-bold">سبب الإلغاء:</strong> {order.cancel_reason}
                         </div>
                       )}
 
                       {/* Total & Action Buttons */}
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-100 flex-wrap gap-2">
                         <div>
-                          <span className="text-xs text-slate-400">المجموع: </span>
-                          <span className="text-sm font-bold text-orange-400">{order.total_price} دج</span>
+                          <span className="text-xs text-slate-500">المجموع: </span>
+                          <span className="text-base font-extrabold text-orange-600">
+                            {order.total_price} دج
+                          </span>
                         </div>
 
                         <div className="flex gap-2">
@@ -753,13 +834,13 @@ export default function StaffPortalPage() {
                             <>
                               <button
                                 onClick={() => handleOrderStatusChange(order.id, 'preparing')}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition min-h-[44px]"
+                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition min-h-[42px] shadow-sm"
                               >
                                 قبول الطلب
                               </button>
                               <button
                                 onClick={() => setSelectedOrderForCancel(order)}
-                                className="px-3 py-2 bg-rose-900/40 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-medium transition min-h-[44px]"
+                                className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition min-h-[42px]"
                               >
                                 رفض
                               </button>
@@ -769,7 +850,7 @@ export default function StaffPortalPage() {
                           {order.status === 'preparing' && (
                             <button
                               onClick={() => handleOrderStatusChange(order.id, 'ready_for_pickup')}
-                              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition min-h-[44px]"
+                              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition min-h-[42px] shadow-sm"
                             >
                               جاهز للتوصيل
                             </button>
@@ -779,8 +860,9 @@ export default function StaffPortalPage() {
                     </div>
                   ))}
 
-                {orders.filter((o) => (orderFilter === 'all' ? true : o.status === orderFilter)).length === 0 && (
-                  <div className="py-12 text-center text-slate-500 text-xs">
+                {orders.filter((o) => (orderFilter === 'all' ? true : o.status === orderFilter)).length ===
+                  0 && (
+                  <div className="py-16 text-center text-slate-400 text-xs bg-white border border-slate-200 rounded-2xl">
                     لا توجد طلبات في هذه الحالة حالياً
                   </div>
                 )}
@@ -791,45 +873,47 @@ export default function StaffPortalPage() {
           {/* Menu Management View */}
           {activeTab === 'menu' && (
             <div className="flex flex-col gap-4">
-              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-xs text-slate-400 leading-relaxed">
-                ℹ️ <strong className="text-slate-200">إدارة القائمة المباشرة:</strong> يمكنك تفعيل/تعطيل توفر الأطباق،
-                وتحديث السعر الأساسي للأطباق البسيطة. الأطباق التي تحتوي على مقاسات متعددة أو إضافات (Variants/Supplements)
-                محمية بحارس البيانات لمنع تشوه التسعير.
+              <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 text-xs text-amber-900 leading-relaxed shadow-sm">
+                ℹ️ <strong className="font-bold">إدارة قائمة الطعام المباشرة:</strong> يمكنك تفعيل/تعطيل توفر الأطباق
+                وتحديث السعر الأساسي للأطباق البسيطة مباشرة. الأطباق التي تحتوي على مقاسات متعددة أو إضافات (Variants)
+                محمية بحارس البيانات لمنع أي تضارب في الأسعار.
               </div>
 
               {isLoadingMenu ? (
-                <div className="py-12 text-center text-slate-500 text-xs">جاري تحميل قائمة الطعام...</div>
+                <div className="py-16 text-center text-slate-400 text-xs bg-white border border-slate-200 rounded-2xl">
+                  جاري تحميل قائمة الطعام...
+                </div>
               ) : (
                 <div className="flex flex-col gap-3">
                   {menuItems.map((item) => (
                     <div
                       key={item.id}
-                      className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm"
                     >
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleMenuAvailabilityToggle(item.id)}
                           className={`w-12 h-6 rounded-full transition relative flex items-center p-0.5 ${
-                            item.is_available ? 'bg-emerald-600' : 'bg-slate-700'
+                            item.is_available ? 'bg-emerald-600' : 'bg-slate-300'
                           }`}
                           title={item.is_available ? 'متوفر' : 'غير متوفر'}
                         >
                           <div
-                            className={`w-5 h-5 rounded-full bg-white transition transform ${
+                            className={`w-5 h-5 rounded-full bg-white shadow-md transition transform ${
                               item.is_available ? '-translate-x-6' : 'translate-x-0'
                             }`}
                           />
                         </button>
                         <div>
-                          <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                             {item.name}
                             {item.has_complex_variants && (
-                              <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">
+                              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md border border-slate-200 font-medium">
                                 أحجام / إضافات متعددة
                               </span>
                             )}
                           </h4>
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-slate-500">
                             التصنيف: {item.category || 'عام'} • وقت التحضير: {item.preparation_time} دقيقة
                           </span>
                         </div>
@@ -837,27 +921,27 @@ export default function StaffPortalPage() {
 
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-slate-400">السعر:</span>
+                          <span className="text-xs text-slate-500 font-medium">السعر:</span>
                           <input
                             type="number"
                             defaultValue={item.price}
                             disabled={item.has_complex_variants}
                             onBlur={(e) => handlePriceUpdate(item.id, e.target.value)}
-                            className={`w-24 bg-slate-950 border rounded-lg px-2 py-1 text-sm text-center font-bold text-white focus:outline-none ${
+                            className={`w-24 bg-slate-50 border rounded-xl px-2 py-1.5 text-sm text-center font-bold text-slate-900 focus:outline-none focus:bg-white ${
                               item.has_complex_variants
-                                ? 'border-slate-800 text-slate-500 cursor-not-allowed opacity-60'
-                                : 'border-slate-700 focus:border-orange-500'
+                                ? 'border-slate-200 text-slate-400 cursor-not-allowed opacity-60'
+                                : 'border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-100'
                             }`}
                             dir="ltr"
                           />
-                          <span className="text-xs text-slate-400">دج</span>
+                          <span className="text-xs text-slate-500 font-medium">دج</span>
                         </div>
                       </div>
                     </div>
                   ))}
 
                   {menuItems.length === 0 && (
-                    <div className="py-12 text-center text-slate-500 text-xs">
+                    <div className="py-16 text-center text-slate-400 text-xs bg-white border border-slate-200 rounded-2xl">
                       لا توجد أطباق مسجلة لهذا المطعم
                     </div>
                   )}
@@ -868,32 +952,31 @@ export default function StaffPortalPage() {
 
           {/* Web Push Alerts View */}
           {activeTab === 'notifications' && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col gap-4">
-              <h3 className="text-base font-bold text-white">إعداد التنبيهات الفورية (Web Push)</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                قم بتفعيل الإشعارات الفورية على هذا الجهاز لتلقي رنين صوتي مميز فور وصول طلب جديد لمطعمك، حتى وإن كان المتصفح
-                في الخلفية أو الجهاز مقفلاً.
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+              <h3 className="text-base font-bold text-slate-900">إعداد التنبيهات الفورية (Web Push)</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                قم بتفعيل الإشعارات الفورية على هذا الجهاز لتلقي رنين صوتي مميز فور وصول طلب جديد لمطعمك، حتى وإن كان
+                المتصفح في الخلفية أو الجهاز مقفلاً.
               </p>
 
-              {/* iOS Safari Instruction Card */}
               {isIOSInBrowser && (
-                <div className="p-4 bg-orange-950/40 border border-orange-700/60 rounded-xl text-xs text-orange-200 flex flex-col gap-2">
-                  <span className="font-bold text-sm">📱 خطوة تفعيل لمستخدمي iPhone (iOS):</span>
-                  <p>أبل تشترط إضافة الموقع للشاشة الرئيسية لتشغيل الإشعارات في الخلفية:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-slate-300">
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl text-xs text-orange-950 flex flex-col gap-2">
+                  <span className="font-bold text-sm text-orange-900">📱 خطوة تفعيل لمستخدمي iPhone (iOS):</span>
+                  <p className="text-slate-700">تشترط أبل إضافة الموقع للشاشة الرئيسية لتشغيل الإشعارات في الخلفية:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-slate-700">
                     <li>
-                      اضغط على زر المشاركة أسفل Safari <strong className="text-white">(أيقونة ⎋ المربع بسهم)</strong>.
+                      اضغط على زر المشاركة أسفل Safari <strong className="text-slate-900">(أيقونة ⎋ المربع بسهم)</strong>.
                     </li>
                     <li>
-                      مرر للأسفل واختر <strong className="text-white">«إضافة إلى الصفحة الرئيسية» (Add to Home Screen)</strong>.
+                      مرر للأسفل واختر <strong className="text-slate-900">«إضافة إلى الصفحة الرئيسية» (Add to Home Screen)</strong>.
                     </li>
-                    <li>افتح التطبيق من الأيقونة على شاشتك واضغط تفعيل ليعمل الرنين والتنبيه مثل التطبيقات الأصلية!</li>
+                    <li>افتح التطبيق من الأيقونة على شاشتك واضغط تفعيل ليعمل الرنين والتنبيه فوراً.</li>
                   </ol>
                 </div>
               )}
 
               {pushStatusMessage && (
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 whitespace-pre-line">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 whitespace-pre-line">
                   {pushStatusMessage}
                 </div>
               )}
@@ -901,7 +984,7 @@ export default function StaffPortalPage() {
               <button
                 onClick={subscribePush}
                 disabled={pushSubscribed}
-                className="py-3 px-6 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs shadow-lg transition disabled:opacity-50 min-h-[44px] self-start"
+                className="py-3 px-6 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl text-xs shadow-md shadow-orange-600/20 transition disabled:opacity-50 min-h-[44px] self-start"
               >
                 {pushSubscribed ? 'التنبيهات مفعلة على هذا الجهاز ✓' : 'تفعيل إشعارات الطلبات الفورية'}
               </button>
@@ -912,10 +995,12 @@ export default function StaffPortalPage() {
 
       {/* Cancellation Reason Modal */}
       {selectedOrderForCancel && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4">
-            <h3 className="text-base font-bold text-white">إلغاء الطلب {selectedOrderForCancel.order_number}</h3>
-            <p className="text-xs text-slate-400">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4">
+            <h3 className="text-base font-bold text-slate-900">
+              إلغاء الطلب {selectedOrderForCancel.order_number}
+            </h3>
+            <p className="text-xs text-slate-600">
               يرجى تحديد سبب الإلغاء ليتم إرساله للزبون وتوثيق العملية في سجل النظام:
             </p>
 
@@ -924,20 +1009,22 @@ export default function StaffPortalPage() {
               onChange={(e) => setCancelReason(e.target.value)}
               placeholder="مثال: نفاد المكونات الأساسية، المطعم مغلق للصيانة..."
               rows={3}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:border-orange-500 focus:bg-white"
             />
 
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setSelectedOrderForCancel(null)}
-                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-medium"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold"
               >
                 تراجع
               </button>
               <button
-                onClick={() => handleOrderStatusChange(selectedOrderForCancel.id, 'cancelled', cancelReason)}
+                onClick={() =>
+                  handleOrderStatusChange(selectedOrderForCancel.id, 'cancelled', cancelReason)
+                }
                 disabled={!cancelReason.trim() || cancelReason.trim().length < 3}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition disabled:opacity-40"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition disabled:opacity-40"
               >
                 تأكيد الإلغاء
               </button>

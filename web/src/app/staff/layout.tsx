@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   manifest: '/staff-manifest.webmanifest',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'Sahla Staff',
   },
   icons: {
@@ -21,7 +21,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#EA580C',
+  themeColor: '#ffffff',
 };
 
 export default function StaffLayout({
@@ -30,7 +30,7 @@ export default function StaffLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
       {children}
     </div>
   );
