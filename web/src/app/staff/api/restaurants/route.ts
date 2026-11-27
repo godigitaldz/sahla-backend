@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       .order('name', { ascending: true });
 
     if (profile.role !== 'admin' && profile.role !== 'super_admin') {
-      if (profile.role === 'owner') {
+      if (profile.role === 'owner' || profile.role === 'restaurant_owner') {
         query = query.eq('owner_id', user.id);
       } else {
         const { data: staffMemberships } = await supabaseAdmin

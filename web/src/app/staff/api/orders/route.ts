@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (restaurantId && restaurantId !== 'all') {
       query = query.eq('restaurant_id', restaurantId);
     } else if (profile.role !== 'admin' && profile.role !== 'super_admin') {
-      if (profile.role === 'owner') {
+      if (profile.role === 'owner' || profile.role === 'restaurant_owner') {
         const { data: owned } = await supabaseAdmin
           .from('restaurants')
           .select('id')

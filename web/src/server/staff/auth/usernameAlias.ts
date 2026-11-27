@@ -37,6 +37,10 @@ export function isValidUsername(username: string): { valid: boolean; reason?: st
   return { valid: true };
 }
 
+const USERNAME_ALIASES: Record<string, string> = {
+  hichem: 'hcihem',
+};
+
 export function usernameToInternalAlias(
   username: string,
   domain: string = DEFAULT_ALIAS_DOMAIN,
@@ -46,7 +50,9 @@ export function usernameToInternalAlias(
     throw new Error(`Invalid username: ${check.reason}`);
   }
   const cleanDomain = domain.trim().toLowerCase();
-  return `${normalizeUsername(username)}@${cleanDomain}`;
+  const normalized = normalizeUsername(username);
+  const resolved = USERNAME_ALIASES[normalized] || normalized;
+  return `${resolved}@${cleanDomain}`;
 }
 
 export function internalAliasToUsername(

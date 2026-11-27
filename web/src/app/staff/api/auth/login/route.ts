@@ -110,7 +110,12 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     const role = profile?.role || 'customer';
-    const isStaffOrAdmin = role === 'admin' || role === 'super_admin' || role === 'owner' || role === 'manager';
+    const isStaffOrAdmin =
+      role === 'admin' ||
+      role === 'super_admin' ||
+      role === 'owner' ||
+      role === 'manager' ||
+      role === 'restaurant_owner';
 
     if (!isStaffOrAdmin) {
       // Sign out unauthorized user immediately

@@ -64,7 +64,7 @@ export async function requireStaffSession(request: NextRequest): Promise<StaffAu
     .maybeSingle();
 
   const role = profile?.role || 'customer';
-  const isStaff = ['admin', 'super_admin', 'owner', 'manager'].includes(role);
+  const isStaff = ['admin', 'super_admin', 'owner', 'manager', 'restaurant_owner'].includes(role);
 
   if (!isStaff) {
     return {

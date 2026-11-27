@@ -39,7 +39,7 @@ export async function POST(
     let restaurantIds: string[] = [];
 
     if (!isAdmin) {
-      if (profile.role === 'owner') {
+      if (profile.role === 'owner' || profile.role === 'restaurant_owner') {
         const { data: owned } = await supabaseAdmin
           .from('restaurants')
           .select('id')

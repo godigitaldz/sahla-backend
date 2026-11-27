@@ -28,7 +28,7 @@ export async function PATCH(
     // 2. Validate tenant access
     const isAdmin = profile.role === 'admin' || profile.role === 'super_admin';
     if (!isAdmin) {
-      if (profile.role === 'owner') {
+      if (profile.role === 'owner' || profile.role === 'restaurant_owner') {
         const { data: rest } = await supabaseAdmin
           .from('restaurants')
           .select('id')
