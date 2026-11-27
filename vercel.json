@@ -82,10 +82,6 @@
       "dest": "/t/$1"
     },
     {
-      "src": "/staff(.*)",
-      "dest": "/staff$1"
-    },
-    {
       "src": "/api/(.*)",
       "dest": "src/index.js"
     },
