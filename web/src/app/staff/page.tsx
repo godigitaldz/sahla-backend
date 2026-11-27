@@ -946,13 +946,44 @@ export default function StaffPortalPage() {
                 </div>
               )}
 
-              <button
-                onClick={subscribePush}
-                disabled={pushSubscribed}
-                className="py-3 px-6 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl text-xs shadow-md shadow-orange-600/20 transition disabled:opacity-50 min-h-[44px] self-start"
-              >
-                {pushSubscribed ? 'التنبيهات مفعلة على هذا الجهاز ✓' : 'تفعيل إشعارات الطلبات الفورية'}
-              </button>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  onClick={subscribePush}
+                  disabled={pushSubscribed}
+                  className="py-3 px-6 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl text-xs shadow-md shadow-orange-600/20 transition disabled:opacity-50 min-h-[44px]"
+                >
+                  {pushSubscribed ? 'التنبيهات مفعلة على هذا الجهاز ✓' : 'تفعيل إشعارات الطلبات الفورية'}
+                </button>
+
+                <button
+                  onClick={() => {
+                    try {
+                      const audio = new Audio('/sounds/new_order_alert.mp3');
+                      audio.volume = 1.0;
+                      audio.play().catch(() => {});
+                    } catch {}
+                  }}
+                  className="py-3 px-5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-bold rounded-xl text-xs transition flex items-center gap-2 min-h-[44px]"
+                >
+                  <span>🔊</span>
+                  <span>تجربة رنين نغمة ساهلة المخصصة</span>
+                </button>
+              </div>
+
+              <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-950 leading-relaxed space-y-1.5">
+                <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                  <span>💡</span>
+                  <span>توضيح تقني بخصوص نغمة الإشعار على نظام iOS (أبل):</span>
+                </div>
+                <ul className="list-disc list-inside space-y-1 text-slate-700 pr-1">
+                  <li>
+                    <strong>أثناء فتح البوابة على الشاشة (في المطبخ أو الكاونتر):</strong> تنطلق نغمة ساهلة المخصصة فورياً وبأعلى صوت بمجرد تسجيل طلب جديد.
+                  </li>
+                  <li>
+                    <strong>أثناء قفل الشاشة (في الخلفية):</strong> نظام iOS لا يسمح لأي تطبيق ويب (PWA) باختيار ملف صوتي مخصص أثناء القفل، ويستخدم حصرياً رنين النظام المعتمد في إعدادات جهازك.
+                  </li>
+                </ul>
+              </div>
             </div>
           )}
         </div>
