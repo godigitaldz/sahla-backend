@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
 
     const response = NextResponse.json({ authenticated: false });
+    const PERMANENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
 
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
@@ -15,10 +16,17 @@ export async function GET(request: NextRequest) {
           return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({ name, value, ...options });
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+            maxAge: PERMANENT_COOKIE_MAX_AGE,
+            sameSite: 'lax',
+            path: '/',
+          });
         },
         remove(name: string, options: CookieOptions) {
-          response.cookies.set({ name, value: '', ...options });
+          response.cookies.set({ name, value: '', ...options, path: '/' });
         },
       },
     });
@@ -34,7 +42,7 @@ export async function GET(request: NextRequest) {
       .eq('id', authData.user.id)
       .maybeSingle();
 
-    return NextResponse.json({
+    const finalResponse = NextResponse.json({
       authenticated: true,
       user: {
         id: authData.user.id,
@@ -44,6 +52,17 @@ export async function GET(request: NextRequest) {
         phone: profile?.phone,
       },
     });
+
+    response.cookies.getAll().forEach((cookie) => {
+      finalResponse.cookies.set({
+        ...cookie,
+        maxAge: PERMANENT_COOKIE_MAX_AGE,
+        sameSite: 'lax',
+        path: '/',
+      });
+    });
+
+    return finalResponse;
   } catch (err: any) {
     return NextResponse.json({ authenticated: false, error: err.message }, { status: 500 });
   }

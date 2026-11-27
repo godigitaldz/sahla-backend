@@ -58,7 +58,7 @@ export default function StaffPortalPage() {
   const [currentUser, setCurrentUser] = useState<StaffUser | null>(null);
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [deviceType, setDeviceType] = useState<'personal' | 'kitchen_tablet'>('personal');
+  const [deviceType] = useState<'personal'>('personal');
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [loginError, setLoginError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -525,16 +525,10 @@ export default function StaffPortalPage() {
       {!isAuthenticated ? (
         <div className="flex flex-col items-center justify-center flex-1 py-6">
           <div className="w-full max-w-md bg-white border border-slate-200/90 rounded-2xl p-6 md:p-8 shadow-xl shadow-slate-200/50">
-            <div className="text-center mb-6">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-50 border border-orange-200/60 flex items-center justify-center text-orange-600 font-black text-3xl mb-3 shadow-inner">
+            <div className="flex justify-center mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-orange-50 border border-orange-200/60 flex items-center justify-center text-orange-600 font-black text-3xl shadow-inner">
                 س
               </div>
-              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-                تسجيل دخول طاقم العمل
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                سجل دخولك باسم المستخدم الخاص بمطعمك للوصول إلى لوحة التحكم
-              </p>
             </div>
 
             {loginError && (
@@ -574,7 +568,7 @@ export default function StaffPortalPage() {
               </div>
 
               {/* Save My Identity Option */}
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-1 pb-1">
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -586,39 +580,6 @@ export default function StaffPortalPage() {
                     حفظ بيانات الدخول على هذا الجهاز
                   </span>
                 </label>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-2">
-                  نوع الجهاز (جلسة العمل)
-                </label>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setDeviceType('personal')}
-                    className={`p-3 rounded-xl border text-xs font-medium flex flex-col items-center gap-1 transition ${
-                      deviceType === 'personal'
-                        ? 'border-orange-500 bg-orange-50/70 text-orange-800 font-bold shadow-sm'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span>هاتف شخصي</span>
-                    <span className="text-[10px] text-slate-500">مهلة خمول: 12 ساعة</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setDeviceType('kitchen_tablet')}
-                    className={`p-3 rounded-xl border text-xs font-medium flex flex-col items-center gap-1 transition ${
-                      deviceType === 'kitchen_tablet'
-                        ? 'border-orange-500 bg-orange-50/70 text-orange-800 font-bold shadow-sm'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span>تابلت المطبخ</span>
-                    <span className="text-[10px] text-slate-500">مهلة خمول: 30 دقيقة</span>
-                  </button>
-                </div>
               </div>
 
               <button

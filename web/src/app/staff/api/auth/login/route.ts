@@ -61,16 +61,26 @@ export async function POST(request: NextRequest) {
     const supabaseAnonKey =
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
 
+    // Permanent cookie max age: 1 year for continuous stable notification reception
+    const PERMANENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
+
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({ name, value, ...options });
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+            maxAge: PERMANENT_COOKIE_MAX_AGE,
+            sameSite: 'lax',
+            path: '/',
+          });
         },
         remove(name: string, options: CookieOptions) {
-          response.cookies.set({ name, value: '', ...options });
+          response.cookies.set({ name, value: '', ...options, path: '/' });
         },
       },
     });
@@ -125,7 +135,12 @@ export async function POST(request: NextRequest) {
     });
 
     response.cookies.getAll().forEach((cookie) => {
-      finalResponse.cookies.set(cookie);
+      finalResponse.cookies.set({
+        ...cookie,
+        maxAge: PERMANENT_COOKIE_MAX_AGE,
+        sameSite: 'lax',
+        path: '/',
+      });
     });
 
     return finalResponse;
