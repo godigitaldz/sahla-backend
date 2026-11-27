@@ -73,10 +73,12 @@ self.addEventListener('push', (event) => {
     body: payload.body || 'تنبيه جديد من ساهلة',
     icon: '/favicon.ico',
     badge: '/favicon.ico',
-    vibrate: [200, 100, 200, 100, 200],
+    vibrate: [500, 200, 500, 200, 500, 200, 500],
     data: payload.data || { url: '/staff/' },
     tag: payload.data?.order_id || 'staff-order-alert',
     renotify: true,
+    requireInteraction: true,
+    silent: false,
   };
 
   event.waitUntil(self.registration.showNotification(payload.title || 'ساهلة — تنبيه المطعم', options));

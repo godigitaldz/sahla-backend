@@ -18,7 +18,12 @@
     "test:web": "npm --prefix web test",
     "test": "node --env-file-if-exists=.env.production.local --test $(find src -name \"*.test.js\")"
   },
-  "keywords": ["food", "delivery", "api", "supabase"],
+  "keywords": [
+    "food",
+    "delivery",
+    "api",
+    "supabase"
+  ],
   "author": "Sahla Team",
   "license": "MIT",
   "dependencies": {
@@ -29,7 +34,8 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
-    "helmet": "^7.1.0"
+    "helmet": "^7.1.0",
+    "web-push": "^4.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

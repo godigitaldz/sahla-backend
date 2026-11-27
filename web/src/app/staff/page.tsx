@@ -393,7 +393,7 @@ export default function StaffPortalPage() {
     }
   };
 
-  const subscribePush = async () => {
+  const subscribePush = useCallback(async () => {
     if (isIOSInBrowser) {
       setPushStatusMessage(
         '⚠️ لتفعيل الإشعارات على أجهزة iPhone:\n1. اضغط على أيقونة المشاركة (⎋ Share) أسفل الشاشة.\n2. اختر «إضافة إلى الصفحة الرئيسية» (Add to Home Screen).\n3. افتح التطبيق من الشاشة الرئيسية واضغط تفعيل.',
@@ -428,13 +428,22 @@ export default function StaffPortalPage() {
 
       if ('PushManager' in window && reg.pushManager) {
         let sub = await reg.pushManager.getSubscription();
-        if (!sub) {
-          sub = await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey:
-              'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
-          });
+        const vapidPublicKey =
+          process.env.NEXT_PUBLIC_ADMIN_VAPID_PUBLIC_KEY ||
+          'BCPctlKMTymGl3KJ6qJl22UASeM-nSRSBAmyKrT8xRA9avZMMHMBVk7nQeqRkm_zbSFfjZLyVG1hWN5Q-5dnY3U';
+
+        if (sub) {
+          try {
+            await sub.unsubscribe();
+          } catch (e) {
+            console.warn('[Push] Unsubscribe previous key:', e);
+          }
         }
+
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: vapidPublicKey,
+        });
 
         await fetch('/staff/api/push/subscribe', {
           method: 'POST',
@@ -473,7 +482,15 @@ export default function StaffPortalPage() {
     } catch (err: any) {
       setPushStatusMessage('تعذر تفعيل الإشعارات: ' + (err.message || err));
     }
-  };
+  }, [deviceType, isIOSInBrowser]);
+
+  // Auto-subscribe or refresh Web Push if permission is granted
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      subscribePush();
+    }
+  }, [isAuthenticated, subscribePush]);
 
   return (
     <div
