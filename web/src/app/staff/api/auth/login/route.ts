@@ -111,8 +111,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Return authenticated profile info
-    return NextResponse.json({
+    // Return authenticated profile info with session cookies preserved
+    const finalResponse = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -123,6 +123,12 @@ export async function POST(request: NextRequest) {
         device_type,
       },
     });
+
+    response.cookies.getAll().forEach((cookie) => {
+      finalResponse.cookies.set(cookie);
+    });
+
+    return finalResponse;
   } catch (err: any) {
     console.error('[staff-login] Error:', err);
     return NextResponse.json(
