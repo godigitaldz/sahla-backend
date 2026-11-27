@@ -23,7 +23,7 @@ before(async () => {
   ({ SupabasePushGateway } = await import('../modules/notifications/supabasePushGateway.js'));
 });
 
-test('F01: AASA files only declare primary iOS team & bundle ID', () => {
+test('F01: AASA files only declare parameterized iOS team & bundle ID (no stale terminated teams)', () => {
   const rootAasa = JSON.parse(
     readFileSync('public/.well-known/apple-app-site-association', 'utf8'),
   );
@@ -36,11 +36,12 @@ test('F01: AASA files only declare primary iOS team & bundle ID', () => {
   );
 
   for (const aasa of [rootAasa, webAasa]) {
-    assert.deepEqual(aasa.applinks.details[0].appIDs, ['9P628XCQ94.com.sahla.sahlaalgerie']);
-    assert.deepEqual(aasa.webcredentials.apps, ['9P628XCQ94.com.sahla.sahlaalgerie']);
+    assert.deepEqual(aasa.applinks.details[0].appIDs, ['TARGET_APPLE_TEAM_ID.com.sahla.sahlaalgerie']);
+    assert.deepEqual(aasa.webcredentials.apps, ['TARGET_APPLE_TEAM_ID.com.sahla.sahlaalgerie']);
   }
 
-  assert.match(routeTs, /9P628XCQ94\.com\.sahla\.sahlaalgerie/);
+  assert.match(routeTs, /TARGET_APPLE_TEAM_ID/);
+  assert.doesNotMatch(routeTs, /9P628XCQ94/);
   assert.doesNotMatch(routeTs, /T8CTMB48BY/);
   assert.doesNotMatch(routeTs, /com\.godigital\.sahla/);
 });
@@ -111,13 +112,14 @@ test('F08: SupabasePushGateway defaults force_activate_inactive_tokens to false'
   assert.match(perfHtml, /const forceActivate = false;/);
 });
 
-test('F15: admin-fixed-otp and performance /auth fail closed without configured secrets', async () => {
+test('F15: admin-fixed-otp is disabled even when legacy secrets are configured', async () => {
   const prevOtp = process.env.ADMIN_FIXED_OTP;
   const prevDashPwd = process.env.PERFORMANCE_DASHBOARD_PASSWORD;
   const prevSessionSecret = process.env.PERFORMANCE_SESSION_SECRET;
   const prevServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  delete process.env.ADMIN_FIXED_OTP;
+  process.env.ADMIN_FIXED_OTP = 'legacy-fixed-test-code';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
   delete process.env.PERFORMANCE_DASHBOARD_PASSWORD;
   delete process.env.PERFORMANCE_SESSION_SECRET;
 
@@ -135,9 +137,13 @@ test('F15: admin-fixed-otp and performance /auth fail closed without configured 
     const otpRes = await fetch(`${baseUrl}/api/auth/admin-fixed-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: '+213555000000', otp: '05102002' }),
+      body: JSON.stringify({ phone: '+213555000000', otp: 'legacy-fixed-test-code' }),
     });
-    assert.equal(otpRes.status, 503);
+    assert.equal(otpRes.status, 410);
+    assert.deepEqual(await otpRes.json(), {
+      success: false,
+      error: 'admin_fixed_otp_disabled',
+    });
 
     const perfRes = await fetch(`${baseUrl}/api/performance/auth`, {
       method: 'POST',
@@ -159,9 +165,11 @@ test('F15: admin-fixed-otp and performance /auth fail closed without configured 
   } finally {
     server.close();
     if (prevOtp !== undefined) process.env.ADMIN_FIXED_OTP = prevOtp;
+    else delete process.env.ADMIN_FIXED_OTP;
     if (prevDashPwd !== undefined) process.env.PERFORMANCE_DASHBOARD_PASSWORD = prevDashPwd;
     if (prevSessionSecret !== undefined) process.env.PERFORMANCE_SESSION_SECRET = prevSessionSecret;
     if (prevServiceKey !== undefined) process.env.SUPABASE_SERVICE_ROLE_KEY = prevServiceKey;
+    else delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   }
 });
 

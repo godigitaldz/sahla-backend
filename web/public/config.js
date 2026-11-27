@@ -13,10 +13,10 @@ var CONFIG = {
   DOMAIN: "sahla-backend.vercel.app",
   HOST: "sahla-backend.vercel.app", // TODO_HOST: Replace with custom production domain you control (e.g., get.sahla.dz or sahla-app.com)
 
-  // iOS App Configuration (App Store ID: 6834895657, Team: 9P628XCQ94)
-  IOS_APP_STORE_URL: "https://apps.apple.com/dz/app/sahla-algerie/id6834895657",
+  // iOS App Configuration (Pending new Apple Developer account)
+  IOS_APP_STORE_URL: window.__ENV?.IOS_APP_STORE_URL || "",
   IOS_BUNDLE_ID: "com.sahla.sahlaalgerie",
-  IOS_TEAM_ID: "9P628XCQ94",
+  IOS_TEAM_ID: window.__ENV?.IOS_TEAM_ID || "",
   IOS_URI_SCHEME: "sahla://",
 
   // Android App Configuration (Package: com.godigital.sahla)

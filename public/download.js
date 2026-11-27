@@ -13,9 +13,9 @@ var DEFAULT_CONFIG = {
   APP_NAME: "Sahla",
   // TODO_HOST: Replace with custom production domain (e.g. get.sahla.dz or sahla-app.com)
   HOST: "sahla-backend.vercel.app",
-  IOS_APP_STORE_URL: "https://apps.apple.com/dz/app/sahla-algerie/id6834895657",
+  IOS_APP_STORE_URL: window.SAHLA_CONFIG?.IOS_APP_STORE_URL || "",
   IOS_BUNDLE_ID: "com.sahla.sahlaalgerie",
-  IOS_TEAM_ID: "9P628XCQ94",
+  IOS_TEAM_ID: window.SAHLA_CONFIG?.IOS_TEAM_ID || "",
   IOS_URI_SCHEME: "sahla://",
   ANDROID_PLAY_STORE_URL: "https://play.google.com/store/apps/details?id=com.godigital.sahla",
   ANDROID_PACKAGE: "com.godigital.sahla",

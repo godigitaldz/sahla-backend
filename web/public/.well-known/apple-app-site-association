@@ -4,7 +4,7 @@
     "details": [
       {
         "appIDs": [
-          "9P628XCQ94.com.sahla.sahlaalgerie"
+          "TARGET_APPLE_TEAM_ID.com.sahla.sahlaalgerie"
         ],
         "components": [
           {
@@ -35,7 +35,7 @@
   },
   "webcredentials": {
     "apps": [
-      "9P628XCQ94.com.sahla.sahlaalgerie"
+      "TARGET_APPLE_TEAM_ID.com.sahla.sahlaalgerie"
     ]
   }
 }

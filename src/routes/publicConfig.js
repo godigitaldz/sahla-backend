@@ -316,7 +316,7 @@ router.get('/system-urls', async (req, res) => {
       adminDashboardUrl: map.get('admin_dashboard_url') || `${baseUrl}/performance`,
       appStoreUrlIos: sanitizeIosAppStoreUrl(
         map.get('app_store_url_ios') || map.get('app_update_url_ios'),
-        'https://apps.apple.com/dz/app/sahla-algerie/id6834895657',
+        process.env.IOS_APP_STORE_URL || '',
       ),
       appStoreUrlAndroid:
         map.get('app_store_url_android') ||
