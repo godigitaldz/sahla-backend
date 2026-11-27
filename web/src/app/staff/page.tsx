@@ -484,13 +484,20 @@ export default function StaffPortalPage() {
     }
   }, [deviceType, isIOSInBrowser]);
 
-  // Auto-subscribe or refresh Web Push if permission is granted
+  // Check existing push subscription on mount/navigation without re-prompting
   useEffect(() => {
-    if (!isAuthenticated) return;
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      subscribePush();
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(async (reg) => {
+          const sub = await reg.pushManager?.getSubscription();
+          if (sub) {
+            setPushSubscribed(true);
+            setPushStatusMessage('تم تفعيل التنبيهات الفورية بنجاح على هذا الجهاز ✓');
+          }
+        }).catch(() => {});
+      }
     }
-  }, [isAuthenticated, subscribePush]);
+  }, [isAuthenticated]);
 
   return (
     <div
