@@ -125,23 +125,7 @@ test('ingest rate limit silently drops requests beyond 120 per minute per IP', a
   assert.equal(inserts.length, 120);
 });
 
-test('stats endpoint requires the Performance cookie and returns the RPC aggregation', async () => {
-  const denied = await fetch(`${baseUrl}/api/performance/download-stats?from=2026-11-01&to=2026-11-22`);
-  assert.equal(denied.status, 401);
-
-  const login = await fetch(`${baseUrl}/api/performance/auth`, {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ password: 'local-test-password' }),
-  });
-  assert.equal(login.status, 200);
-  const cookie = login.headers.get('set-cookie').split(';')[0];
-  rpcResult = {
-    totals: { entered: 3, reached_store: 1, app_open_attempts: 2, likely_opened: 1, conversion_rate: 33.33, likely_opened_rate: 33.33 },
-    byPlatform: [{ key: 'ios', sessions: 2 }], byInApp: [], bySource: [], byRoute: [], byDay: [],
-  };
-  const stats = await fetch(`${baseUrl}/api/performance/download-stats?from=2026-11-01&to=2026-11-22&tz=Africa%2FAlgiers`, {
-    headers: { cookie },
-  });
-  assert.equal(stats.status, 200);
-  assert.equal((await stats.json()).totals.conversion_rate, 33.33);
+test('download-stats endpoint is permanently removed', async () => {
+  const res = await fetch(`${baseUrl}/api/performance/download-stats?from=2026-11-01&to=2026-11-22`);
+  assert.equal(res.status, 404);
 });

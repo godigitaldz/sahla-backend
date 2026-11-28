@@ -390,15 +390,6 @@ function requirePerformanceAuth(req, res, next) {
   return next();
 }
 
-const downloadStatsCache = new Map();
-
-function parseDownloadStatsDate(value, fallback) {
-  const date = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
-    ? new Date(`${value}T00:00:00.000Z`)
-    : fallback;
-  return Number.isNaN(date.getTime()) ? fallback : date;
-}
-
 function safeEqualUtf8(a, b) {
   const ba = Buffer.from(String(a), 'utf8');
   const bb = Buffer.from(String(b), 'utf8');
@@ -600,43 +591,6 @@ router.post('/auth', async (req, res) => {
 router.post('/logout', requirePerformanceAuth, (req, res) => {
   res.setHeader('Set-Cookie', `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
   return res.json({ success: true });
-});
-
-router.get('/download-stats', requirePerformanceAuth, async (req, res) => {
-  const tz = String(req.query.tz || 'Africa/Algiers').slice(0, 80);
-  try {
-    // Intl validates the zone before passing it to PostgreSQL's timezone().
-    new Intl.DateTimeFormat('en', { timeZone: tz });
-    const today = new Intl.DateTimeFormat('en-CA', {
-      timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
-    }).format(new Date());
-    const toDay = typeof req.query.to === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.to)
-      ? req.query.to : today;
-    const toDate = parseDownloadStatsDate(toDay, new Date());
-    const fromFallback = new Date(toDate.getTime() - 29 * 86400_000);
-    const fromDay = typeof req.query.from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.from)
-      ? req.query.from : fromFallback.toISOString().slice(0, 10);
-    const fromDate = parseDownloadStatsDate(fromDay, fromFallback);
-    const exclusiveToDate = new Date(toDate.getTime() + 86400_000);
-    if (fromDate > toDate || exclusiveToDate - fromDate > 366 * 86400_000) {
-      return res.status(400).json({ success: false, error: 'invalid_date_range' });
-    }
-    const cacheKey = `${fromDay}|${toDay}|${tz}`;
-    const cached = downloadStatsCache.get(cacheKey);
-    if (cached && Date.now() - cached.at < 45_000) return res.json(cached.data);
-    const { data, error } = await supabaseAdmin.rpc('download_event_stats', {
-      p_from: fromDay,
-      p_to: exclusiveToDate.toISOString().slice(0, 10),
-      p_tz: tz,
-    });
-    if (error) throw error;
-    const result = { success: true, ...data };
-    downloadStatsCache.set(cacheKey, { at: Date.now(), data: result });
-    return res.json(result);
-  } catch (error) {
-    console.error('performance /download-stats', error?.message || 'stats_query_failed');
-    return res.status(500).json({ success: false, error: 'stats_unavailable' });
-  }
 });
 
 /* ========================================================================= */

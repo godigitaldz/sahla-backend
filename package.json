@@ -13,7 +13,6 @@
     "test:download": "node scripts/test-download-page.js",
     "test:download-tracking": "node scripts/test-download-tracking.js",
     "test:tracking-api": "node --test src/routes/downloadTracking.test.js",
-    "screenshot:download-funnel": "node scripts/capture-download-funnel.js",
     "test:safe": "node --test $(find src -name \"*.test.js\")",
     "test:web": "npm --prefix web test",
     "test": "node --env-file-if-exists=.env.production.local --test $(find src -name \"*.test.js\")"
