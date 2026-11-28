@@ -172,32 +172,22 @@
         cursor: pointer;
       }
       .login-panel {
-        max-width: 430px;
-        margin: 60px auto;
-        padding: 32px 28px;
+        max-width: 400px;
+        margin: 100px auto;
+        padding: 30px 24px;
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: 18px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-      }
-      .login-panel h2 {
-        margin: 0 0 8px;
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: var(--text);
-      }
-      .login-panel p {
-        margin: 0 0 20px;
-        color: var(--muted);
-        font-size: 0.88rem;
-        line-height: 1.45;
+        box-shadow: 0 12px 36px rgba(15, 23, 42, 0.09);
       }
       .login-field-group {
         margin-bottom: 16px;
         text-align: start;
       }
       .login-input-wrap {
-        display: flex;
+        direction: ltr !important;
+        display: flex !important;
+        flex-direction: row !important;
         align-items: center;
         background: #fff;
         border: 1.5px solid #cbd5e1;
@@ -210,17 +200,22 @@
         box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.18);
       }
       .login-input-prefix {
+        direction: ltr !important;
         display: inline-flex;
         align-items: center;
         padding: 10px 12px;
         background: #f8fafc;
-        border-inline-end: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0 !important;
+        border-left: none !important;
         font-size: 0.88rem;
         font-weight: 700;
         color: #475569;
         user-select: none;
+        flex-shrink: 0;
       }
       .login-input-wrap input {
+        direction: ltr !important;
+        text-align: left !important;
         border: none !important;
         outline: none !important;
         box-shadow: none !important;
@@ -231,18 +226,49 @@
         color: var(--text);
         border-radius: 0;
       }
+      .login-input-wrap input::placeholder {
+        text-align: left !important;
+        direction: ltr !important;
+      }
       .login-link-btn {
         background: none;
         border: none;
-        padding: 2px 6px;
+        padding: 6px 12px;
         cursor: pointer;
-        font-size: 0.82rem;
+        font-size: 0.95rem;
         color: #64748b;
         border-radius: 4px;
+        flex-shrink: 0;
       }
       .login-link-btn:hover {
         background: #f1f5f9;
         color: #0f172a;
+      }
+      .login-remember-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin: 14px 0 18px;
+      }
+      .login-checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 0.86rem;
+        font-weight: 500;
+        color: #475569;
+        text-transform: none;
+        letter-spacing: normal;
+        user-select: none;
+        margin-bottom: 0;
+      }
+      .login-checkbox-label input[type='checkbox'] {
+        width: 17px;
+        height: 17px;
+        accent-color: var(--accent);
+        cursor: pointer;
+        margin: 0;
       }
       .login-panel .err {
         margin-top: 14px;
@@ -2454,15 +2480,6 @@
   <body>
     <div id="gate">
       <div class="login-panel">
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:18px;">
-          <div class="sahla-gate-logo-circle" title="Sahla Delivery">
-            <img src="/sahla-logo-circle.png" alt="Sahla Logo" />
-          </div>
-          <span style="font-family:'Cairo',sans-serif;font-size:1.35rem;font-weight:900;color:#064E3B;margin-top:6px;line-height:1;">ساهلة</span>
-        </div>
-        <h2 data-i18n="gate_title">لوحة التحكم والعمليات</h2>
-        <p data-i18n="gate_desc">أدخل رقم الهاتف ورمز التحقق (OTP) الخاص بحسابك للوصول إلى لوحة العمليات والمهام الحية.</p>
-
         <form id="authForm" onsubmit="return false;" novalidate>
           <div class="login-field-group">
             <label for="authPhone" data-i18n="gate_label_phone">رقم الهاتف</label>
@@ -2483,9 +2500,6 @@
           <div class="login-field-group">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
               <label for="authOtp" style="margin-bottom:0;" data-i18n="gate_label_otp">رمز التحقق (OTP)</label>
-              <button type="button" id="toggleOtpVisibility" class="login-link-btn" title="إظهار / إخفاء الرمز">
-                <span id="otpToggleIcon">👁️</span>
-              </button>
             </div>
             <div class="login-input-wrap">
               <span class="login-input-prefix">🔑</span>
@@ -2498,10 +2512,20 @@
                 dir="ltr" 
                 required 
               />
+              <button type="button" id="toggleOtpVisibility" class="login-link-btn" title="إظهار / إخفاء الرمز">
+                <span id="otpToggleIcon">👁️</span>
+              </button>
             </div>
           </div>
 
-          <button class="btn-primary" type="button" id="unlockBtn" data-i18n="gate_btn_unlock">
+          <div class="login-remember-row">
+            <label class="login-checkbox-label" for="saveIdentCheck">
+              <input type="checkbox" id="saveIdentCheck" checked />
+              <span data-i18n="gate_save_ident">حفظ بيانات الدخول على هذا الجهاز</span>
+            </label>
+          </div>
+
+          <button class="btn-primary" type="button" id="unlockBtn" data-i18n="gate_btn_unlock" style="margin-top:0;">
             تسجيل الدخول
           </button>
         </form>
@@ -7343,6 +7367,16 @@
       if ($('authPhone')) $('authPhone').addEventListener('keydown', handleAuthKey);
       if ($('authOtp')) $('authOtp').addEventListener('keydown', handleAuthKey);
 
+      // Pre-fill saved identity if available
+      try {
+        const savedPhone = localStorage.getItem('sahla_saved_phone');
+        if (savedPhone && $('authPhone')) {
+          $('authPhone').value = savedPhone;
+          if ($('saveIdentCheck')) $('saveIdentCheck').checked = true;
+          setTimeout(() => $('authOtp')?.focus(), 150);
+        }
+      } catch {}
+
       $('unlockBtn').onclick = async () => {
         const errEl = $('gateErr');
         errEl.classList.add('hidden');
@@ -7378,6 +7412,13 @@
             method: 'POST',
             body: JSON.stringify({ phone, otp }),
           });
+
+          // Save identity if checked
+          if ($('saveIdentCheck')?.checked) {
+            try { localStorage.setItem('sahla_saved_phone', phone); } catch {}
+          } else {
+            try { localStorage.removeItem('sahla_saved_phone'); } catch {}
+          }
 
           if (authRes && authRes.user) {
             localStorage.setItem('sahla_auth_user', JSON.stringify(authRes.user));
