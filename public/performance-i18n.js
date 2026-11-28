@@ -21,11 +21,16 @@ const SAHLA_PERF_I18N = {
 
     // Gate Lock Screen
     gate_title: 'لوحة التحكم والعمليات',
-    gate_desc: 'أدخل كلمة مرور الإدارة لعرض الطلبات والمهام الحية من قاعدة البيانات.',
+    gate_desc: 'أدخل رقم الهاتف ورمز التحقق (OTP) الخاص بحسابك للوصول إلى لوحة العمليات والمهام الحية.',
+    gate_label_phone: 'رقم الهاتف',
+    gate_label_otp: 'رمز التحقق (OTP)',
     gate_label_pw: 'كلمة المرور',
-    gate_btn_unlock: 'دخول',
-    gate_err_empty: 'يرجى إدخال كلمة المرور',
-    gate_err_invalid: 'كلمة المرور غير صحيحة',
+    gate_btn_unlock: 'تسجيل الدخول',
+    gate_btn_verifying: 'جاري التحقق…',
+    gate_err_empty: 'يرجى إدخال بيانات الدخول',
+    gate_err_empty_phone: 'يرجى إدخال رقم الهاتف',
+    gate_err_empty_otp: 'يرجى إدخال رمز التحقق (OTP)',
+    gate_err_invalid: 'بيانات الدخول غير صحيحة',
 
     // Navigation Tabs
     tab_alerts: 'الطلبات والتنبيهات',
@@ -429,11 +434,16 @@ const SAHLA_PERF_I18N = {
 
     // Gate Lock Screen
     gate_title: 'Tableau de bord de performance',
-    gate_desc: "Entrez le mot de passe d'accès pour charger les commandes et tâches en direct.",
+    gate_desc: "Entrez votre numéro de téléphone et votre code OTP pour accéder aux commandes et tâches en direct.",
+    gate_label_phone: 'Numéro de téléphone',
+    gate_label_otp: 'Code de vérification (OTP)',
     gate_label_pw: 'Mot de passe',
-    gate_btn_unlock: 'Déverrouiller',
-    gate_err_empty: 'Veuillez entrer le mot de passe',
-    gate_err_invalid: 'Mot de passe incorrect',
+    gate_btn_unlock: 'Se connecter',
+    gate_btn_verifying: 'Vérification…',
+    gate_err_empty: 'Veuillez remplir les informations requises',
+    gate_err_empty_phone: 'Veuillez entrer votre numéro de téléphone',
+    gate_err_empty_otp: 'Veuillez entrer le code OTP',
+    gate_err_invalid: 'Informations de connexion incorrectes',
 
     // Navigation Tabs
     tab_alerts: 'Commandes + alertes',
@@ -837,11 +847,16 @@ const SAHLA_PERF_I18N = {
 
     // Gate Lock Screen
     gate_title: 'Performance dashboard',
-    gate_desc: 'Enter the access password to load live orders and tasks from the database.',
+    gate_desc: 'Enter your phone number and account verification code (OTP) to load live orders and tasks.',
+    gate_label_phone: 'Phone number',
+    gate_label_otp: 'Verification code (OTP)',
     gate_label_pw: 'Password',
-    gate_btn_unlock: 'Unlock',
-    gate_err_empty: 'Please enter the password',
-    gate_err_invalid: 'Incorrect password',
+    gate_btn_unlock: 'Sign In',
+    gate_btn_verifying: 'Verifying…',
+    gate_err_empty: 'Please enter your login credentials',
+    gate_err_empty_phone: 'Please enter your phone number',
+    gate_err_empty_otp: 'Please enter your OTP code',
+    gate_err_invalid: 'Invalid credentials or code',
 
     // Navigation Tabs
     tab_alerts: 'Orders + alerts',

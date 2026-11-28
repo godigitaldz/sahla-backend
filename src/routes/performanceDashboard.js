@@ -353,11 +353,11 @@ function parseCookies(req) {
   return out;
 }
 
-function signSession() {
+function signSession(extra = {}) {
   const secret = sessionSecret();
   if (!secret) throw new Error('PERFORMANCE_SESSION_SECRET is not configured');
   const exp = Date.now() + 12 * 3600 * 1000;
-  const payload = Buffer.from(JSON.stringify({ exp }), 'utf8').toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ exp, ...extra }), 'utf8').toString('base64url');
   const sig = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
   return `${payload}.${sig}`;
 }
@@ -373,8 +373,8 @@ function verifySession(token) {
   if (sig.length !== expected.length) return false;
   if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false;
   try {
-    const { exp } = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
-    return typeof exp === 'number' && Date.now() < exp;
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
+    return typeof payload.exp === 'number' && Date.now() < payload.exp ? payload : false;
   } catch {
     return false;
   }
@@ -382,9 +382,11 @@ function verifySession(token) {
 
 function requirePerformanceAuth(req, res, next) {
   const cookies = parseCookies(req);
-  if (!verifySession(cookies[COOKIE_NAME])) {
+  const session = verifySession(cookies[COOKIE_NAME]);
+  if (!session) {
     return res.status(401).json({ success: false, error: 'Unauthorized' });
   }
+  req.performanceUser = session;
   return next();
 }
 
@@ -408,28 +410,191 @@ function safeEqualUtf8(a, b) {
 /* Auth & Session Routes                                                     */
 /* ========================================================================= */
 
-router.post('/auth', (req, res) => {
-  const expectedPwd = dashboardPassword();
+router.get('/session', requirePerformanceAuth, (req, res) => {
+  return res.json({
+    success: true,
+    user: req.performanceUser || null,
+  });
+});
+
+router.post('/auth', async (req, res) => {
   const secret = sessionSecret();
-  if (!expectedPwd || !secret) {
+  if (!secret) {
     return res.status(503).json({ success: false, error: 'Performance dashboard auth is not configured' });
   }
-  const pwd = String(req.body?.password ?? '');
-  if (!pwd || !safeEqualUtf8(pwd, expectedPwd)) {
-    return res.status(401).json({ success: false, error: 'Invalid password' });
+
+  const rawPhone = String(req.body?.phone ?? '').trim();
+  const rawOtp = String(req.body?.otp ?? '').trim();
+  const pwd = String(req.body?.password ?? '').trim();
+
+  // Primary Auth: Phone number + fixed OTP stored in DB only
+  if (rawPhone || rawOtp) {
+    if (!rawPhone || !rawOtp) {
+      return res.status(400).json({
+        success: false,
+        error: 'missing_credentials',
+        message: 'يرجى إدخال رقم الهاتف ورمز التحقق (OTP)',
+      });
+    }
+
+    const digits = rawPhone.replace(/\D/g, '');
+    let e164 = null;
+    if (digits.startsWith('213') && digits.length >= 11) {
+      e164 = `+${digits}`;
+    } else if (digits.startsWith('0') && digits.length === 10) {
+      e164 = `+213${digits.slice(1)}`;
+    } else if (digits.length === 9) {
+      e164 = `+213${digits}`;
+    } else if (rawPhone.startsWith('+')) {
+      e164 = `+${digits}`;
+    }
+
+    const searchPhones = Array.from(new Set([
+      rawPhone,
+      e164,
+      digits,
+      digits.startsWith('213') ? `0${digits.slice(3)}` : null,
+      digits.length === 10 && digits.startsWith('0') ? digits : null,
+    ].filter(Boolean)));
+
+    try {
+      // 1. Check user_profiles table in DB
+      const { data: profiles, error: pErr } = await supabaseAdmin
+        .from('user_profiles')
+        .select('id, phone, name, role, fixed_otp, is_active, is_deactivated')
+        .in('phone', searchPhones)
+        .limit(5);
+
+      if (pErr) {
+        console.error('performance /auth db error:', pErr);
+        return res.status(500).json({
+          success: false,
+          error: 'db_error',
+          message: 'خطأ في الاتصال بقاعدة البيانات',
+        });
+      }
+
+      // 2. Also check auth_fixed_otps table in DB
+      const { data: fixedOtpRows } = await supabaseAdmin
+        .from('auth_fixed_otps')
+        .select('*')
+        .in('phone', searchPhones)
+        .eq('is_active', true)
+        .limit(5);
+
+      const profile = profiles?.[0];
+      const fixedRow = fixedOtpRows?.[0];
+
+      if (!profile && !fixedRow) {
+        return res.status(404).json({
+          success: false,
+          error: 'account_not_found',
+          message: 'رقم الهاتف غير مسجل في قاعدة البيانات',
+        });
+      }
+
+      // Check user role from DB
+      const userRole = String(profile?.role || fixedRow?.role || '').toLowerCase();
+      const ALLOWED_ROLES = new Set(['admin', 'super_admin']);
+
+      // Screen responds based on role: allowed if admin; further roles will be added later
+      if (!ALLOWED_ROLES.has(userRole)) {
+        return res.status(403).json({
+          success: false,
+          error: 'unauthorized_role',
+          role: userRole || 'user',
+          message: `غير مصرح: الحساب مسجل بدور (${userRole || 'مستخدم'}). لوحة العمليات مخصصة لدور الإدارة (Admin) حالياً. سيتم تفعيل الأدوار الإضافية لاحقاً.`,
+        });
+      }
+
+      // Check fixed OTP stored in DB only
+      const dbOtp = String(profile?.fixed_otp || fixedRow?.otp || '').trim();
+      if (!dbOtp) {
+        return res.status(403).json({
+          success: false,
+          error: 'otp_not_configured',
+          message: 'لم يتم تعيين رمز OTP ثابت لهذا الحساب في قاعدة البيانات',
+        });
+      }
+
+      const bufInput = Buffer.from(rawOtp, 'utf8');
+      const bufDb = Buffer.from(dbOtp, 'utf8');
+      const match = bufInput.length === bufDb.length && crypto.timingSafeEqual(bufInput, bufDb);
+
+      if (!match) {
+        return res.status(401).json({
+          success: false,
+          error: 'invalid_otp',
+          message: 'رمز التحقق (OTP) غير صحيح',
+        });
+      }
+
+      const userName = profile?.name || fixedRow?.name || 'Admin';
+      const userPhone = profile?.phone || fixedRow?.phone || e164 || rawPhone;
+      const userId = profile?.id || fixedRow?.id;
+
+      const token = signSession({
+        user_id: userId,
+        phone: userPhone,
+        role: userRole,
+        name: userName,
+      });
+
+      const secure = !!(process.env.VERCEL || process.env.NODE_ENV === 'production');
+      const cookieVal = [
+        `${COOKIE_NAME}=${encodeURIComponent(token)}`,
+        'Path=/',
+        'HttpOnly',
+        'SameSite=Lax',
+        'Max-Age=43200',
+        ...(secure ? ['Secure'] : []),
+      ].join('; ');
+
+      res.setHeader('Set-Cookie', cookieVal);
+      return res.json({
+        success: true,
+        user: {
+          id: userId,
+          phone: userPhone,
+          role: userRole,
+          name: userName,
+        },
+      });
+    } catch (authErr) {
+      console.error('performance /auth unexpected error:', authErr);
+      return res.status(500).json({
+        success: false,
+        error: 'server_error',
+        message: 'حدث خطأ غير متوقع أثناء تسجيل الدخول',
+      });
+    }
   }
-  const token = signSession();
-  const secure = !!(process.env.VERCEL || process.env.NODE_ENV === 'production');
-  const cookieVal = [
-    `${COOKIE_NAME}=${encodeURIComponent(token)}`,
-    'Path=/',
-    'HttpOnly',
-    'SameSite=Lax',
-    'Max-Age=43200',
-    ...(secure ? ['Secure'] : []),
-  ].join('; ');
-  res.setHeader('Set-Cookie', cookieVal);
-  return res.json({ success: true });
+
+  // Fallback to legacy password if provided
+  const expectedPwd = dashboardPassword();
+  if (!expectedPwd) {
+    return res.status(503).json({ success: false, error: 'Performance dashboard auth is not configured' });
+  }
+  if (pwd && safeEqualUtf8(pwd, expectedPwd)) {
+    const token = signSession({ role: 'admin', name: 'Admin' });
+    const secure = !!(process.env.VERCEL || process.env.NODE_ENV === 'production');
+    const cookieVal = [
+      `${COOKIE_NAME}=${encodeURIComponent(token)}`,
+      'Path=/',
+      'HttpOnly',
+      'SameSite=Lax',
+      'Max-Age=43200',
+      ...(secure ? ['Secure'] : []),
+    ].join('; ');
+    res.setHeader('Set-Cookie', cookieVal);
+    return res.json({ success: true, user: { role: 'admin', name: 'Admin' } });
+  }
+
+  return res.status(401).json({
+    success: false,
+    error: 'invalid_credentials',
+    message: 'بيانات الدخول غير صحيحة',
+  });
 });
 
 router.post('/logout', requirePerformanceAuth, (req, res) => {

@@ -172,13 +172,13 @@
         cursor: pointer;
       }
       .login-panel {
-        max-width: 400px;
-        margin: 80px auto;
-        padding: 32px;
+        max-width: 430px;
+        margin: 60px auto;
+        padding: 32px 28px;
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 16px;
-        box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
       }
       .login-panel h2 {
         margin: 0 0 8px;
@@ -192,6 +192,74 @@
         font-size: 0.88rem;
         line-height: 1.45;
       }
+      .login-field-group {
+        margin-bottom: 16px;
+        text-align: start;
+      }
+      .login-input-wrap {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .login-input-wrap:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.18);
+      }
+      .login-input-prefix {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 12px;
+        background: #f8fafc;
+        border-inline-end: 1px solid #e2e8f0;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #475569;
+        user-select: none;
+      }
+      .login-input-wrap input {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        flex: 1;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        background: transparent;
+        color: var(--text);
+        border-radius: 0;
+      }
+      .login-link-btn {
+        background: none;
+        border: none;
+        padding: 2px 6px;
+        cursor: pointer;
+        font-size: 0.82rem;
+        color: #64748b;
+        border-radius: 4px;
+      }
+      .login-link-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+      .login-panel .err {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 0.86rem;
+        line-height: 1.5;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        text-align: start;
+      }
+      .login-panel .err.role-blocked {
+        background: #fffbeb;
+        border-color: #fde68a;
+        color: #92400e;
+      }
       label {
         display: block;
         font-size: 0.75rem;
@@ -201,7 +269,7 @@
         color: var(--muted);
         margin-bottom: 6px;
       }
-      input[type='password'] {
+      input[type='password'], input[type='tel'], input[type='text'] {
         width: 100%;
         padding: 10px 14px;
         border-radius: 8px;
@@ -212,7 +280,7 @@
         font-family: inherit;
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
       }
-      input[type='password']:focus {
+      input[type='password']:focus, input[type='tel']:focus, input[type='text']:focus {
         outline: none;
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
@@ -2386,17 +2454,58 @@
   <body>
     <div id="gate">
       <div class="login-panel">
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:18px;">
           <div class="sahla-gate-logo-circle" title="Sahla Delivery">
             <img src="/sahla-logo-circle.png" alt="Sahla Logo" />
           </div>
           <span style="font-family:'Cairo',sans-serif;font-size:1.35rem;font-weight:900;color:#064E3B;margin-top:6px;line-height:1;">ساهلة</span>
         </div>
-        <h2 data-i18n="gate_title">Performance dashboard</h2>
-        <p data-i18n="gate_desc">Enter the access password to load live orders and tasks from the database.</p>
-        <label for="pw" data-i18n="gate_label_pw">Password</label>
-        <input id="pw" type="password" autocomplete="current-password" />
-        <button class="btn-primary" type="button" id="unlockBtn" data-i18n="gate_btn_unlock">Unlock</button>
+        <h2 data-i18n="gate_title">لوحة التحكم والعمليات</h2>
+        <p data-i18n="gate_desc">أدخل رقم الهاتف ورمز التحقق (OTP) الخاص بحسابك للوصول إلى لوحة العمليات والمهام الحية.</p>
+
+        <form id="authForm" onsubmit="return false;" novalidate>
+          <div class="login-field-group">
+            <label for="authPhone" data-i18n="gate_label_phone">رقم الهاتف</label>
+            <div class="login-input-wrap">
+              <span class="login-input-prefix">🇩🇿 +213</span>
+              <input 
+                id="authPhone" 
+                type="tel" 
+                inputmode="tel" 
+                autocomplete="tel" 
+                placeholder="06XXXXXXXX أو 07..." 
+                dir="ltr" 
+                required 
+              />
+            </div>
+          </div>
+
+          <div class="login-field-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <label for="authOtp" style="margin-bottom:0;" data-i18n="gate_label_otp">رمز التحقق (OTP)</label>
+              <button type="button" id="toggleOtpVisibility" class="login-link-btn" title="إظهار / إخفاء الرمز">
+                <span id="otpToggleIcon">👁️</span>
+              </button>
+            </div>
+            <div class="login-input-wrap">
+              <span class="login-input-prefix">🔑</span>
+              <input 
+                id="authOtp" 
+                type="password" 
+                inputmode="numeric" 
+                autocomplete="one-time-code" 
+                placeholder="أدخل رمز OTP" 
+                dir="ltr" 
+                required 
+              />
+            </div>
+          </div>
+
+          <button class="btn-primary" type="button" id="unlockBtn" data-i18n="gate_btn_unlock">
+            تسجيل الدخول
+          </button>
+        </form>
+
         <div class="err hidden" id="gateErr"></div>
       </div>
     </div>
@@ -2432,6 +2541,12 @@
               <span class="hdr-btn-icon">🔔</span>
               <span data-i18n="hdr_push_notif">Push Notification</span>
             </button>
+            <div id="sahlaHdrUserWrap" class="sahla-hdr-user-wrap hidden" style="display:inline-flex;align-items:center;gap:6px;margin-inline-start:8px;padding:4px 8px;background:rgba(255,255,255,0.08);border-radius:8px;">
+              <span style="font-size:0.8rem;color:#e2e8f0;font-weight:700;" id="sahlaHdrUserName">👤 Admin</span>
+              <button type="button" id="logoutBtn" style="background:none;border:none;padding:2px 6px;cursor:pointer;font-size:0.85rem;color:#fca5a5;border-radius:4px;" title="تسجيل الخروج">
+                خروج
+              </button>
+            </div>
           </div>
           <div class="sahla-live-status-pill">
             <span class="pulse-beacon"><span class="pulse-core"></span></span>
@@ -4320,10 +4435,14 @@
           if (r.status === 429) {
             pollBackoffUntil = Date.now() + 30000;
           }
-          const detail = j.error || r.statusText || ('HTTP ' + r.status);
+          const detail = j.message || j.error || r.statusText || ('HTTP ' + r.status);
           const msg = detail + ' (' + path + ' [' + r.status + '])';
-          showDashboardError(msg);
-          throw new Error(msg);
+          if (path !== '/auth') showDashboardError(msg);
+          const err = new Error(msg);
+          err.detail = detail;
+          err.status = r.status;
+          err.data = j;
+          throw err;
         }
         return j;
       }
@@ -4626,9 +4745,32 @@
         sel.value = cur;
       }
 
+      function updateAdminUserHeader(user) {
+        const wrap = $('sahlaHdrUserWrap');
+        const nameEl = $('sahlaHdrUserName');
+        if (!wrap || !nameEl) return;
+        if (user && user.role) {
+          const roleBadge = user.role === 'admin' ? 'Admin' : user.role;
+          nameEl.textContent = `👤 ${user.name || 'Admin'} (${roleBadge})`;
+          wrap.classList.remove('hidden');
+        } else {
+          wrap.classList.add('hidden');
+        }
+      }
+
       async function tryBootstrap() {
         try {
           await api('/meta', { method: 'GET' });
+          const cachedUser = localStorage.getItem('sahla_auth_user');
+          if (cachedUser) {
+            try { updateAdminUserHeader(JSON.parse(cachedUser)); } catch {}
+          }
+          api('/session', { method: 'GET' }).then((res) => {
+            if (res && res.user) {
+              localStorage.setItem('sahla_auth_user', JSON.stringify(res.user));
+              updateAdminUserHeader(res.user);
+            }
+          }).catch(() => {});
           showApp();
           await loadMeta();
           await loadAlerts();
@@ -4643,6 +4785,17 @@
       function showApp() {
         $('gate').classList.add('hidden');
         $('app').classList.remove('hidden');
+      }
+
+      const hdrLogoutBtn = $('logoutBtn');
+      if (hdrLogoutBtn) {
+        hdrLogoutBtn.onclick = async () => {
+          try {
+            await api('/logout', { method: 'POST' });
+          } catch {}
+          localStorage.removeItem('sahla_auth_user');
+          window.location.reload();
+        };
       }
 
       function fillAdminRequestHelps(m) {
@@ -7163,13 +7316,73 @@
         }
       }
 
+      // OTP visibility toggle
+      const otpToggleBtn = $('toggleOtpVisibility');
+      if (otpToggleBtn) {
+        otpToggleBtn.onclick = () => {
+          const otpInput = $('authOtp');
+          const icon = $('otpToggleIcon');
+          if (!otpInput) return;
+          if (otpInput.type === 'password') {
+            otpInput.type = 'text';
+            if (icon) icon.textContent = '🙈';
+          } else {
+            otpInput.type = 'password';
+            if (icon) icon.textContent = '👁️';
+          }
+        };
+      }
+
+      // Enter key submits login form
+      const handleAuthKey = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          $('unlockBtn')?.click();
+        }
+      };
+      if ($('authPhone')) $('authPhone').addEventListener('keydown', handleAuthKey);
+      if ($('authOtp')) $('authOtp').addEventListener('keydown', handleAuthKey);
+
       $('unlockBtn').onclick = async () => {
-        $('gateErr').classList.add('hidden');
+        const errEl = $('gateErr');
+        errEl.classList.add('hidden');
+        errEl.classList.remove('role-blocked');
+        errEl.textContent = '';
+
+        const phone = ($('authPhone')?.value ?? '').trim();
+        const otp = ($('authOtp')?.value ?? '').trim();
+
+        if (!phone) {
+          const emptyPhoneMsg = (window.performanceI18n?.getTranslation ? window.performanceI18n.getTranslation('gate_err_empty_phone') : null) || 'يرجى إدخال رقم الهاتف';
+          errEl.textContent = emptyPhoneMsg;
+          errEl.classList.remove('hidden');
+          $('authPhone')?.focus();
+          return;
+        }
+
+        if (!otp) {
+          const emptyOtpMsg = (window.performanceI18n?.getTranslation ? window.performanceI18n.getTranslation('gate_err_empty_otp') : null) || 'يرجى إدخال رمز التحقق (OTP)';
+          errEl.textContent = emptyOtpMsg;
+          errEl.classList.remove('hidden');
+          $('authOtp')?.focus();
+          return;
+        }
+
+        const btn = $('unlockBtn');
+        const prevText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = (window.performanceI18n?.getTranslation ? window.performanceI18n.getTranslation('gate_btn_verifying') : null) || 'جاري التحقق…';
+
         try {
-          await api('/auth', {
+          const authRes = await api('/auth', {
             method: 'POST',
-            body: JSON.stringify({ password: $('pw').value }),
+            body: JSON.stringify({ phone, otp }),
           });
+
+          if (authRes && authRes.user) {
+            localStorage.setItem('sahla_auth_user', JSON.stringify(authRes.user));
+          }
+
           showApp();
           await loadMeta();
           await loadAlerts();
@@ -7177,8 +7390,19 @@
           loadSahlaPayments().catch(() => {});
           applyViewFromQuery();
         } catch (e) {
-          $('gateErr').textContent = e.message || 'Unlock failed';
-          $('gateErr').classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = prevText;
+
+          let displayErr = e.detail || e.message || 'فشل تسجيل الدخول';
+          const parenIdx = displayErr.lastIndexOf(' (/api/');
+          if (parenIdx !== -1) displayErr = displayErr.slice(0, parenIdx);
+
+          if (e.status === 403 || displayErr.includes('غير مصرح') || displayErr.includes('unauthorized') || displayErr.includes('دور')) {
+            errEl.classList.add('role-blocked');
+          }
+
+          errEl.textContent = displayErr;
+          errEl.classList.remove('hidden');
         }
       };
 
